@@ -113,9 +113,9 @@ if __name__ == '__main__':
         encoder.set_params(**hp_dict)
         encoder.load_encoder("./checkpoints/test")
 
-    test_windows_batcher = BatchSlidingWindow(test.shape[0],window_size=encoder.window_size, batch_size=encoder.batch_size, shuffle=False)
+    test_windows_batcher = BatchSlidingWindow(test.shape[0],window_size=encoder.window_size, batch_size=1000, shuffle=False)
 
     print(test.shape)
-    features = encoder.encode(test_windows_batcher, test, batch_size=encoder.batch_size)
+    features = encoder.encode(test_windows_batcher, test, batch_size=1000)
     print(features.shape)
     
