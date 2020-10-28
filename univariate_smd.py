@@ -92,7 +92,7 @@ if __name__ == '__main__':
         args.cuda = True
     else:
         args.cuda = False
-        print("CUDA is not available, proceeding without it...")
+        print("Proceeding without cuda...")
 
 
     (train, _,), (test, test_labels) = load_SMD_dataset(args.path, args.dataset)
