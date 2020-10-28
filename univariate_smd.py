@@ -79,6 +79,7 @@ def parse_arguments():
     parser.add_argument('--hyper', type=str, metavar='FILE', default="default_hyperparameters.json",help='path of the file of hyperparameters to use; ' + 'for training; must be a JSON file')
     parser.add_argument('--load', action='store_true', default=False,help='activate to load the estimator instead of training it')
 
+    os.makedirs(args.save_path, exist_ok=True)
     return parser.parse_args()
 
 # for cuda
@@ -101,7 +102,7 @@ if __name__ == '__main__':
         encoder = fit_hyperparameters(
                 args.hyper, train, args.cuda, args.gpu
             )
-        encoder.save_encoder("./checkpoints/test")
+        encoder.save_encoder(os.paht.join(args.save_path, "test"))
     else:
         encoder = scikit_wrappers.CausalCNNEncoder()
         hf = open("default_hyperparameters.json", 'r')
@@ -110,7 +111,7 @@ if __name__ == '__main__':
         hp_dict['cuda'] = args.cuda
         hp_dict['gpu'] = args.gpu
         encoder.set_params(**hp_dict)
-        encoder.load_encoder("./checkpoints/test")
+        encoder.load_encoder(os.paht.join(args.save_path, "test"))
 
     test_windows_batcher = BatchSlidingWindow(test.shape[0],window_size=encoder.window_size, batch_size=1000, shuffle=False)
 
