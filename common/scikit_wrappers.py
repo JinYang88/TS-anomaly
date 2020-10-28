@@ -33,13 +33,13 @@ from IPython import embed
 class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                                   sklearn.base.ClassifierMixin):
     def __init__(self, compared_length, nb_random_samples, negative_penalty,
-                 batch_size, window_size, nb_steps, lr, penalty, early_stopping,
+                 batch_size, window_size, nb_epochs, lr, penalty, early_stopping,
                  encoder, params, in_channels, out_channels, device="cpu"):
         self.device = device
         self.architecture = ''
         self.batch_size = batch_size
         self.window_size = window_size
-        self.nb_steps = nb_steps
+        self.nb_epochs = nb_epochs
         self.lr = lr
         self.penalty = penalty
         self.early_stopping = early_stopping
@@ -78,7 +78,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         count = 0  # Count of number of epochs without improvement
 
         # Encoder training
-        while i < self.nb_steps:
+        while epochs < self.nb_epochs:
             if verbose:
                 print('Epoch: ', epochs + 1)
             for idx, batch in enumerate(train_generator):
@@ -94,9 +94,6 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                     )
                 loss.backward()
                 self.optimizer.step()
-                i += 1
-                if i >= self.nb_steps:
-                    break
             epochs += 1
         return self
 
@@ -165,14 +162,14 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
 
 class CausalCNNEncoder(TimeSeriesEncoder):
     def __init__(self, compared_length=50, nb_random_samples=10,
-                 negative_penalty=1, batch_size=1, window_size=100, nb_steps=2000, lr=0.001,
+                 negative_penalty=1, batch_size=1, window_size=100, nb_epochs=2000, lr=0.001,
                  penalty=1, early_stopping=None, channels=10, depth=1,
                  reduced_size=10, out_channels=10, kernel_size=4,
                  in_channels=1, device="cpu"):
 
         super(CausalCNNEncoder, self).__init__(
             compared_length, nb_random_samples, negative_penalty, batch_size, window_size,
-            nb_steps, lr, penalty, early_stopping,
+            nb_epochs, lr, penalty, early_stopping,
             self.__create_encoder(in_channels, channels, depth, reduced_size, out_channels, kernel_size, device),
             self.__encoder_params(in_channels, channels, depth, reduced_size,out_channels, kernel_size),
             in_channels, out_channels, device
@@ -283,7 +280,7 @@ class CausalCNNEncoder(TimeSeriesEncoder):
             'nb_random_samples': self.loss.nb_random_samples,
             'negative_penalty': self.loss.negative_penalty,
             'batch_size': self.batch_size,
-            'nb_steps': self.nb_steps,
+            'nb_epochs': self.nb_epochs,
             'lr': self.lr,
             'penalty': self.penalty,
             'early_stopping': self.early_stopping,
@@ -304,11 +301,11 @@ class CausalCNNEncoder(TimeSeriesEncoder):
 
 class LSTMEncoder(TimeSeriesEncoder):
     def __init__(self, compared_length=50, nb_random_samples=10,
-                 negative_penalty=1, batch_size=1, nb_steps=2000, lr=0.001,
+                 negative_penalty=1, batch_size=1, nb_epochs=2000, lr=0.001,
                  penalty=1, early_stopping=None, in_channels=1, device="cpu"):
         super(LSTMEncoder, self).__init__(
             compared_length, nb_random_samples, negative_penalty, batch_size,
-            nb_steps, lr, penalty, early_stopping,
+            nb_epochs, lr, penalty, early_stopping,
             self.__create_encoder(device), {}, in_channels, 160, device
         )
         assert in_channels == 1
@@ -326,7 +323,7 @@ class LSTMEncoder(TimeSeriesEncoder):
             'nb_random_samples': self.loss.nb_random_samples,
             'negative_penalty': self.loss.negative_penalty,
             'batch_size': self.batch_size,
-            'nb_steps': self.nb_steps,
+            'nb_epochs': self.nb_epochs,
             'lr': self.lr,
             'penalty': self.penalty,
             'early_stopping': self.early_stopping,
