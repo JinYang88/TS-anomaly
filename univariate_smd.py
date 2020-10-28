@@ -66,7 +66,10 @@ def parse_arguments():
     parser.add_argument('--load', action='store_true', default=False,help='activate to load the estimator instead of training it')
 
     args = parser.parse_args()
-    
+    if args.gpu >= 0 and torch.cuda.is_available():
+        args.device = torch.device("cuda:{}".format(args.gpu))
+    else:
+        args.device = torch.device("cpu")
     os.makedirs(args.save_path, exist_ok=True)
     return args
 
@@ -77,12 +80,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-    if args.gpu >= 0 and torch.cuda.is_available():
-        args.device = torch.device("gpu:{}".format(args.gpu))
-    else:
-        args.device = torch.device("cpu")
-        print("Proceeding without cuda...")
-
+    print("Proceeding using {}...".format(args.device))
 
     (train, _,), (test, test_labels) = load_SMD_dataset(args.path, args.dataset)
 
