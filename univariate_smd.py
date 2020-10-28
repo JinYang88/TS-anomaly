@@ -29,19 +29,9 @@ from common.dataloader import load_SMD_dataset
 from common import scikit_wrappers
 from common.sliding import BatchSlidingWindow
 
-def fit_hyperparameters(file, train, cuda, gpu,
+def fit_hyperparameters(file, train, device,
                         save_memory=False):
-    """
-    Creates a classifier from the given set of hyperparameters in the input
-    file, fits it and return it.
 
-    @param file Path of a file containing a set of hyperparemeters.
-    @param train Training set.
-    @param cuda If True, enables computations on the GPU.
-    @param gpu GPU to use if CUDA is enabled.
-    @param save_memory If True, save GPU memory by propagating gradients after
-           each loss term, instead of doing it after computing the whole loss.
-    """
     classifier = scikit_wrappers.CausalCNNEncoder()
 
     # Loads a given set of hyperparameters and fits a model with those
@@ -50,14 +40,10 @@ def fit_hyperparameters(file, train, cuda, gpu,
     hf.close()
     # Check the number of input channels
     params['in_channels'] = numpy.shape(train)[1]
-    params['cuda'] = cuda
-    params['gpu'] = gpu
+    params['device'] = device
     classifier.set_params(**params)
 
-    window_size = params["window_size"]
-    batch_size = params["batch_size"]
-
-    train_windows_batcher = BatchSlidingWindow(train.shape[0], window_size=window_size, batch_size=batch_size)
+    train_windows_batcher = BatchSlidingWindow(train.shape[0], window_size=params["window_size"], batch_size=params["batch_size"])
 
     return classifier.fit(
         train_windows_batcher, train, save_memory=save_memory, verbose=True
@@ -92,9 +78,9 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     if args.gpu > 0 and torch.cuda.is_available():
-        args.cuda = True
+        args.device = torch.device("gpu:{}".format(args.gpu))
     else:
-        args.cuda = False
+        args.device = torch.device("cpu")
         print("Proceeding without cuda...")
 
 
@@ -102,7 +88,7 @@ if __name__ == '__main__':
 
     if not args.load:
         encoder = fit_hyperparameters(
-                args.hyper, train, args.cuda, args.gpu
+                args.hyper, train, args.device
             )
         encoder.save_encoder(os.path.join(args.save_path, "test"))
     else:

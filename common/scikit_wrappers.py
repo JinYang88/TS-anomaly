@@ -33,46 +33,11 @@ from IPython import embed
 
 class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                                   sklearn.base.ClassifierMixin):
-    """
-    "Virtual" class to wrap an encoder of time series as a PyTorch module and
-    a SVM classifier with RBF kernel on top of its computed representations in
-    a scikit-learn class.
-
-    All inheriting classes should implement the get_params and set_params
-    methods, as in the recommendations of scikit-learn.
-
-    @param compared_length Maximum length of randomly chosen time series. If
-           None, this parameter is ignored.
-    @param nb_random_samples Number of randomly chosen intervals to select the
-           final negative sample in the loss.
-    @param negative_penalty Multiplicative coefficient for the negative sample
-           loss.
-    @param batch_size Batch size used during the training of the encoder.
-    @param nb_steps Number of optimization steps to perform for the training of
-           the encoder.
-    @param lr learning rate of the Adam optimizer used to train the encoder.
-    @param penalty Penalty term for the SVM classifier. If None and if the
-           number of samples is high enough, performs a hyperparameter search
-           to find a suitable constant.
-    @param early_stopping Enables, if not None, early stopping heuristic
-           for the training of the representations, based on the final
-           score. Representations are still learned unsupervisedly in this
-           case. If the number of samples per class is no more than 10,
-           disables this heuristic. If not None, accepts an integer
-           representing the patience of the early stopping strategy.
-    @param encoder Encoder PyTorch module.
-    @param params Dictionaries of the parameters of the encoder.
-    @param in_channels Number of input channels of the time series.
-    @param cuda Transfers, if True, all computations to the GPU.
-    @param gpu GPU index to use, if CUDA is enabled.
-    """
     def __init__(self, compared_length, nb_random_samples, negative_penalty,
                  batch_size, window_size, nb_steps, lr, penalty, early_stopping,
-                 encoder, params, in_channels, out_channels, cuda=False,
-                 gpu=0):
+                 encoder, params, in_channels, out_channels, device="cpu"):
+        self.device = device
         self.architecture = ''
-        self.cuda = cuda
-        self.gpu = gpu
         self.batch_size = batch_size
         self.window_size = window_size
         self.nb_steps = nb_steps
@@ -92,34 +57,16 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
 
     def save_encoder(self, prefix_file):
-        """
-        Saves the encoder and the SVM classifier.
-
-        @param prefix_file Path and prefix of the file where the models should
-               be saved (at '$(prefix_file)_$(architecture)_encoder.pth').
-        """
         torch.save(
             self.encoder.state_dict(),
             prefix_file + '_' + self.architecture + '_encoder.pth'
         )
 
     def load_encoder(self, prefix_file):
-        """
-        Loads an encoder.
-
-        @param prefix_file Path and prefix of the file where the model should
-               be loaded (at '$(prefix_file)_$(architecture)_encoder.pth').
-        """
-        if self.cuda:
-            self.encoder.load_state_dict(torch.load(
+        self.encoder.load_state_dict(torch.load(
                 prefix_file + '_' + self.architecture + '_encoder.pth',
-                map_location=lambda storage, loc: storage.cuda(self.gpu)
-            ))
-        else:
-            self.encoder.load_state_dict(torch.load(
-                prefix_file + '_' + self.architecture + '_encoder.pth',
-                map_location=lambda storage, loc: storage
-            ))
+                map_location=self.device)
+                )
 
     def fit(self, batcher, X, save_memory=False, verbose=False):
         """
@@ -157,10 +104,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
             if verbose:
                 print('Epoch: ', epochs + 1)
             for idx, batch in enumerate(train_generator):
-                # batch = torch.Tensor(batch).transpose(0,1)
-                # embed()
-                if self.cuda:
-                    batch = batch.cuda(self.gpu)
+                batch = batch.to(self.device)
                 self.optimizer.zero_grad()
                 if not varying:
                     loss = self.loss(
@@ -180,14 +124,6 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
 
 
     def encode(self, bacher, X, batch_size=50):
-        """
-        Outputs the representations associated to the input by the encoder.
-
-        @param X Testing set.
-        @param batch_size Size of batches used for splitting the test data to
-               avoid out of memory errors when using CUDA. Ignored if the
-               testing set contains time series of unequal lengths.
-        """
         # Check if the given time series have unequal lengths
         varying = bool(numpy.isnan(numpy.sum(X)))
 
@@ -200,16 +136,14 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         with torch.no_grad():
             if not varying:
                 for batch in test_generator:
-                    if self.cuda:
-                        batch = batch.cuda(self.gpu)
+                    batch = batch.to(self.device)
                     features[
                         count * batch_size: (count + 1) * batch_size
                     ] = self.encoder(batch).cpu()
                     count += 1
             else:
                 for batch in test_generator:
-                    if self.cuda:
-                        batch = batch.cuda(self.gpu)
+                    batch = batch.to(self.device)
                     length = batch.size(2) - torch.sum(
                         torch.isnan(batch[0, 0])
                     ).data.cpu().numpy()
@@ -222,18 +156,6 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         return features
 
     def encode_window(self, X, window, batch_size=50, window_batch_size=10000):
-        """
-        Outputs the representations associated to the input by the encoder,
-        for each subseries of the input of the given size (sliding window
-        representations).
-
-        @param X Testing set.
-        @param window Size of the sliding window.
-        @param batch_size Size of batches used for splitting the test data to
-               avoid out of memory errors when using CUDA.
-        @param window_batch_size Size of batches of windows to compute in a
-               run of encode, to save RAM.
-        """
         features = numpy.empty((
                 numpy.shape(X)[0], self.out_channels,
                 numpy.shape(X)[2] - window + 1
@@ -270,52 +192,18 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
 
 
 class CausalCNNEncoder(TimeSeriesEncoder):
-    """
-    Wraps a causal CNN encoder of time series as a PyTorch module and a
-    SVM classifier on top of its computed representations in a scikit-learn
-    class.
-
-    @param compared_length Maximum length of randomly chosen time series. If
-           None, this parameter is ignored.
-    @param nb_random_samples Number of randomly chosen intervals to select the
-           final negative sample in the loss.
-    @param negative_penalty Multiplicative coefficient for the negative sample
-           loss.
-    @param batch_size Batch size used during the training of the encoder.
-    @param nb_steps Number of optimization steps to perform for the training of
-           the encoder.
-    @param lr learning rate of the Adam optimizer used to train the encoder.
-    @param penalty Penalty term for the SVM classifier. If None and if the
-           number of samples is high enough, performs a hyperparameter search
-           to find a suitable constant.
-    @param early_stopping Enables, if not None, early stopping heuristic
-           for the training of the representations, based on the final
-           score. Representations are still learned unsupervisedly in this
-           case. If the number of samples per class is no more than 10,
-           disables this heuristic. If not None, accepts an integer
-           representing the patience of the early stopping strategy.
-    @param channels Number of channels manipulated in the causal CNN.
-    @param depth Depth of the causal CNN.
-    @param reduced_size Fixed length to which the output time series of the
-           causal CNN is reduced.
-    @param out_channels Number of features in the final output.
-    @param kernel_size Kernel size of the applied non-residual convolutions.
-    @param in_channels Number of input channels of the time series.
-    @param cuda Transfers, if True, all computations to the GPU.
-    @param gpu GPU index to use, if CUDA is enabled.
-    """
     def __init__(self, compared_length=50, nb_random_samples=10,
                  negative_penalty=1, batch_size=1, window_size=100, nb_steps=2000, lr=0.001,
                  penalty=1, early_stopping=None, channels=10, depth=1,
                  reduced_size=10, out_channels=10, kernel_size=4,
-                 in_channels=1, cuda=False, gpu=0):
+                 in_channels=1, device="cpu"):
 
         super(CausalCNNEncoder, self).__init__(
             compared_length, nb_random_samples, negative_penalty, batch_size, window_size,
             nb_steps, lr, penalty, early_stopping,
-            self.__create_encoder(in_channels, channels, depth, reduced_size, out_channels, kernel_size, cuda, gpu),
+            self.__create_encoder(in_channels, channels, depth, reduced_size, out_channels, kernel_size, device),
             self.__encoder_params(in_channels, channels, depth, reduced_size,out_channels, kernel_size),
-            in_channels, out_channels, cuda, gpu
+            in_channels, out_channels, device
         )
         self.architecture = 'CausalCNN'
         self.channels = channels
@@ -323,26 +211,16 @@ class CausalCNNEncoder(TimeSeriesEncoder):
         self.reduced_size = reduced_size
         self.kernel_size = kernel_size
 
-
-    # def save_encoder(self, prefix_file):
-    #     super().save_encoder(prefix_file)
-    
-    # def load_encoder(self, prefix_file):
-    #     super().load_encoder(prefix_file)
-
     def __create_encoder(self, in_channels, channels, depth, reduced_size,
-                         out_channels, kernel_size, cuda, gpu):
+                         out_channels, kernel_size, device):
         encoder = networks.causal_cnn.CausalCNNEncoder(
             in_channels, channels, depth, reduced_size, out_channels,
             kernel_size
         )
-        encoder.double()
-        if cuda:
-            encoder.cuda(gpu)
+        encoder = encoder.double().to(device)
         return encoder
 
-    def __encoder_params(self, in_channels, channels, depth, reduced_size,
-                         out_channels, kernel_size):
+    def __encoder_params(self, in_channels, channels, depth, reduced_size, out_channels, kernel_size):
         return {
             'in_channels': in_channels,
             'channels': channels,
@@ -353,21 +231,6 @@ class CausalCNNEncoder(TimeSeriesEncoder):
         }
 
     def encode_sequence(self, X, batch_size=50):
-        """
-        Outputs the representations associated to the input by the encoder,
-        from the start of the time series to each time step (i.e., the
-        evolution of the representations of the input time series with
-        repect to time steps).
-
-        Takes advantage of the causal CNN (before the max pooling), wich
-        ensures that its output at time step i only depends on time step i and
-        previous time steps.
-
-        @param X Testing set.
-        @param batch_size Size of batches used for splitting the test data to
-               avoid out of memory errors when using CUDA. Ignored if the
-               testing set contains time series of unequal lengths.
-        """
         # Check if the given time series have unequal lengths
         varying = bool(numpy.isnan(numpy.sum(X)))
 
@@ -388,15 +251,13 @@ class CausalCNNEncoder(TimeSeriesEncoder):
         with torch.no_grad():
             if not varying:
                 for batch in test_generator:
-                    if self.cuda:
-                        batch = batch.cuda(self.gpu)
+                    batch = batch.to(self.device)
                     # First applies the causal CNN
                     output_causal_cnn = causal_cnn(batch)
                     after_pool = torch.empty(
                         output_causal_cnn.size(), dtype=torch.double
                     )
-                    if self.cuda:
-                        after_pool = after_pool.cuda(self.gpu)
+                    after_pool = after_pool.to(self.device)
                     after_pool[:, :, 0] = output_causal_cnn[:, :, 0]
                     # Then for each time step, computes the output of the max
                     # pooling layer
@@ -416,8 +277,7 @@ class CausalCNNEncoder(TimeSeriesEncoder):
                     count += 1
             else:
                 for batch in test_generator:
-                    if self.cuda:
-                        batch = batch.cuda(self.gpu)
+                    batch = batch.to(self.device)
                     length = batch.size(2) - torch.sum(
                         torch.isnan(batch[0, 0])
                     ).data.cpu().numpy()
@@ -425,8 +285,7 @@ class CausalCNNEncoder(TimeSeriesEncoder):
                     after_pool = torch.empty(
                         output_causal_cnn.size(), dtype=torch.double
                     )
-                    if self.cuda:
-                        after_pool = after_pool.cuda(self.gpu)
+                    after_pool = after_pool.to(self.device)
                     after_pool[:, :, 0] = output_causal_cnn[:, :, 0]
                     for i in range(1, length):
                         after_pool[:, :, i] = torch.max(
@@ -462,7 +321,7 @@ class CausalCNNEncoder(TimeSeriesEncoder):
             'kernel_size': self.kernel_size,
             'in_channels': self.in_channels,
             'out_channels': self.out_channels,
-            'cuda': self.cuda,
+            'device': self.device,
             'gpu': self.gpu
         }
 
@@ -472,52 +331,21 @@ class CausalCNNEncoder(TimeSeriesEncoder):
 
 
 class LSTMEncoder(TimeSeriesEncoder):
-    """
-    Wraps an LSTM encoder of time series as a PyTorch module and a SVM
-    classifier on top of its computed representations in a scikit-learn
-    class.
-
-    @param compared_length Maximum length of randomly chosen time series. If
-           None, this parameter is ignored.
-    @param nb_random_samples Number of randomly chosen intervals to select the
-           final negative sample in the loss.
-    @param negative_penalty Multiplicative coefficient for the negative sample
-           loss.
-    @param batch_size Batch size used during the training of the encoder.
-    @param nb_steps Number of optimization steps to perform for the training of
-           the encoder.
-    @param lr learning rate of the Adam optimizer used to train the encoder.
-    @param penalty Penalty term for the SVM classifier. If None and if the
-           number of samples is high enough, performs a hyperparameter search
-           to find a suitable constant.
-    @param early_stopping Enables, if not None, early stopping heuristic
-           for the training of the representations, based on the final
-           score. Representations are still learned unsupervisedly in this
-           case. If the number of samples per class is no more than 10,
-           disables this heuristic. If not None, accepts an integer
-           representing the patience of the early stopping strategy.
-    @param cuda Transfers, if True, all computations to the GPU.
-    @param in_channels Number of input channels of the time series.
-    @param gpu GPU index to use, if CUDA is enabled.
-    """
     def __init__(self, compared_length=50, nb_random_samples=10,
                  negative_penalty=1, batch_size=1, nb_steps=2000, lr=0.001,
-                 penalty=1, early_stopping=None, in_channels=1, cuda=False,
-                 gpu=0):
+                 penalty=1, early_stopping=None, in_channels=1, device="cpu"):
         super(LSTMEncoder, self).__init__(
             compared_length, nb_random_samples, negative_penalty, batch_size,
             nb_steps, lr, penalty, early_stopping,
-            self.__create_encoder(cuda, gpu), {}, in_channels, 160, cuda, gpu
+            self.__create_encoder(device), {}, in_channels, 160, device
         )
         assert in_channels == 1
         self.architecture = 'LSTM'
 
-    def __create_encoder(self, cuda, gpu):
+    def __create_encoder(self, device):
         encoder = networks.lstm.LSTMEncoder()
         encoder.double()
-        
-        if cuda:
-            encoder.cuda(gpu)
+        encoder = encoder.to(device)
         return encoder
 
     def get_params(self, deep=True):
@@ -531,8 +359,7 @@ class LSTMEncoder(TimeSeriesEncoder):
             'penalty': self.penalty,
             'early_stopping': self.early_stopping,
             'in_channels': self.in_channels,
-            'cuda': self.cuda,
-            'gpu': self.gpu
+            'device': self.device
         }
 
     def set_params(self, **kwargs):
