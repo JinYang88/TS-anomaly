@@ -89,8 +89,10 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     if args.gpu > 0 and torch.cuda.is_available():
+        args.cuda = True
+    else:
         print("CUDA is not available, proceeding without it...")
-        args.cuda = False
+
 
     (train, _,), (test, test_labels) = load_SMD_dataset(
         args.path, args.dataset
