@@ -43,7 +43,7 @@ def fit_hyperparameters(file, train, device,
     params['device'] = device
     classifier.set_params(**params)
 
-    train_windows_batcher = BatchSlidingWindow(train.shape[0], window_size=params["window_size"], batch_size=params["batch_size"]shuffle=True)
+    train_windows_batcher = BatchSlidingWindow(train.shape[0], window_size=params["window_size"], batch_size=params["batch_size"], shuffle=True)
 
     return classifier.fit(
         train_windows_batcher, train, save_memory=save_memory, verbose=True
