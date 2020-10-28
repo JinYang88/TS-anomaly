@@ -91,12 +91,11 @@ if __name__ == '__main__':
     if args.gpu > 0 and torch.cuda.is_available():
         args.cuda = True
     else:
+        args.cuda = False
         print("CUDA is not available, proceeding without it...")
 
 
-    (train, _,), (test, test_labels) = load_SMD_dataset(
-        args.path, args.dataset
-    )
+    (train, _,), (test, test_labels) = load_SMD_dataset(args.path, args.dataset)
 
     if not args.load:
         encoder = fit_hyperparameters(
