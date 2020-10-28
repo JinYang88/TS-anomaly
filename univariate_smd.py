@@ -104,7 +104,7 @@ if __name__ == '__main__':
         encoder = fit_hyperparameters(
                 args.hyper, train, args.cuda, args.gpu
             )
-        encoder.save_encoder(os.paht.join(args.save_path, "test"))
+        encoder.save_encoder(os.path.join(args.save_path, "test"))
     else:
         encoder = scikit_wrappers.CausalCNNEncoder()
         hf = open("default_hyperparameters.json", 'r')
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         hp_dict['cuda'] = args.cuda
         hp_dict['gpu'] = args.gpu
         encoder.set_params(**hp_dict)
-        encoder.load_encoder(os.paht.join(args.save_path, "test"))
+        encoder.load_encoder(os.path.join(args.save_path, "test"))
 
     test_windows_batcher = BatchSlidingWindow(test.shape[0],window_size=encoder.window_size, batch_size=1000, shuffle=False)
 
