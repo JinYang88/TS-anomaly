@@ -48,13 +48,14 @@ class TripletLoss(torch.nn.modules.loss._Loss):
     @param negative_penalty Multiplicative coefficient for the negative sample
            loss.
     """
-    def __init__(self, compared_length, nb_random_samples, negative_penalty):
+    def __init__(self, compared_length, nb_random_samples, negative_penalty, device):
         super(TripletLoss, self).__init__()
         self.compared_length = compared_length
         if self.compared_length is None:
             self.compared_length = numpy.inf
         self.nb_random_samples = nb_random_samples
         self.negative_penalty = negative_penalty
+        self.device = device
 
     def forward(self, batch, encoder, train, save_memory=False):
         batch_size = batch.size(0)
@@ -102,13 +103,13 @@ class TripletLoss(torch.nn.modules.loss._Loss):
                 j: j + 1, :,
                 beginning_batches[j]: beginning_batches[j] + random_length
             ] for j in range(batch_size)]
-        ))  # Anchors representations
+        ).to(self.device))  # Anchors representations
 
         positive_representation = encoder(torch.cat(
             [batch[
                 j: j + 1, :, end_positive[j] - length_pos_neg: end_positive[j]
             ] for j in range(batch_size)]
-        ))  # Positive samples representations
+        ).to(self.device))  # Positive samples representations
 
         size_representation = representation.size(1)
         # Positive loss: -logsigmoid of dot product between anchor and positive
@@ -135,7 +136,7 @@ class TripletLoss(torch.nn.modules.loss._Loss):
                     :, :,
                     beginning_samples_neg[i, j]:
                     beginning_samples_neg[i, j] + length_pos_neg
-                ] for j in range(batch_size)])
+                ] for j in range(batch_size)]).to(self.device)
             )
             loss += multiplicative_ratio * -torch.mean(
                 torch.nn.functional.logsigmoid(-torch.bmm(
@@ -186,13 +187,14 @@ class TripletLossVaryingLength(torch.nn.modules.loss._Loss):
     @param negative_penalty Multiplicative coefficient for the negative sample
            loss.
     """
-    def __init__(self, compared_length, nb_random_samples, negative_penalty):
+    def __init__(self, compared_length, nb_random_samples, negative_penalty, device):
         super(TripletLossVaryingLength, self).__init__()
         self.compared_length = compared_length
         if self.compared_length is None:
             self.compared_length = numpy.inf
         self.nb_random_samples = nb_random_samples
         self.negative_penalty = negative_penalty
+        self.device = device
 
     def forward(self, batch, encoder, train, save_memory=False):
         batch_size = batch.size(0)
@@ -265,14 +267,14 @@ class TripletLossVaryingLength(torch.nn.modules.loss._Loss):
             batch[
                 j: j + 1, :,
                 beginning_batches[j]: beginning_batches[j] + random_length[j]
-            ]
+            ].to(self.device)
         ) for j in range(batch_size)])  # Anchors representations
 
         positive_representation = torch.cat([encoder(
             batch[
                 j: j + 1, :,
                 end_positive[j] - lengths_pos[j]: end_positive[j]
-            ]
+            ].to(self.device)
         ) for j in range(batch_size)])  # Positive samples representations
 
         size_representation = representation.size(1)
@@ -300,7 +302,7 @@ class TripletLossVaryingLength(torch.nn.modules.loss._Loss):
                     :, :,
                     beginning_samples_neg[i, j]:
                     beginning_samples_neg[i, j] + lengths_neg[i, j]
-                ]
+                ].to(self.device)
             ) for j in range(batch_size)])
             loss += multiplicative_ratio * -torch.mean(
                 torch.nn.functional.logsigmoid(-torch.bmm(

@@ -49,10 +49,10 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.loss = losses.triplet_loss.TripletLoss(
-            compared_length, nb_random_samples, negative_penalty
+            compared_length, nb_random_samples, negative_penalty, device
         )
         self.loss_varying = losses.triplet_loss.TripletLossVaryingLength(
-            compared_length, nb_random_samples, negative_penalty
+            compared_length, nb_random_samples, negative_penalty, device
         )
         self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
 
@@ -85,8 +85,6 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
             if verbose:
                 print('Epoch: ', epochs + 1)
             for idx, batch in enumerate(train_generator):
-                print(self.device)
-                embed()
                 batch = batch.to(self.device)
                 self.optimizer.zero_grad()
                 if not varying:
