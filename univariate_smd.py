@@ -79,8 +79,10 @@ def parse_arguments():
     parser.add_argument('--hyper', type=str, metavar='FILE', default="default_hyperparameters.json",help='path of the file of hyperparameters to use; ' + 'for training; must be a JSON file')
     parser.add_argument('--load', action='store_true', default=False,help='activate to load the estimator instead of training it')
 
+    args = parser.parse_args()
+    
     os.makedirs(args.save_path, exist_ok=True)
-    return parser.parse_args()
+    return args
 
 # for cuda
 # python univariate.py --path ./datasets/ucr/ --dataset Worms --save_path ./checkpoints --hyper default_hyperparameters.json --cuda --gpu 0
