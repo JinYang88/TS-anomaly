@@ -21,14 +21,14 @@ import numpy
 
 
 class TripletLoss(torch.nn.modules.loss._Loss):
-    def __init__(self, compared_length, nb_random_samples, negative_penalty, device="cpu"):
+    def __init__(self, compared_length, nb_random_samples, negative_penalty, device1="cpu"):
         super(TripletLoss, self).__init__()
         self.compared_length = compared_length
         if self.compared_length is None:
             self.compared_length = numpy.inf
         self.nb_random_samples = nb_random_samples
         self.negative_penalty = negative_penalty
-        self.device = device
+        self.device = device1
 
     def forward(self, batch, encoder, train, save_memory=False):
         batch_size = batch.size(0)
