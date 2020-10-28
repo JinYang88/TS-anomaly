@@ -23,12 +23,11 @@ import sklearn
 import sklearn.svm
 import sklearn.externals
 import sklearn.model_selection
-
 import utils
-import losses
 import networks
 import sys
 
+from common import triplet_loss
 from IPython import embed
 
 class TimeSeriesEncoder(sklearn.base.BaseEstimator,
@@ -48,10 +47,10 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         self.params = params
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.loss = losses.triplet_loss.TripletLoss(
-            compared_length, nb_random_samples, negative_penalty,device1=device)
-        self.loss_varying = losses.triplet_loss.TripletLossVaryingLength(
-            compared_length, nb_random_samples, negative_penalty,device=device)
+        self.loss = triplet_loss.TripletLoss(
+            compared_length, nb_random_samples, negative_penalty, device)
+        self.loss_varying = triplet_loss.TripletLossVaryingLength(
+            compared_length, nb_random_samples, negative_penalty, device)
         self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
 
     def save_encoder(self, prefix_file):
