@@ -94,8 +94,7 @@ if __name__ == '__main__':
         hf = open("default_hyperparameters.json", 'r')
         hp_dict = json.load(hf)
         hf.close()
-        hp_dict['cuda'] = args.cuda
-        hp_dict['gpu'] = args.gpu
+        hp_dict['device'] = args.device
         encoder.set_params(**hp_dict)
         encoder.load_encoder(os.path.join(args.save_path, "test"))
 

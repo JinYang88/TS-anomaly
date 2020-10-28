@@ -26,7 +26,7 @@ class BatchSlidingWindow(object):
     """
 
     def __init__(self, array_size, window_size, batch_size, excludes=None,
-                 shuffle=False, ignore_incomplete_batch=True):
+                 shuffle=False, ignore_incomplete_batch=False):
         # check the parameters
         if window_size < 1:
             raise ValueError('`window_size` must be at least 1')
