@@ -68,10 +68,7 @@ class BatchSlidingWindow(object):
         self._ignore_incomplete_batch = ignore_incomplete_batch
 
     def get_windows(self, arrays):
-        tensor = torch.from_numpy(np.array(list(self.get_iterator(arrays))))
-        tensor = tensor.transpose(1,2)
-        n_batch, batch_size, n_dim, n_time = tensor.size()
-        tensor = torch.flatten(tensor, start_dim=0, end_dim=1)
+        tensor = torch.cat(list(self.get_iterator(arrays)))
         return tensor
         
     def get_iterator(self, arrays):
@@ -103,7 +100,7 @@ class BatchSlidingWindow(object):
             batch_size=self._batch_size,
             ignore_incomplete_batch=self._ignore_incomplete_batch):
             idx = self._indices[s] + self._offsets
-            yield np.array(tuple(a[idx] if len(a.shape) == 1 else a[idx, :] for a in arrays))
+            yield torch.Tensor(tuple(a[idx] if len(a.shape) == 1 else a[idx, :] for a in arrays)).transpose(0,1)
   
 
 

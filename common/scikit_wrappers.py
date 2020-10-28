@@ -157,7 +157,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
             if verbose:
                 print('Epoch: ', epochs + 1)
             for idx, batch in enumerate(train_generator):
-                batch = torch.Tensor(batch).transpose(0,1)
+                # batch = torch.Tensor(batch).transpose(0,1)
                 # embed()
                 if self.cuda:
                     batch = batch.cuda(self.gpu)
@@ -176,10 +176,10 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                 if i >= self.nb_steps:
                     break
             epochs += 1
-        return self.encoder
+        return self
 
 
-    def encode(self, X, batch_size=50):
+    def encode(self, bacher, X, batch_size=50):
         """
         Outputs the representations associated to the input by the encoder.
 
@@ -191,12 +191,8 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         # Check if the given time series have unequal lengths
         varying = bool(numpy.isnan(numpy.sum(X)))
 
-        test_generator = X 
-        # test = utils.Dataset(X)
-        # test_generator = torch.utils.data.DataLoader(
-        #     test, batch_size=batch_size if not varying else 1
-        # )
-        
+        test_generator = bacher.get_iterator(X) 
+
         features = numpy.zeros((numpy.shape(X)[0], self.out_channels))
         self.encoder = self.encoder.eval()
 
@@ -317,10 +313,8 @@ class CausalCNNEncoder(TimeSeriesEncoder):
         super(CausalCNNEncoder, self).__init__(
             compared_length, nb_random_samples, negative_penalty, batch_size, window_size,
             nb_steps, lr, penalty, early_stopping,
-            self.__create_encoder(in_channels, channels, depth, reduced_size,
-                                  out_channels, kernel_size, cuda, gpu),
-            self.__encoder_params(in_channels, channels, depth, reduced_size,
-                                  out_channels, kernel_size),
+            self.__create_encoder(in_channels, channels, depth, reduced_size, out_channels, kernel_size, cuda, gpu),
+            self.__encoder_params(in_channels, channels, depth, reduced_size,out_channels, kernel_size),
             in_channels, out_channels, cuda, gpu
         )
         self.architecture = 'CausalCNN'
@@ -328,6 +322,13 @@ class CausalCNNEncoder(TimeSeriesEncoder):
         self.depth = depth
         self.reduced_size = reduced_size
         self.kernel_size = kernel_size
+
+
+    # def save_encoder(self, prefix_file):
+    #     super().save_encoder(prefix_file)
+    
+    # def load_encoder(self, prefix_file):
+    #     super().load_encoder(prefix_file)
 
     def __create_encoder(self, in_channels, channels, depth, reduced_size,
                          out_channels, kernel_size, cuda, gpu):
