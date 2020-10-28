@@ -69,41 +69,24 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                 )
 
     def fit(self, batcher, X, save_memory=False, verbose=False):
-        """
-        Trains the encoder unsupervisedly using the given training data.
-
-        @param X Training set.
-        @param y Training labels, used only for early stopping, if enabled. If
-               None, disables early stopping in the method.
-        @param save_memory If True, enables to save GPU memory by propagating
-               gradients after each loss term of the encoder loss, instead of
-               doing it after computing the whole loss.
-        @param verbose Enables, if True, to monitor which epoch is running in
-               the encoder training.
-        """
         # Check if the given time series have unequal lengths
         varying = bool(numpy.isnan(numpy.sum(X)))
         train = batcher.get_windows(X)
-        # train_torch_dataset = utils.Dataset(X)
-        # train_generator = torch.utils.data.DataLoader(
-        #     train_torch_dataset, batch_size=self.batch_size, shuffle=True
-        # )
+    
         train_generator = batcher.get_iterator(X)
         varying = False
 
-        max_score = 0
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
         count = 0  # Count of number of epochs without improvement
-        # Will be true if, by enabling epoch_selection, a model was selected
-        # using cross-validation
-        found_best = False
 
         # Encoder training
         while i < self.nb_steps:
             if verbose:
                 print('Epoch: ', epochs + 1)
             for idx, batch in enumerate(train_generator):
+                print(self.device)
+                embed()
                 batch = batch.to(self.device)
                 self.optimizer.zero_grad()
                 if not varying:
