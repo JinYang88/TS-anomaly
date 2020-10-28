@@ -77,7 +77,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-    if args.gpu > 0 and torch.cuda.is_available():
+    if args.gpu >= 0 and torch.cuda.is_available():
         args.device = torch.device("gpu:{}".format(args.gpu))
     else:
         args.device = torch.device("cpu")
