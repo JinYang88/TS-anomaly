@@ -4,7 +4,7 @@
     "channels": 40,
     "compared_length": null,
     "depth": 10,
-    "nb_steps": 1,
+    "nb_steps": 20,
     "in_channels": 1,
     "kernel_size": 3,
     "penalty": null,
