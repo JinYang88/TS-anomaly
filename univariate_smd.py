@@ -74,8 +74,6 @@ def parse_arguments():
 
     parser.add_argument('--save_path', type=str, metavar='PATH', default="./checkpoints", help='path where the estimator is/should be saved')
 
-    parser.add_argument('--cuda', action='store_true',
-                        help='activate to use CUDA')
     parser.add_argument('--gpu', type=int, default=0, metavar='GPU',
                         help='index of GPU used for computations (default: 0)')
     parser.add_argument('--hyper', type=str, metavar='FILE', default="default_hyperparameters.json",help='path of the file of hyperparameters to use; ' + 'for training; must be a JSON file')
