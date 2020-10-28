@@ -129,29 +129,23 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
 
         test_generator = bacher.get_iterator(X) 
 
-        features = numpy.zeros((numpy.shape(X)[0], self.out_channels))
+        features = []
         self.encoder = self.encoder.eval()
 
-        count = 0
         with torch.no_grad():
             if not varying:
                 for batch in test_generator:
                     batch = batch.to(self.device)
-                    features[
-                        count * batch_size: (count + 1) * batch_size
-                    ] = self.encoder(batch).cpu()
-                    count += 1
+                    features.append(self.encoder(batch))
             else:
                 for batch in test_generator:
                     batch = batch.to(self.device)
                     length = batch.size(2) - torch.sum(
                         torch.isnan(batch[0, 0])
                     ).data.cpu().numpy()
-                    features[count: count + 1] = self.encoder(
-                        batch[:, :, :length]
-                    ).cpu()
-                    count += 1
+                    features.append(self.encoder(batch[:, :, :length]))
 
+        features = torch.cat(features)
         self.encoder = self.encoder.train()
         return features
 
