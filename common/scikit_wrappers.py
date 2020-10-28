@@ -49,9 +49,9 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.loss = losses.triplet_loss.TripletLoss(
-            compared_length, nb_random_samples, negative_penalty, device=device)
+            compared_length, nb_random_samples, negative_penalty,device=device)
         self.loss_varying = losses.triplet_loss.TripletLossVaryingLength(
-            compared_length, nb_random_samples, negative_penalty, device=device)
+            compared_length, nb_random_samples, negative_penalty,device=device)
         self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
 
     def save_encoder(self, prefix_file):
