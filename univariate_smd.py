@@ -88,7 +88,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-    if args.cuda and not torch.cuda.is_available():
+    if args.gpu > 0 and torch.cuda.is_available():
         print("CUDA is not available, proceeding without it...")
         args.cuda = False
 
