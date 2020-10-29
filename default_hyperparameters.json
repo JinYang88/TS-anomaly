@@ -4,14 +4,14 @@
     "channels": 40,
     "compared_length": null,
     "depth": 10,
-    "nb_epochs": 1,
+    "nb_steps": 3000,
     "in_channels": 1,
     "kernel_size": 3,
     "penalty": null,
     "early_stopping": null,
     "lr": 0.001,
-    "nb_random_samples": 10,
+    "nb_random_samples": 5,
     "negative_penalty": 1,
-    "out_channels": 100,
+    "out_channels": 300,
     "reduced_size": 160
 }
