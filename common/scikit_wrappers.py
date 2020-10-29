@@ -101,7 +101,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                 loss.backward()
                 self.optimizer.step()
                 i += 1
-                if i % 100 == 0:
+                if i % 10 == 0:
                     print("Step: {}, loss: {:.3f}".format(i, loss.item()))
                 if i >= self.nb_steps:
                     break
