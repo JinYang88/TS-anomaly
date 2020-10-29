@@ -82,7 +82,7 @@ if __name__ == '__main__':
     args = parse_arguments()
     print("Proceeding using {}...".format(args.device))
 
-    (train, _,), (test, test_labels) = load_SMD_dataset(args.path, args.dataset)
+    (train, _,), (test, test_labels) = load_SMD_dataset(args.path, args.dataset, use_dim=0)
 
     if not args.load:
         encoder = fit_hyperparameters(

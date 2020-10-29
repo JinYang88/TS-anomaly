@@ -54,9 +54,16 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
 
     def save_encoder(self, prefix_file):
-        torch.save(
+        try:
+            torch.save(
             self.encoder.state_dict(),
             prefix_file + '_' + self.architecture + '_encoder.pth'
+        )
+        except:
+            torch.save(
+            self.encoder.state_dict(),
+            prefix_file + '_' + self.architecture + '_encoder.pth',
+            _use_new_zipfile_serialization=False 
         )
 
     def load_encoder(self, prefix_file):
@@ -124,34 +131,12 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         self.encoder = self.encoder.train()
         return features
 
-    def encode_window(self, X, window, batch_size=50, window_batch_size=10000):
-        features = numpy.empty((
-                numpy.shape(X)[0], self.out_channels,
-                numpy.shape(X)[2] - window + 1
-        ))
-        masking = numpy.empty((
-            min(window_batch_size, numpy.shape(X)[2] - window + 1),
-            numpy.shape(X)[1], window
-        ))
-        for b in range(numpy.shape(X)[0]):
-            for i in range(math.ceil(
-                (numpy.shape(X)[2] - window + 1) / window_batch_size)
-            ):
-                for j in range(
-                    i * window_batch_size,
-                    min(
-                        (i + 1) * window_batch_size,
-                        numpy.shape(X)[2] - window + 1
-                    )
-                ):
-                    j0 = j - i * window_batch_size
-                    masking[j0, :, :] = X[b, :, j: j + window]
-                features[
-                    b, :, i * window_batch_size: (i + 1) * window_batch_size
-                ] = numpy.swapaxes(
-                    self.encode(masking[:j0 + 1], batch_size=batch_size), 0, 1
-                )
-        return features
+    def encode_windows(self, windows):
+        # window: n_batch x dim x time
+        windows = torch.Tensor(windows).double()
+        if len(windows.size()) == 2:
+            windows = windows.unsqueeze(0)
+        return self.encoder(windows)
 
     def predict(self, X, batch_size=50):
         raise NotImplementedError("TBD")

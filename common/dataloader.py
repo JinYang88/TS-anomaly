@@ -5,6 +5,7 @@ import numpy as np
 import weka.core.jvm
 import weka.core.converters
 
+from IPython import embed
 def get_data_dim(dataset):
     if dataset == 'SMAP':
         return 25
@@ -15,7 +16,7 @@ def get_data_dim(dataset):
     else:
         raise ValueError('unknown dataset '+str(dataset))
 
-def load_SMD_dataset(path, dataset):
+def load_SMD_dataset(path, dataset, use_dim="all"):
     x_dim = get_data_dim(dataset)
 
     f = open(os.path.join(path, dataset + "_train.pkl"), "rb")
@@ -29,7 +30,11 @@ def load_SMD_dataset(path, dataset):
     f = open(os.path.join(path, dataset + "_test_label.pkl"), "rb")
     test_label = pickle.load(f).reshape((-1))
     f.close()
-
+    
+    if use_dim != "all":
+        train_data = train_data[:, use_dim].reshape(-1, 1)
+        test_data = test_data[:, use_dim].reshape(-1, 1)
+    
     return (train_data, None), (test_data, test_label)
 
     
