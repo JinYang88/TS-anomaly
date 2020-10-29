@@ -1,5 +1,5 @@
 {
-    "window_size": 30,
+    "window_size": 45,
     "batch_size": 64,
     "channels": 40,
     "compared_length": null,
