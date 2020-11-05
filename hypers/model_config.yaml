@@ -12,7 +12,7 @@ casualCnn:
     channels: 40
     depth: 2
     in_channels: 1 # 输入有几维度KPI
-    kernel_size: 3 # 同时考虑多少个词
+    kernel_size: 3 # 同时考虑多少个token
     out_channels: 64
     reduced_size: 32
     embedding_dim: 10
