@@ -53,7 +53,7 @@ if __name__ == '__main__':
     logging.info(print_to_json(params))
     # training
     encoder = scikit_wrappers.CausalCNNEncoder(vocab_size=vocab_size, **params)
-    # encoder.fit(train_iterator, save_memory=False, verbose=True)
+    encoder.fit(train_iterator, save_memory=False, verbose=True)
 
     encoder.save_encoder(prefix_path=os.path.join(params["save_path"]))
 
