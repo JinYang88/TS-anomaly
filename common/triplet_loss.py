@@ -83,6 +83,7 @@ class TripletLoss(torch.nn.modules.loss._Loss):
                 beginning_batches[j]: beginning_batches[j] + random_length
             ] for j in range(batch_size)]
         ).to(self.device))  # Anchors representations
+        
 
         positive_representation = encoder(torch.cat(
             [batch[
