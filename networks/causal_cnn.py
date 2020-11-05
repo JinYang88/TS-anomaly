@@ -139,12 +139,10 @@ class CausalConvolutionBlock(nn.Module):
             in_channels, out_channels, 1
         ) if in_channels != out_channels else None
 
-        print("in: {} out: {}".format(in_channels, out_channels))
         # Final activation function
         self.relu = nn.LeakyReLU() if final else None
 
     def forward(self, x):
-        embed()
         out_causal = self.causal(x.double())
         res = x if self.upordownsample is None else self.upordownsample(x)
         if self.relu is None:
