@@ -44,9 +44,11 @@
 
 
 import torch
+from torch import nn
 from IPython import embed
 
-class Chomp1d(torch.nn.Module):
+
+class Chomp(nn.Module):
     """
     Removes the last elements of a time series.
 
@@ -57,15 +59,20 @@ class Chomp1d(torch.nn.Module):
 
     @param chomp_size Number of elements to remove.
     """
-    def __init__(self, chomp_size):
-        super(Chomp1d, self).__init__()
+    def __init__(self, chomp_size, dim=1):
+        super(Chomp, self).__init__()
         self.chomp_size = chomp_size
+        self.dim = dim
 
     def forward(self, x):
-        return x[:, :, :-self.chomp_size]
+        if self.dim == 1:
+            return x[:, :, :-self.chomp_size]
+        elif self.dim == 2:
+            return x[:, :, :-self.chomp_size[0], :-self.chomp_size[1]]
+    
 
 
-class SqueezeChannels(torch.nn.Module):
+class SqueezeChannels(nn.Module):
     """
     Squeezes, in a three-dimensional tensor, the third dimension.
     """
@@ -76,7 +83,7 @@ class SqueezeChannels(torch.nn.Module):
         return x.squeeze(2)
 
 
-class CausalConvolutionBlock(torch.nn.Module):
+class CausalConvolutionBlock(nn.Module):
     """
     Causal convolution block, composed sequentially of two causal convolutions
     (with leaky ReLU activation functions), and a parallel residual connection.
@@ -91,42 +98,52 @@ class CausalConvolutionBlock(torch.nn.Module):
     @param dilation Dilation parameter of non-residual convolutions.
     @param final Disables, if True, the last activation function.
     """
-    def __init__(self, in_channels, out_channels, kernel_size, dilation,
-                 final=False):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation, embedding_dim, final=False):
         super(CausalConvolutionBlock, self).__init__()
 
         # Computes left padding so that the applied convolutions are causal
-        padding = (kernel_size - 1) * dilation
-
+        if embedding_dim is not None:
+            kernel_size = (kernel_size, embedding_dim)
+            padding = ((kernel_size[0] - 1) * dilation, (kernel_size[1] - 1) * dilation)
+            conv_func = "Conv2d"
+            chomp_dim = 2
+        else:
+            padding = (kernel_size - 1) * dilation
+            conv_func = "Conv1d"
+            chomp_dim = 1
+            
         # First causal convolution
-        conv1 = torch.nn.utils.weight_norm(torch.nn.Conv1d(
+        conv1 = nn.utils.weight_norm(getattr(nn, conv_func)(
             in_channels, out_channels, kernel_size,
             padding=padding, dilation=dilation
         ))
         # The truncation makes the convolution causal
-        chomp1 = Chomp1d(padding)
-        relu1 = torch.nn.LeakyReLU()
+        chomp1 = Chomp(padding, dim=chomp_dim)
+        relu1 = nn.LeakyReLU()
 
         # Second causal convolution
-        conv2 = torch.nn.utils.weight_norm(torch.nn.Conv1d(
+        conv2 = nn.utils.weight_norm(getattr(nn, conv_func)(
             out_channels, out_channels, kernel_size,
             padding=padding, dilation=dilation
         ))
-        chomp2 = Chomp1d(padding)
-        relu2 = torch.nn.LeakyReLU()
+        chomp2 = Chomp(padding, dim=chomp_dim)
+        relu2 = nn.LeakyReLU()
 
         # Causal network
-        self.causal = torch.nn.Sequential(
-            conv1, chomp1, relu1, conv2, chomp2, relu2
-        )
+        self.causal = nn.Sequential(
+            conv1, relu1, chomp1, conv2, chomp2, relu2
+        ) # last_dim = 
+        # conv2, chomp2, relu2
+
 
         # Residual connection
-        self.upordownsample = torch.nn.Conv1d(
+        self.upordownsample = getattr(nn, conv_func)(
             in_channels, out_channels, 1
         ) if in_channels != out_channels else None
 
+        print("in: {} out: {}".format(in_channels, out_channels))
         # Final activation function
-        self.relu = torch.nn.LeakyReLU() if final else None
+        self.relu = nn.LeakyReLU() if final else None
 
     def forward(self, x):
         out_causal = self.causal(x.double())
@@ -137,7 +154,7 @@ class CausalConvolutionBlock(torch.nn.Module):
             return self.relu(out_causal + res)
 
 
-class CausalCNN(torch.nn.Module):
+class CausalCNN(nn.Module):
     """
     Causal CNN, composed of a sequence of causal convolution blocks.
 
@@ -153,7 +170,7 @@ class CausalCNN(torch.nn.Module):
     @param kernel_size Kernel size of the applied non-residual convolutions.
     """
     def __init__(self, in_channels, channels, depth, out_channels,
-                 kernel_size):
+                 kernel_size, embedding_dim):
         super(CausalCNN, self).__init__()
 
         layers = []  # List of causal convolution blocks
@@ -162,22 +179,22 @@ class CausalCNN(torch.nn.Module):
         for i in range(depth):
             in_channels_block = in_channels if i == 0 else channels
             layers += [CausalConvolutionBlock(
-                in_channels_block, channels, kernel_size, dilation_size
+                in_channels_block, channels, kernel_size, dilation_size, embedding_dim
             )]
             dilation_size *= 2  # Doubles the dilation size at each step
 
         # Last layer
         layers += [CausalConvolutionBlock(
-            channels, out_channels, kernel_size, dilation_size
+            channels, out_channels, kernel_size, dilation_size, embedding_dim
         )]
 
-        self.network = torch.nn.Sequential(*layers)
+        self.network = nn.Sequential(*layers)
 
     def forward(self, x):
         return self.network(x.double())
 
 
-class CausalCNNEncoder(torch.nn.Module):
+class CausalCNNEncoder(nn.Module):
     """
     Encoder of a time series using a causal CNN: the computed representation is
     the output of a fully connected layer applied to the output of an adaptive
@@ -197,17 +214,25 @@ class CausalCNNEncoder(torch.nn.Module):
     @param kernel_size Kernel size of the applied non-residual convolutions.
     """
     def __init__(self, in_channels, channels, depth, reduced_size,
-                 out_channels, kernel_size):
+                 out_channels, kernel_size, vocab_size=None, embedding_dim=None, **kwargs):
         super(CausalCNNEncoder, self).__init__()
         causal_cnn = CausalCNN(
-            in_channels, channels, depth, reduced_size, kernel_size
-        )
-        reduce_size = torch.nn.AdaptiveMaxPool1d(1)
+            in_channels, channels, depth, reduced_size, kernel_size, embedding_dim)
+        reduce_size = nn.AdaptiveMaxPool1d(1)
         squeeze = SqueezeChannels()  # Squeezes the third dimension (time)
-        linear = torch.nn.Linear(reduced_size, out_channels)
-        self.network = torch.nn.Sequential(
+        linear = nn.Linear(reduced_size, out_channels)
+        self.network = nn.Sequential(
             causal_cnn, reduce_size, squeeze, linear
         )
+        self.vocab_size = vocab_size
+        self.embedding_dim = embedding_dim
+
+        if vocab_size is not None and embedding_dim is not None:
+            self.embedder = nn.Embedding(vocab_size, embedding_dim)
 
     def forward(self, x):
+        # x: b x dim x window_size
+        if self.vocab_size is not None and self.embedding_dim is not None:
+            x = self.embedder(x.long()) # b x dim x window_size x embed_dim
+
         return self.network(x)

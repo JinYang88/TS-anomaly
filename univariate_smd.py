@@ -25,11 +25,11 @@ import pandas
 import logging
 
 from IPython import embed
+from common import scikit_wrappers, preprocessor 
+from common.utils import print_to_json
 from common.dataloader import load_SMD_dataset
-from common import scikit_wrappers
 from common.sliding import BatchSlidingWindow, WindowIterator
-from common.preprocessor import preprocess_SMD
-from common.config import parse_arguments, set_logger
+from common.config import parse_arguments, set_logger, load_config
 
 
 # python univariate_smd.py 
@@ -37,26 +37,27 @@ if __name__ == '__main__':
     args = parse_arguments()
     set_logger(args)
     logging.info("Proceeding using {}...".format(args.device))
-
-    # load config
-    with open(os.path.join(args.hyper), 'r') as hf:
-        params = json.load(hf)
     
+    # load config
+    params = load_config("./hypers/", args)
+
     # load & preprocess data
-    data_dict = load_SMD_dataset(args.path, args.dataset, use_dim=0)
-    train_windows, test_windows = preprocess_SMD(data_dict, window_size=params["window_size"])
+    data_dict = load_SMD_dataset(params["path"], params["dataset"],use_dim=0)
+    data_dict = preprocessor.discretize(data_dict)
+    vocab_size = preprocessor.build_vocab(data_dict)
+    train_windows, test_windows = preprocessor.preprocess_SMD(data_dict, window_size=params["window_size"])
     train_iterator = WindowIterator(train_windows, batch_size=params["batch_size"], shuffle=True)
     test_iterator = WindowIterator(test_windows, batch_size=params["batch_size"], shuffle=False)
     params['in_channels'] = data_dict["dim"]
 
+    logging.info(print_to_json(params))
     # training
-    encoder = scikit_wrappers.CausalCNNEncoder()
-    encoder.set_params(**params)
+    encoder = scikit_wrappers.CausalCNNEncoder(vocab_size=vocab_size, **params)
     encoder.fit(
         train_iterator, save_memory=False, verbose=True
     )
 
-
+    # inference
     features = encoder.encode(test_iterator, batch_size=1000)
     logging.info("final features have shape: {}".format(features.shape))
     
