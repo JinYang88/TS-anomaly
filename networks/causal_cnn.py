@@ -144,6 +144,7 @@ class CausalConvolutionBlock(nn.Module):
         self.relu = nn.LeakyReLU() if final else None
 
     def forward(self, x):
+        embed()
         out_causal = self.causal(x.double())
         res = x if self.upordownsample is None else self.upordownsample(x)
         if self.relu is None:
