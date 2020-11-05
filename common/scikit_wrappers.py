@@ -16,6 +16,7 @@
 # under the License.
 
 import joblib
+import logging
 import math
 import numpy
 import torch
@@ -82,7 +83,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         # Encoder training
         while i < self.nb_steps:
             if verbose:
-                print('Epoch: ', epochs + 1)
+                logging.info('Epoch: {}'.format(epochs + 1))
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
                 batch = batch.to(self.device)
@@ -99,29 +100,26 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                 self.optimizer.step()
                 i += 1
                 if i % 10 == 0:
-                    print("Step: {}, loss: {:.3f}".format(i, loss.item()))
+                    logging.info("Step: {}, loss: {:.3f}".format(i, loss.item()))
                 if i >= self.nb_steps:
                     break
             epochs += 1
         return self
 
 
-    def encode(self, bacher, X, batch_size=50):
+    def encode(self, iterator, batch_size=50):
         # Check if the given time series have unequal lengths
-        varying = bool(numpy.isnan(numpy.sum(X)))
-
-        test_generator = bacher.get_iterator(X) 
-
+        varying = False
         features = []
         self.encoder = self.encoder.eval()
 
         with torch.no_grad():
             if not varying:
-                for batch in test_generator:
+                for batch in iterator:
                     batch = batch.to(self.device)
                     features.append(self.encoder(batch))
             else:
-                for batch in test_generator:
+                for batch in iterator:
                     batch = batch.to(self.device)
                     length = batch.size(2) - torch.sum(
                         torch.isnan(batch[0, 0])

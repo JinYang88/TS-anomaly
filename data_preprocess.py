@@ -14,7 +14,7 @@ def load_and_save(category, filename, dataset, dataset_folder):
     temp = np.genfromtxt(os.path.join(dataset_folder, category, filename),
                          dtype=np.float32,
                          delimiter=',')
-    print(dataset, category, filename, temp.shape)
+    logging.info(dataset, category, filename, temp.shape)
     with open(os.path.join(output_folder, dataset + "_" + category + ".pkl"), "wb") as file:
         dump(temp, file)
 
@@ -46,7 +46,7 @@ def load_data(dataset):
                 label[anomaly[0]:anomaly[1] + 1] = True
             labels.extend(label)
         labels = np.asarray(labels)
-        print(dataset, 'test_label', labels.shape)
+        logging.info(dataset, 'test_label', labels.shape)
         with open(os.path.join(output_folder, dataset + "_" + 'test_label' + ".pkl"), "wb") as file:
             dump(labels, file)
 
@@ -57,7 +57,7 @@ def load_data(dataset):
                 temp = np.load(os.path.join(dataset_folder, category, filename + '.npy'))
                 data.extend(temp)
             data = np.asarray(data)
-            print(dataset, category, data.shape)
+            logging.info(dataset, category, data.shape)
             with open(os.path.join(output_folder, dataset + "_" + category + ".pkl"), "wb") as file:
                 dump(data, file)
 
@@ -74,7 +74,7 @@ if __name__ == '__main__':
             if d in datasets:
                 load_data(d)
     else:
-        print("""
+        logging.info("""
         Usage: python data_preprocess.py <datasets>
         where <datasets> should be one of ['SMD', 'SMAP', 'MSL']
         """)

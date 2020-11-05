@@ -86,7 +86,7 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     if args.cuda and not torch.cuda.is_available():
-        print("CUDA is not available, proceeding without it...")
+        logging.info("CUDA is not available, proceeding without it...")
         args.cuda = False
 
     train, train_labels, test, test_labels = load_UCR_dataset(
@@ -108,7 +108,7 @@ if __name__ == '__main__':
         encoder.set_params(**hp_dict)
         encoder.load_encoder("./checkpoints/test")
 
-    print(test.shape)
+    logging.info(test.shape)
     features = encoder.encode(test)
-    print(features.shape)
+    logging.info(features.shape)
     
