@@ -4,7 +4,7 @@ Base:
     compared_length: null
     penalty: null
     negative_penalty: 1
-    nb_steps: 500
+    nb_steps: 600
     lr: 0.001
     nb_random_samples: 5
 

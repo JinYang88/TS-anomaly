@@ -45,22 +45,22 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
             compared_length, nb_random_samples, negative_penalty, device)
         self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
 
-    def save_encoder(self, prefix_file):
+    def save_encoder(self, prefix_path):
         try:
             torch.save(
             self.encoder.state_dict(),
-            prefix_file + '_' + self.architecture + '_encoder.pth'
+            prefix_path + '_' + self.architecture + '_encoder.pth'
         )
         except:
             torch.save(
             self.encoder.state_dict(),
-            prefix_file + '_' + self.architecture + '_encoder.pth',
+            prefix_path + '_' + self.architecture + '_encoder.pth',
             _use_new_zipfile_serialization=False 
         )
 
-    def load_encoder(self, prefix_file):
+    def load_encoder(self, prefix_path):
         self.encoder.load_state_dict(torch.load(
-                prefix_file + '_' + self.architecture + '_encoder.pth',
+                prefix_path + '_' + self.architecture + '_encoder.pth',
                 map_location=self.device)
                 )
 

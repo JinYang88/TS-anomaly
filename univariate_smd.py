@@ -53,11 +53,11 @@ if __name__ == '__main__':
     logging.info(print_to_json(params))
     # training
     encoder = scikit_wrappers.CausalCNNEncoder(vocab_size=vocab_size, **params)
-    encoder.fit(
-        train_iterator, save_memory=False, verbose=True
-    )
+    # encoder.fit(train_iterator, save_memory=False, verbose=True)
+
+    encoder.save_encoder(prefix_path=os.path.join(params["save_path"]))
 
     # inference
-    features = encoder.encode(test_iterator, batch_size=1000)
+    features = encoder.encode(test_iterator.loader)
     logging.info("final features have shape: {}".format(features.shape))
     
