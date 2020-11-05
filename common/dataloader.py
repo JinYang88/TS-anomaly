@@ -6,12 +6,15 @@ import weka.core.jvm
 import weka.core.converters
 
 from IPython import embed
+from glob import glob
+from collections import defaultdict
+
 def get_data_dim(dataset):
     if dataset == 'SMAP':
         return 25
     elif dataset == 'MSL':
         return 55
-    elif str(dataset).startswith('machine'):
+    elif dataset == 'SMD' or str(dataset).startswith('machine'):
         return 38
     else:
         raise ValueError('unknown dataset '+str(dataset))
@@ -19,23 +22,43 @@ def get_data_dim(dataset):
 def load_SMD_dataset(path, dataset, use_dim="all"):
     x_dim = get_data_dim(dataset)
 
-    f = open(os.path.join(path, dataset + "_train.pkl"), "rb")
-    train_data = pickle.load(f).reshape((-1, x_dim))
-    f.close()
+    if str(dataset).startswith('machine'):
+        prefix = dataset
+    else:
+        prefix = "*"
 
-    f = open(os.path.join(path, dataset + "_test.pkl"), "rb")
-    test_data = pickle.load(f).reshape((-1, x_dim))
-    f.close()
+    train_files = glob(os.path.join(path, prefix + "_train.pkl"))
+    test_files = glob(os.path.join(path, prefix + "_test.pkl"))
+    label_files = glob(os.path.join(path, prefix + "_test_label.pkl"))
 
-    f = open(os.path.join(path, dataset + "_test_label.pkl"), "rb")
-    test_label = pickle.load(f).reshape((-1))
-    f.close()
+    data_dict = defaultdict(dict)
+    data_dict["dim"] = x_dim if use_dim == "all" else 1
+    for idx, f_name in enumerate(train_files):
+        machine_name = os.path.basename(f_name).split("_")[0]
+        f = open(f_name, "rb")
+        train_data = pickle.load(f).reshape((-1, x_dim))
+        f.close()
+        if use_dim != "all":
+            train_data = train_data[:, use_dim].reshape(-1, 1)
+        data_dict[machine_name]["train"] = train_data
+
+    for idx, f_name in enumerate(test_files):
+        machine_name = os.path.basename(f_name).split("_")[0]
+        f = open(f_name, "rb")
+        test_data = pickle.load(f).reshape((-1, x_dim))
+        f.close()
+        if use_dim != "all":
+            test_data = test_data[:, use_dim].reshape(-1, 1)
+        data_dict[machine_name]["test"] = test_data
+
+    for idx, f_name in enumerate(label_files):
+        machine_name = os.path.basename(f_name).split("_")[0]
+        f = open(f_name, "rb")
+        test_label = pickle.load(f).reshape((-1))
+        f.close()
+        data_dict[machine_name]["test_label"] = test_label
     
-    if use_dim != "all":
-        train_data = train_data[:, use_dim].reshape(-1, 1)
-        test_data = test_data[:, use_dim].reshape(-1, 1)
-    
-    return (train_data, None), (test_data, test_label)
+    return data_dict
 
     
 

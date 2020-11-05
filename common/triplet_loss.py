@@ -18,6 +18,7 @@
 
 import torch
 import numpy
+from IPython import embed
 
 
 class TripletLoss(torch.nn.modules.loss._Loss):
@@ -31,6 +32,10 @@ class TripletLoss(torch.nn.modules.loss._Loss):
         self.device = device
 
     def forward(self, batch, encoder, train, save_memory=False):
+        '''
+            pos segments are chosen from the same **window** of data
+            neg segments are sampled from total train data
+        '''
         batch_size = batch.size(0)
         train_size = train.size(0)
         length = min(self.compared_length, train.size(2))
@@ -51,6 +56,7 @@ class TripletLoss(torch.nn.modules.loss._Loss):
         random_length = numpy.random.randint(
             length_pos_neg, high=length + 1
         )  # Length of anchors
+
         beginning_batches = numpy.random.randint(
             0, high=length - random_length + 1, size=batch_size
         )  # Start of anchors

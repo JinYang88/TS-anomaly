@@ -27,26 +27,31 @@ import argparse
 from IPython import embed
 from common.dataloader import load_SMD_dataset
 from common import scikit_wrappers
-from common.sliding import BatchSlidingWindow
+from common.sliding import BatchSlidingWindow, WindowIterator
+from common.preprocessor import preprocess_SMD
 
-def fit_hyperparameters(file, train, device,
+def fit_hyperparameters(file, data_dict, device,
                         save_memory=False):
 
-    classifier = scikit_wrappers.CausalCNNEncoder()
+    encoder = scikit_wrappers.CausalCNNEncoder()
 
     # Loads a given set of hyperparameters and fits a model with those
     hf = open(os.path.join(file), 'r')
     params = json.load(hf)
     hf.close()
     # Check the number of input channels
-    params['in_channels'] = numpy.shape(train)[1]
+    params['in_channels'] = data_dict["dim"]
     params['device'] = device
-    classifier.set_params(**params)
+    encoder.set_params(**params)
 
-    train_windows_batcher = BatchSlidingWindow(train.shape[0], window_size=params["window_size"], batch_size=params["batch_size"], shuffle=True)
+    # preprocess
+    # output: train_windows test_windows
+    train_windows, test_windows = preprocess_SMD(data_dict, window_size=params["window_size"])
 
-    return classifier.fit(
-        train_windows_batcher, train, save_memory=save_memory, verbose=True
+    train_iterator = WindowIterator(train_windows, batch_size=params["batch_size"], shuffle=True)
+
+    return encoder.fit(
+        train_iterator, save_memory=save_memory, verbose=True
     )
 
 
@@ -73,20 +78,18 @@ def parse_arguments():
     os.makedirs(args.save_path, exist_ok=True)
     return args
 
-# for cuda
-# python univariate.py --path ./datasets/ucr/ --dataset Worms --save_path ./checkpoints --hyper default_hyperparameters.json --cuda --gpu 0
 
-# python univariate_smd.py --path  --dataset machine-1-1 --save_path ./checkpoints --hyper default_hyperparameters.json 
+# python univariate_smd.py 
 
 if __name__ == '__main__':
     args = parse_arguments()
     print("Proceeding using {}...".format(args.device))
 
-    (train, _,), (test, test_labels) = load_SMD_dataset(args.path, args.dataset, use_dim=0)
+    data_dict = load_SMD_dataset(args.path, args.dataset, use_dim=0)
 
     if not args.load:
         encoder = fit_hyperparameters(
-                args.hyper, train, args.device
+                args.hyper, data_dict, args.device
             )
         encoder.save_encoder(os.path.join(args.save_path, "test"))
     else:
@@ -98,6 +101,7 @@ if __name__ == '__main__':
         encoder.set_params(**hp_dict)
         encoder.load_encoder(os.path.join(args.save_path, "test"))
 
+    test = data_dict["machine-1-1"]["test"]
     test_windows_batcher = BatchSlidingWindow(test.shape[0],window_size=encoder.window_size, batch_size=1000, shuffle=False)
 
     print(test.shape)

@@ -1,6 +1,15 @@
 import torch
 import numpy as np
 from IPython import embed
+from torch.utils.data import DataLoader
+
+class WindowIterator():
+    def __init__(self, windows, batch_size, shuffle, num_workers=2):
+        self.windows = windows
+        self.loader = DataLoader(windows, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, persistent_workers=True)
+
+    def fetch_windows(self):
+        return self.windows
 
 class BatchSlidingWindow(object):
     """
@@ -25,8 +34,7 @@ class BatchSlidingWindow(object):
             (default :obj:`False`)
     """
 
-    def __init__(self, array_size, window_size, batch_size, excludes=None,
-                 shuffle=False, ignore_incomplete_batch=False):
+    def __init__(self, array_size, window_size, batch_size, excludes=None, shuffle=False, ignore_incomplete_batch=False):
         # check the parameters
         if window_size < 1:
             raise ValueError('`window_size` must be at least 1')
@@ -100,10 +108,7 @@ class BatchSlidingWindow(object):
             batch_size=self._batch_size,
             ignore_incomplete_batch=self._ignore_incomplete_batch):
             idx = self._indices[s] + self._offsets
-            yield torch.Tensor(tuple(a[idx] if len(a.shape) == 1 else a[idx, :] for a in arrays)).transpose(0,1)
-  
-
-
+            yield torch.Tensor(tuple(a[idx] if len(a.shape) == 1 else a[idx, :] for a in arrays)).transpose(0,1) 
 
 def minibatch_slices_iterator(length, batch_size,
                               ignore_incomplete_batch=False):

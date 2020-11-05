@@ -72,14 +72,10 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                 map_location=self.device)
                 )
 
-    def fit(self, batcher, X, save_memory=False, verbose=False):
+    def fit(self, train_iterator, save_memory=False, verbose=False):
         # Check if the given time series have unequal lengths
-        varying = bool(numpy.isnan(numpy.sum(X)))
-        train = batcher.get_windows(X)
-    
-        train_generator = batcher.get_iterator(X)
         varying = False
-
+        train = train_iterator.fetch_windows()
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
 
@@ -87,7 +83,8 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         while i < self.nb_steps:
             if verbose:
                 print('Epoch: ', epochs + 1)
-            for idx, batch in enumerate(train_generator):
+            for idx, batch in enumerate(train_iterator.loader):
+                # batch: b x d x dim
                 batch = batch.to(self.device)
                 self.optimizer.zero_grad()
                 if not varying:
