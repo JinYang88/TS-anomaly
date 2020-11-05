@@ -132,9 +132,7 @@ class CausalConvolutionBlock(nn.Module):
         # Causal network
         self.causal = nn.Sequential(
             conv1, relu1, chomp1, conv2, chomp2, relu2
-        ) # last_dim = 
-        # conv2, chomp2, relu2
-
+        ) 
 
         # Residual connection
         self.upordownsample = getattr(nn, conv_func)(
