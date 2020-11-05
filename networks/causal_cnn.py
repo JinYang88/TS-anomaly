@@ -188,7 +188,8 @@ class CausalCNN(nn.Module):
         self.network = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.network(x.double())
+        x = self.network(x.double()).sum(dim=2)
+        return x
 
 
 class CausalCNNEncoder(nn.Module):
@@ -232,4 +233,7 @@ class CausalCNNEncoder(nn.Module):
         if self.vocab_size is not None and self.embedding_dim is not None:
             x = self.embedder(x.long()) # b x dim x window_size x embed_dim
 
-        return self.network(x)
+        # for item in self.network:
+        #     embed()
+        #     x = item(x)
+        return self.network(x) # b x feature_dim
