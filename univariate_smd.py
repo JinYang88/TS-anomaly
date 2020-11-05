@@ -32,13 +32,6 @@ from common.preprocessor import preprocess_SMD
 from common.config import parse_arguments, set_logger
 
 
-
-    # preprocess
-    # output: train_windows test_windows
-
-    return 
-
-
 # python univariate_smd.py 
 if __name__ == '__main__':
     args = parse_arguments()
@@ -46,7 +39,7 @@ if __name__ == '__main__':
     logging.info("Proceeding using {}...".format(args.device))
 
     # load config
-    with open(os.path.join(args.hyper), 'r') as hf
+    with open(os.path.join(args.hyper), 'r') as hf:
         params = json.load(hf)
     
     # load & preprocess data
@@ -60,7 +53,7 @@ if __name__ == '__main__':
     encoder = scikit_wrappers.CausalCNNEncoder()
     encoder.set_params(**params)
     encoder.fit(
-        train_iterator, save_memory=save_memory, verbose=True
+        train_iterator, save_memory=False, verbose=True
     )
 
 
