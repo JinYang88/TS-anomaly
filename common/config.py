@@ -30,11 +30,35 @@ def parse_arguments():
     return args
 
 
-def set_logger(args):
-    log_dir = args.save_path
+def initialize_config(config_dir, args):
+    params = dict()
+    model_configs = glob.glob(os.path.join(config_dir, '*/*.yaml')) + glob.glob(os.path.join(config_dir, '*.yaml'))
+    if not model_configs:
+        raise RuntimeError('config_dir={} is not valid!'.format(config_dir))
+    found_params = find_config(model_configs, args.expid)
+    base_config = found_params.get('Base', {})
+    model_config = found_params.get(args.expid) 
+    params.update(base_config)
+    params.update(model_config)
+    params.update(vars(args))
+
+    log_dir, trial_id = set_logger(params)
+
+    with open(os.path.join(log_dir, "model_config.yaml"), "w") as fr:
+        yaml.dump(found_params, fr) 
+
+    # update save_path
+    params["save_path"] = log_dir
+    params["trial_id"] = trial_id
+    return params
+
+
+def set_logger(params):
     trial_id = nni.get_trial_id()
     if trial_id == "STANDALONE":
         trial_id = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
+    log_dir = os.path.join(params["save_path"], trial_id)
+    os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, "{}.log".format(trial_id))
 
     # logs will not show in the file without the two lines.
@@ -45,6 +69,7 @@ def set_logger(args):
                         handlers=[logging.FileHandler(log_file),
                                   logging.StreamHandler()])
 
+    return log_dir, trial_id
 
 
 def find_config(model_configs, experiment_id):
@@ -59,37 +84,3 @@ def find_config(model_configs, experiment_id):
         if len(found_params) == 2:
             break
     return found_params
-    
-
-def load_config(config_dir, args):
-    params = dict()
-    model_configs = glob.glob(os.path.join(config_dir, '*/*.yaml')) + glob.glob(os.path.join(config_dir, '*.yaml'))
-    if not model_configs:
-        raise RuntimeError('config_dir={} is not valid!'.format(config_dir))
-
-    found_params = find_config(model_configs, args.expid)
-    base_config = found_params.get('Base', {})
-    model_config = found_params.get(args.expid) 
-    params.update(base_config)
-    params.update(model_config)
-    params.update(vars(args))
-    return params
-    # if 'dataset_id' not in params:
-    #     raise RuntimeError('experiment_id={} is not valid in config.'.format(experiment_id))
-    # params['model_id'] = experiment_id
-    
-    # dataset_id = params['dataset_id']
-    # dataset_configs = glob.glob(os.path.join(config_dir, 'dataset_config.yaml'))
-    # if not dataset_configs:
-    #     dataset_configs = glob.glob(os.path.join(config_dir, 'dataset_config/*.yaml'))
-    # for config in dataset_configs:
-    #     with open(config, 'r', encoding="utf-8") as cfg:
-    #         config_dict = yaml.safe_load(cfg)
-    #         if dataset_id in config_dict:
-    #             dataset_config_dict = config_dict[dataset_id]
-    #             params.update(dataset_config_dict)
-    #             break
-    
-    # assert len(set(extra_params.keys()) - set(params.keys())) == 0
-    # params.update(extra_params) # update params in dataset config
-            

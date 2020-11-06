@@ -29,17 +29,15 @@ from common import scikit_wrappers, preprocessor
 from common.utils import print_to_json
 from common.dataloader import load_SMD_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
-from common.config import parse_arguments, set_logger, load_config
+from common.config import parse_arguments, set_logger, initialize_config
 
 
 # python univariate_smd.py 
 if __name__ == '__main__':
     args = parse_arguments()
-    set_logger(args)
-    logging.info("Proceeding using {}...".format(args.device))
     
     # load config
-    params = load_config("./hypers/", args)
+    params = initialize_config("./hypers/", args)
 
     # load & preprocess data
     data_dict = load_SMD_dataset(params["path"], params["dataset"],use_dim=0)
@@ -50,12 +48,13 @@ if __name__ == '__main__':
     test_iterator = WindowIterator(test_windows, batch_size=params["batch_size"], shuffle=False)
     params['in_channels'] = data_dict["dim"]
 
+    logging.info("Proceeding using {}...".format(params["device"]))
     logging.info(print_to_json(params))
     # training
     encoder = scikit_wrappers.CausalCNNEncoder(vocab_size=vocab_size, **params)
     encoder.fit(train_iterator, save_memory=False, verbose=True)
 
-    encoder.save_encoder(prefix_path=os.path.join(params["save_path"]))
+    encoder.save_encoder()
 
     # inference
     features = encoder.encode(test_iterator.loader)

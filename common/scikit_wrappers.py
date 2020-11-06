@@ -26,43 +26,47 @@ import sklearn.externals
 import sklearn.model_selection
 import networks
 import sys
-
+import os
 from common import triplet_loss
 from IPython import embed
 
 class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                                   sklearn.base.ClassifierMixin):
-    def __init__(self, compared_length, nb_random_samples, negative_penalty,batch_size, nb_steps, lr, encoder, device="cpu", **kwargs):
+    def __init__(self, architecture, save_path, trial_id, compared_length, nb_random_samples, negative_penalty,batch_size, nb_steps, lr, encoder, device="cpu", **kwargs):
+        self.architecture = architecture
+        self.save_path = save_path
+        self.trial_id = trial_id
+        self.model_save_file = os.path.join(self.save_path, "{}_{}.pth".format(self.architecture, self.trial_id))
+
         self.device = device
-        self.architecture = ''
         self.batch_size = batch_size
         self.nb_steps = nb_steps
         self.lr = lr
         self.encoder = encoder
+
         self.loss = triplet_loss.TripletLoss(
             compared_length, nb_random_samples, negative_penalty, device)
         self.loss_varying = triplet_loss.TripletLossVaryingLength(
             compared_length, nb_random_samples, negative_penalty, device)
         self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
 
-    def save_encoder(self, prefix_path):
+    def save_encoder(self):
+        logging.info("Saving model to {}".format(self.model_save_file))
         try:
             torch.save(
             self.encoder.state_dict(),
-            prefix_path + '_' + self.architecture + '_encoder.pth'
+            self.model_save_file,
+            _use_new_zipfile_serialization=False 
         )
         except:
             torch.save(
             self.encoder.state_dict(),
-            prefix_path + '_' + self.architecture + '_encoder.pth',
-            _use_new_zipfile_serialization=False 
+            self.model_save_file
         )
 
-    def load_encoder(self, prefix_path):
-        self.encoder.load_state_dict(torch.load(
-                prefix_path + '_' + self.architecture + '_encoder.pth',
-                map_location=self.device)
-                )
+    def load_encoder(self):
+        logging.info("Loading model from {}".format(self.model_save_file))
+        self.encoder.load_state_dict(torch.load(self.model_save_file,map_location=self.device))
 
     def fit(self, train_iterator, save_memory=False, verbose=False):
         # Check if the given time series have unequal lengths
@@ -139,8 +143,8 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
 class CausalCNNEncoder(TimeSeriesEncoder):
     def __init__(self, in_channels=1, channels=10, depth=1,reduced_size=10, out_channels=10, kernel_size=4, device="cpu", **kwargs):
         super(CausalCNNEncoder, self).__init__(
+            architecture="CausalCNN",
             encoder=self.__create_encoder(in_channels, channels, depth, reduced_size, out_channels, kernel_size, device, **kwargs), device=device, **kwargs)
-        self.architecture = 'CausalCNN'
         self.channels = channels
         self.depth = depth
         self.reduced_size = reduced_size
