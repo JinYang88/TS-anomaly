@@ -75,6 +75,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
 
+        logging.info("Start training for {} steps.".format(self.nb_steps))
         # Encoder training
         while i < self.nb_steps:
             if verbose:
@@ -84,7 +85,6 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                 batch = batch.to(self.device)
                 self.optimizer.zero_grad()
                 if not varying:
-                    # logging.info("computing loss..")
                     loss = self.loss(
                         batch, self.encoder, train, save_memory=save_memory
                     )
