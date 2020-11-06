@@ -38,27 +38,29 @@ def initialize_config(config_dir, args):
     found_params = find_config(model_configs, args["expid"])
     base_config = found_params.get('Base', {})
     model_config = found_params.get(args["expid"]) 
+    params.update(args)
     params.update(base_config)
     params.update(model_config)
-    params.update(args)
 
-    log_dir, trial_id = set_logger(params)
+    params = set_logger(params)
 
-    with open(os.path.join(log_dir, "model_config.yaml"), "w") as fr:
+    with open(os.path.join(params["save_path"], "model_config.yaml"), "w") as fr:
+        found_params["Base"]["save_path"] = params["save_path"]
+        found_params["Base"]["trial_id"] = params["trial_id"]
         yaml.dump(found_params, fr) 
-
-    # update save_path
-    params["save_path"] = log_dir
-    params["trial_id"] = trial_id
     return params
 
 
 def set_logger(params):
-    trial_id = nni.get_trial_id()
-    if trial_id == "STANDALONE":
-        trial_id = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
-    log_dir = os.path.join(params["save_path"], trial_id)
-    os.makedirs(log_dir, exist_ok=True)
+    if not params["load"]:
+        trial_id = nni.get_trial_id()
+        if trial_id == "STANDALONE":
+            trial_id = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
+        log_dir = os.path.join(params["save_path"], trial_id)
+        os.makedirs(log_dir, exist_ok=True)
+    else:
+        log_dir = params["save_path"]
+        trial_id = params["trial_id"]
     log_file = os.path.join(log_dir, "{}.log".format(trial_id))
 
     # logs will not show in the file without the two lines.
@@ -68,8 +70,10 @@ def set_logger(params):
                         format='%(asctime)s P%(process)d %(levelname)s %(message)s',
                         handlers=[logging.FileHandler(log_file),
                                   logging.StreamHandler()])
-
-    return log_dir, trial_id
+    # update save_path
+    params["save_path"] = log_dir
+    params["trial_id"] = trial_id
+    return params
 
 
 def find_config(model_configs, experiment_id):

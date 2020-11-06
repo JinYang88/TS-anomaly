@@ -54,9 +54,9 @@ if __name__ == '__main__':
     # training
     encoder = scikit_wrappers.CausalCNNEncoder(vocab_size=vocab_size, **params)
     if params["load"]:
-        encoder.load_encoder(params["load"])
+        encoder.load_encoder()
     else:
-        encoder.fit(train_iterator, save_memory=False, verbose=True)
+        # encoder.fit(train_iterator, save_memory=False, verbose=True)
         encoder.save_encoder()
 
     # inference
