@@ -19,7 +19,7 @@ def parse_arguments():
 
     parser.add_argument('--gpu', type=int, default=0, metavar='GPU', help='index of GPU used for computations (default: 0)')
     parser.add_argument('--expid', type=str, default="casualCnn",help='Expid in hypers')
-    parser.add_argument('--load', action='store_true', default=False,help='activate to load the estimator instead of training it')
+    parser.add_argument('--load', type=str, default="",help='Load a pretrained model from the specific directory')
 
     args = parser.parse_args()
     if args.gpu >= 0 and torch.cuda.is_available():
@@ -27,7 +27,7 @@ def parse_arguments():
     else:
         args.device = torch.device("cpu")
     os.makedirs(args.save_path, exist_ok=True)
-    return args
+    return vars(args)
 
 
 def initialize_config(config_dir, args):
@@ -35,12 +35,12 @@ def initialize_config(config_dir, args):
     model_configs = glob.glob(os.path.join(config_dir, '*/*.yaml')) + glob.glob(os.path.join(config_dir, '*.yaml'))
     if not model_configs:
         raise RuntimeError('config_dir={} is not valid!'.format(config_dir))
-    found_params = find_config(model_configs, args.expid)
+    found_params = find_config(model_configs, args["expid"])
     base_config = found_params.get('Base', {})
-    model_config = found_params.get(args.expid) 
+    model_config = found_params.get(args["expid"]) 
     params.update(base_config)
     params.update(model_config)
-    params.update(vars(args))
+    params.update(args)
 
     log_dir, trial_id = set_logger(params)
 

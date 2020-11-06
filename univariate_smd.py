@@ -37,7 +37,8 @@ if __name__ == '__main__':
     args = parse_arguments()
     
     # load config
-    params = initialize_config("./hypers/", args)
+    config_dir = "./hypers/" if not args["load"] else args["load"]
+    params = initialize_config(config_dir, args)
 
     # load & preprocess data
     data_dict = load_SMD_dataset(params["path"], params["dataset"],use_dim=0)
@@ -52,11 +53,13 @@ if __name__ == '__main__':
     logging.info(print_to_json(params))
     # training
     encoder = scikit_wrappers.CausalCNNEncoder(vocab_size=vocab_size, **params)
-    encoder.fit(train_iterator, save_memory=False, verbose=True)
-
-    encoder.save_encoder()
+    if params["load"]:
+        encoder.load_encoder(params["load"])
+    else:
+        encoder.fit(train_iterator, save_memory=False, verbose=True)
+        encoder.save_encoder()
 
     # inference
     features = encoder.encode(test_iterator.loader)
-    logging.info("final features have shape: {}".format(features.shape))
+    logging.info("Final features have shape: {}".format(features.shape))
     

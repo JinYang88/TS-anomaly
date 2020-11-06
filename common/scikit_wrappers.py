@@ -27,6 +27,7 @@ import sklearn.model_selection
 import networks
 import sys
 import os
+from glob import glob
 from common import triplet_loss
 from IPython import embed
 
@@ -64,9 +65,13 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
             self.model_save_file
         )
 
-    def load_encoder(self):
-        logging.info("Loading model from {}".format(self.model_save_file))
-        self.encoder.load_state_dict(torch.load(self.model_save_file,map_location=self.device))
+    def load_encoder(self, model_save_path=""):
+        if model_save_path:
+            model_save_file = glob(os.path.join(model_save_path, "*.pth"))[0]
+        else:
+            model_save_file = self.model_save_file
+        logging.info("Loading model from {}".format(model_save_file))
+        self.encoder.load_state_dict(torch.load(model_save_file, map_location=self.device))
 
     def fit(self, train_iterator, save_memory=False, verbose=False):
         # Check if the given time series have unequal lengths
