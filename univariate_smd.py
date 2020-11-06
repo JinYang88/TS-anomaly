@@ -56,7 +56,7 @@ if __name__ == '__main__':
     if params["load"]:
         encoder.load_encoder()
     else:
-        # encoder.fit(train_iterator, save_memory=False, verbose=True)
+        encoder.fit(train_iterator, save_memory=False, verbose=True)
         encoder.save_encoder()
 
     # inference
