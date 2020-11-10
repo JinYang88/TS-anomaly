@@ -73,7 +73,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         logging.info("Loading model from {}".format(model_save_file))
         self.encoder.load_state_dict(torch.load(model_save_file, map_location=self.device))
 
-    def fit(self, train_iterator, save_memory=False, verbose=False):
+    def fit(self, train_iterator, nb_steps_per_verbose=10, save_memory=False):
         # Check if the given time series have unequal lengths
         varying = False
         train = train_iterator.fetch_windows()
@@ -83,8 +83,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         logging.info("Start training for {} steps.".format(self.nb_steps))
         # Encoder training
         while i < self.nb_steps:
-            if verbose:
-                logging.info('Epoch: {}'.format(epochs + 1))
+            logging.info('Epoch: {}'.format(epochs + 1))
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
                 batch = batch.to(self.device)
@@ -100,7 +99,7 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
                 loss.backward()
                 self.optimizer.step()
                 i += 1
-                if i % 10 == 0:
+                if i % nb_steps_per_verbose == 0:
                     logging.info("Step: {}, loss: {:.3f}".format(i, loss.item()))
                 if i >= self.nb_steps:
                     break

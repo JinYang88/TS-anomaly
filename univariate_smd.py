@@ -27,7 +27,7 @@ import logging
 from IPython import embed
 from common import scikit_wrappers, preprocessor 
 from common.utils import print_to_json
-from common.dataloader import load_SMD_dataset
+from common.dataloader import load_SMD_dataset, load_CSV_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
 from common.config import parse_arguments, set_logger, initialize_config
 
@@ -41,7 +41,8 @@ if __name__ == '__main__':
     params = initialize_config(config_dir, args)
 
     # load & preprocess data
-    data_dict = load_SMD_dataset(params["path"], params["dataset"],use_dim=0)
+    data_dict = load_CSV_dataset(params["path"], test_ratio=0.2)
+    # data_dict = load_SMD_dataset(params["path"], params["dataset"],use_dim=0)
     data_dict = preprocessor.discretize(data_dict)
     vocab_size = preprocessor.build_vocab(data_dict)
     train_windows, test_windows = preprocessor.preprocess_SMD(data_dict, window_size=params["window_size"])
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     if params["load"]:
         encoder.load_encoder()
     else:
-        encoder.fit(train_iterator, save_memory=False, verbose=True)
+        encoder.fit(train_iterator, save_memory=False)
         encoder.save_encoder()
 
     # inference

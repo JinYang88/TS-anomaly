@@ -13,7 +13,9 @@ def parse_arguments():
 
     parser.add_argument('--dataset', type=str, metavar='D', default="machine-1-1", help='dataset name')
 
-    parser.add_argument('--path', type=str, metavar='PATH', default="./datasets/SMD/processed", help='path where the dataset is located')
+    # SMD: "./datasets/SMD/processed"
+    # Simulated: "./datasets/Simulated/simulated_p0.1.csv"
+    parser.add_argument('--path', type=str, metavar='PATH', default="./datasets/Simulated/simulated_p1.csv", help='path where the dataset is located')
 
     parser.add_argument('--save_path', type=str, metavar='PATH', default="./checkpoints", help='path where the estimator is/should be saved')
 

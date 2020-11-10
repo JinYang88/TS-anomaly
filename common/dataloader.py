@@ -19,6 +19,20 @@ def get_data_dim(dataset):
     else:
         raise ValueError('unknown dataset '+str(dataset))
 
+def load_CSV_dataset(path, test_ratio=0.2):
+    df = pd.read_csv(path)
+    train_size = int(df.shape[0] * (1-test_ratio))
+    train_df = df[:train_size]
+    test_df = df[train_size:]
+
+    data_dict = defaultdict(dict)
+    data_dict["dim"] = 1
+    for f_name in train_df.columns:
+        data_dict[f_name]["train"] = np.array(train_df[f_name]).reshape(-1,1)
+        data_dict[f_name]["test"] = np.array(test_df[f_name]).reshape(-1,1)
+
+    return data_dict
+
 def load_SMD_dataset(path, dataset, use_dim="all"):
     x_dim = get_data_dim(dataset)
 
@@ -61,7 +75,6 @@ def load_SMD_dataset(path, dataset, use_dim="all"):
     return data_dict
 
     
-
 def load_UCR_dataset(path, dataset):
     """
     Loads the UCR dataset given in input in numpy arrays.
