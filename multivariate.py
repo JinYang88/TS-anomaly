@@ -48,10 +48,10 @@ if __name__ == '__main__':
         vocab_size = pp.build_vocab(data_dict)
     pp.save(params["save_path"])
 
-    train_windows, test_windows, test_labels = data_preprocess.generate_windows(data_dict, window_size=params["window_size"], nrows=params["nrows"])
+    window_dict = data_preprocess.generate_windows(data_dict, window_size=params["window_size"], nrows=params["nrows"])
 
-    train_iterator = WindowIterator(train_windows, batch_size=params["batch_size"], shuffle=True)
-    test_iterator = WindowIterator(test_windows, batch_size=params["batch_size"], shuffle=False)
+    train_iterator = WindowIterator(window_dict["train_windows"], batch_size=params["batch_size"], shuffle=True)
+    test_iterator = WindowIterator(window_dict["test_windows"], batch_size=params["batch_size"], shuffle=False)
     params['in_channels'] = data_dict["dim"]
 
     logging.info("Proceeding using {}...".format(params["device"]))
@@ -62,10 +62,10 @@ if __name__ == '__main__':
     if params["load"]:
         encoder.load_encoder()
     else:
-        encoder.fit(train_iterator, test_iterator=test_iterator.loader, test_labels=test_labels, **params)
+        encoder.fit(train_iterator, test_iterator=test_iterator.loader, test_labels=window_dict["test_labels"], **params)
         encoder.save_encoder()
 
-    encoder.score(test_iterator.loader, test_labels)
+    encoder.score(test_iterator.loader, window_dict["test_labels"])
     # inference
     # features = encoder.encode(test_iterator.loader)
     # logging.info("Final features have shape: {}".format(features.shape))

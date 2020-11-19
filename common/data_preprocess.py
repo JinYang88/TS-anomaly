@@ -113,7 +113,7 @@ def normalize(data_dict, method="minmax"):
 def generate_windows(data_dict, window_size=100, nrows=None):
     train_windows = []
     test_windows = []
-    results = []
+    results = {}
 
     for data_name, sub_dict in data_dict.items():
         if not isinstance(sub_dict, dict): continue
@@ -131,15 +131,15 @@ def generate_windows(data_dict, window_size=100, nrows=None):
 
     if train_windows:
         train_windows = torch.cat(train_windows,dim=0)
-        results.append(train_windows)
+        results["train_windows"] = train_windows.cpu().numpy()
     if test_windows:
         test_windows = torch.cat(test_windows,dim=0)
         if test_label is not None:
-            test_windows, y = test_windows[:, 0:-1], test_windows[:, -1]
-            results.append(test_windows)
-            results.append(y)
+            test_windows, test_labels = test_windows[:, 0:-1], test_windows[:, -1]
+            results["test_windows"] = test_windows.cpu().numpy()
+            results["test_labels"] = test_labels.cpu().numpy()
         else:
-            results.append(test_windows)
+            results["test_windows"] = test_windows.cpu().numpy()
     return results
         
         
