@@ -19,7 +19,25 @@ def get_data_dim(dataset):
     else:
         raise ValueError('unknown dataset '+str(dataset))
 
-def load_CSV_dataset(path, test_ratio=0.2):
+def load_SMAP_MSL_dataset(path, dataset="MSL"):
+    data_dict = defaultdict(dict)
+    data_dict["dim"] = get_data_dim(dataset)
+    pkl_files = glob(os.path.join(path, "pkls_" + dataset, "*.pkl"))
+
+    for f in pkl_files:
+        basename = os.path.basename(f)
+        with open(f, "rb") as fr:
+            array = pickle.load(fr)
+        if basename.startswith(dataset+"_train"):
+            data_dict[dataset]["train"] = array
+        if basename.startswith(dataset+"_test_label"):
+            data_dict[dataset]["test_label"] = array
+        if basename.startswith(dataset+"_test"):
+            data_dict[dataset]["test"] = array
+
+    return data_dict
+
+def load_CSV_dataset(path, dataset="all", test_ratio=0.2):
     df = pd.read_csv(path)
     train_size = int(df.shape[0] * (1-test_ratio))
     train_df = df[:train_size]
@@ -27,10 +45,10 @@ def load_CSV_dataset(path, test_ratio=0.2):
 
     data_dict = defaultdict(dict)
     data_dict["dim"] = 1
-    for f_name in train_df.columns:
+    columns = train_df.columns if dataset == "all" else [dataset]
+    for f_name in columns:
         data_dict[f_name]["train"] = np.array(train_df[f_name]).reshape(-1,1)
         data_dict[f_name]["test"] = np.array(test_df[f_name]).reshape(-1,1)
-
     return data_dict
 
 def load_SMD_dataset(path, dataset, use_dim="all"):

@@ -25,12 +25,12 @@ import pandas
 import logging
 
 from IPython import embed
-from common import scikit_wrappers, data_preprocess 
+from common import data_preprocess 
 from common.utils import print_to_json
 from common.dataloader import load_SMAP_MSL_dataset, load_CSV_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
 from common.config import parse_arguments, set_logger, initialize_config
-
+from networks.mlstm import MultiLSTMEncoder
 
 # python univariate_smd.py 
 if __name__ == '__main__':
@@ -48,8 +48,8 @@ if __name__ == '__main__':
         vocab_size = pp.build_vocab(data_dict)
     pp.save(params["save_path"])
 
-    train_windows, test_windows, test_labels = data_preprocess.generate_windows(data_dict, window_size=params["window_size"])
-    embed()
+    train_windows, test_windows, test_labels = data_preprocess.generate_windows(data_dict, window_size=params["window_size"], nrows=None)
+
     train_iterator = WindowIterator(train_windows, batch_size=params["batch_size"], shuffle=True)
     test_iterator = WindowIterator(test_windows, batch_size=params["batch_size"], shuffle=False)
     params['in_channels'] = data_dict["dim"]
@@ -57,14 +57,16 @@ if __name__ == '__main__':
     logging.info("Proceeding using {}...".format(params["device"]))
     logging.info(print_to_json(params))
     # training
-    encoder = scikit_wrappers.CausalCNNEncoder(vocab_size=vocab_size, **params)
+    encoder = MultiLSTMEncoder(**params)
+    
     if params["load"]:
         encoder.load_encoder()
     else:
-        encoder.fit(train_iterator, save_memory=False)
+        encoder.fit(train_iterator, test_iterator=test_iterator.loader, test_labels=test_labels)
         encoder.save_encoder()
 
+    encoder.score(test_iterator.loader, test_labels)
     # inference
-    features = encoder.encode(test_iterator.loader)
-    logging.info("Final features have shape: {}".format(features.shape))
+    # features = encoder.encode(test_iterator.loader)
+    # logging.info("Final features have shape: {}".format(features.shape))
     

@@ -15,4 +15,13 @@ casualCnn:
     kernel_size: 3 # 同时考虑多少个token
     out_channels: 64
     reduced_size: 32
-    embedding_dim: 10
+    # embedding_dim: 0
+    discretized: False
+
+mlstm:
+    channels: 40
+    depth: 2
+    in_channels: 1 # 输入有几维度KPI
+    out_channels: 64
+    # embedding_dim: 0
+    discretized: False

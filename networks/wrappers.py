@@ -29,11 +29,13 @@ import sys
 import os
 from glob import glob
 from common import triplet_loss
+from common.utils import adjust_predicts
 from IPython import embed
+from sklearn.metrics import f1_score, precision_score, recall_score
 
-class TimeSeriesEncoder(sklearn.base.BaseEstimator,
-                                  sklearn.base.ClassifierMixin):
-    def __init__(self, architecture, save_path, trial_id, compared_length, nb_random_samples, negative_penalty,batch_size, nb_steps, lr, encoder, device="cpu", **kwargs):
+class TimeSeriesEncoder(torch.nn.Module):
+    def __init__(self, save_path, trial_id, compared_length, nb_random_samples, negative_penalty, batch_size, nb_steps, lr, architecture="BaseEncoder", device="cpu", **kwargs):
+        super().__init__()
         self.architecture = architecture
         self.save_path = save_path
         self.trial_id = trial_id
@@ -43,25 +45,22 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         self.batch_size = batch_size
         self.nb_steps = nb_steps
         self.lr = lr
-        self.encoder = encoder
-
-        self.loss = triplet_loss.TripletLoss(
-            compared_length, nb_random_samples, negative_penalty, device)
-        self.loss_varying = triplet_loss.TripletLossVaryingLength(
-            compared_length, nb_random_samples, negative_penalty, device)
-        self.optimizer = torch.optim.Adam(self.encoder.parameters(), lr=lr)
+    
+    def compile(self):
+        logging.info("Compiling finished.")
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
 
     def save_encoder(self):
         logging.info("Saving model to {}".format(self.model_save_file))
         try:
             torch.save(
-            self.encoder.state_dict(),
+            self.state_dict(),
             self.model_save_file,
             _use_new_zipfile_serialization=False 
         )
         except:
             torch.save(
-            self.encoder.state_dict(),
+            self.state_dict(),
             self.model_save_file
         )
 
@@ -71,11 +70,10 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         else:
             model_save_file = self.model_save_file
         logging.info("Loading model from {}".format(model_save_file))
-        self.encoder.load_state_dict(torch.load(model_save_file, map_location=self.device))
+        self.load_state_dict(torch.load(model_save_file, map_location=self.device))
 
-    def fit(self, train_iterator, nb_steps_per_verbose=10, save_memory=False):
+    def fit(self, train_iterator, test_iterator=None, test_labels=None, percent=88, nb_steps_per_verbose=10, save_memory=False):
         # Check if the given time series have unequal lengths
-        varying = False
         train = train_iterator.fetch_windows()
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
@@ -87,47 +85,34 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
                 batch = batch.to(self.device)
+                return_dict = self(batch)
                 self.optimizer.zero_grad()
-                if not varying:
-                    loss = self.loss(
-                        batch, self.encoder, train, save_memory=save_memory
-                    )
-                else:
-                    loss = self.loss_varying(
-                        batch, self.encoder, train, save_memory=save_memory
-                    )
+
+                loss = return_dict["loss"]
                 loss.backward()
                 self.optimizer.step()
                 i += 1
                 if i % nb_steps_per_verbose == 0:
                     logging.info("Step: {}, loss: {:.3f}".format(i, loss.item()))
+
+                    self.score(test_iterator, test_labels, percent)
                 if i >= self.nb_steps:
                     break
             epochs += 1
         return self
 
-
     def encode(self, iterator):
         # Check if the given time series have unequal lengths
-        varying = False
         features = []
-        self.encoder = self.encoder.eval()
+        self = self.eval()
 
         with torch.no_grad():
-            if not varying:
-                for batch in iterator:
-                    batch = batch.to(self.device)
-                    features.append(self.encoder(batch))
-            else:
-                for batch in iterator:
-                    batch = batch.to(self.device)
-                    length = batch.size(2) - torch.sum(
-                        torch.isnan(batch[0, 0])
-                    ).data.cpu().numpy()
-                    features.append(self.encoder(batch[:, :, :length]))
-
+            for batch in iterator:
+                batch = batch.to(self.device)
+                return_dict = self(batch)
+                features.append(return_dict["recst"])
         features = torch.cat(features)
-        self.encoder = self.encoder.train()
+        self = self.train()
         return features
 
     def encode_windows(self, windows):
@@ -135,13 +120,31 @@ class TimeSeriesEncoder(sklearn.base.BaseEstimator,
         windows = torch.Tensor(windows).double()
         if len(windows.size()) == 2:
             windows = windows.unsqueeze(0)
-        return self.encoder(windows)
+        return self(windows)
 
     def predict(self, X):
         raise NotImplementedError("TBD")
 
-    def score(self, X, y):
-        raise NotImplementedError("TBD")
+    def score(self, iterator, anomaly_label, percent=88):
+        self = self.eval()
+        anomaly_label = anomaly_label[:, -1] # actually predict the last window
+        with torch.no_grad():
+            diff_list = []
+            for batch in iterator:
+                batch = batch.to(self.device)
+                return_dict = self(batch)
+                diff = return_dict["diff"].max(dim=-1)[0] # chose the most anomaous ts
+                diff_list.append(diff)
+
+        diff_list = torch.cat(diff_list)
+        pred = adjust_predicts(diff_list, anomaly_label, percent)
+        
+        f1 = f1_score(pred, anomaly_label)
+        ps = precision_score(pred, anomaly_label)
+        rc = recall_score(pred, anomaly_label)
+
+        logging.info("F1: {:.3f}, PS: {:.3f}, RC:{:.3f}".format(f1, ps, rc))
+        self = self.train()
 
 
 class CausalCNNEncoder(TimeSeriesEncoder):

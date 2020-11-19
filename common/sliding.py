@@ -75,11 +75,11 @@ class BatchSlidingWindow(object):
         self._shuffle = shuffle
         self._ignore_incomplete_batch = ignore_incomplete_batch
 
-    def get_windows(self, arrays):
-        tensor = torch.cat(list(self.get_iterator(arrays)))
+    def get_windows(self, arrays, label=None):
+        tensor = torch.cat(list(self.get_iterator(arrays, label)))
         return tensor
         
-    def get_iterator(self, arrays):
+    def get_iterator(self, arrays, label=None):
         """
         Iterate through the sliding windows of each array in `arrays`.
 
@@ -92,7 +92,8 @@ class BatchSlidingWindow(object):
         Yields:
             tuple[np.ndarray]: The windows of arrays of each mini-batch.
         """
-        # check the parameters
+        if label is not None:
+            arrays = np.hstack([arrays, label.reshape(-1,1)])
         arrays = arrays.T # To get shape (dim x time)
         arrays = tuple(np.asarray(a) for a in arrays)
         if not arrays:
