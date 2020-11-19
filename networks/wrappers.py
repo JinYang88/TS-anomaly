@@ -49,6 +49,7 @@ class TimeSeriesEncoder(torch.nn.Module):
     def compile(self):
         logging.info("Compiling finished.")
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        self = self.to(self.device)
 
     def save_encoder(self):
         logging.info("Saving model to {}".format(self.model_save_file))
