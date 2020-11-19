@@ -22,6 +22,7 @@ def parse_arguments():
     parser.add_argument('--gpu', type=int, default=0, metavar='GPU', help='index of GPU used for computations (default: 0)')
     parser.add_argument('--expid', type=str, default="casualCnn",help='Expid in hypers')
     parser.add_argument('--load', type=str, default="",help='Load a pretrained model from the specific directory')
+    parser.add_argument('--nrows', type=int, default=None,help='Read only first nrows for test')
 
     args = parser.parse_args()
     if args.gpu >= 0 and torch.cuda.is_available():

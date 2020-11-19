@@ -138,7 +138,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 diff_list.append(diff)
 
         diff_list = torch.cat(diff_list)
-        pred = adjust_predicts(diff_list, anomaly_label, percent)
+        pred = adjust_predicts(diff_list.cpu().numpy(), anomaly_label.cpu().numpy(), percent)
         
         f1 = f1_score(pred, anomaly_label)
         ps = precision_score(pred, anomaly_label)
