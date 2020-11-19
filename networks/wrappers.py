@@ -88,13 +88,9 @@ class TimeSeriesEncoder(torch.nn.Module):
                 batch = batch.to(self.device)
                 return_dict = self(batch)
                 self.optimizer.zero_grad()
-
                 loss = return_dict["loss"]
                 loss.backward()
                 self.optimizer.step()
-                # if i % nb_steps_per_verbose == 0:
-                #     logging.info("Step: {}, loss: {:.3f}".format(i, loss.item()))
-                #     self.score(test_iterator, test_labels, percent)
             self.score(test_iterator, test_labels, percent)
             epochs += 1
         return self
@@ -132,7 +128,8 @@ class TimeSeriesEncoder(torch.nn.Module):
             for batch in iterator:
                 batch = batch.to(self.device)
                 return_dict = self(batch)
-                diff = return_dict["diff"].max(dim=-1)[0] # chose the most anomaous ts
+                # diff = return_dict["diff"].max(dim=-1)[0] # chose the most anomaous ts
+                diff = return_dict["diff"].mean(dim=-1) # chose the most anomaous ts
                 diff_list.append(diff)
 
         diff_list = torch.cat(diff_list)
