@@ -81,7 +81,7 @@ class TimeSeriesEncoder(torch.nn.Module):
 
         logging.info("Start training for {} steps.".format(self.nb_steps))
         # Encoder training
-        while i < self.nb_steps:
+        while epochs < self.nb_steps:
             logging.info('Epoch: {}'.format(epochs + 1))
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
@@ -92,12 +92,9 @@ class TimeSeriesEncoder(torch.nn.Module):
                 loss = return_dict["loss"]
                 loss.backward()
                 self.optimizer.step()
-                i += 1
                 # if i % nb_steps_per_verbose == 0:
                 #     logging.info("Step: {}, loss: {:.3f}".format(i, loss.item()))
                 #     self.score(test_iterator, test_labels, percent)
-                if i >= self.nb_steps:
-                    break
             self.score(test_iterator, test_labels, percent)
             epochs += 1
         return self
@@ -127,6 +124,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         raise NotImplementedError("TBD")
 
     def score(self, iterator, anomaly_label, percent=88):
+        logging.info("Evaluating ")
         self = self.eval()
         anomaly_label = anomaly_label[:, -1] # actually predict the last window
         with torch.no_grad():

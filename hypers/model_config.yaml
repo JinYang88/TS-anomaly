@@ -22,5 +22,4 @@ casualCnn:
 mlstm:
     hidden_size: 64
     num_layers: 2
-    # embedding_dim: 0
     discretized: False
