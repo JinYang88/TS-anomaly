@@ -1,5 +1,5 @@
 Base:
-    window_size: 45
+    window_size: 20
     batch_size: 64
     compared_length: null
     penalty: null

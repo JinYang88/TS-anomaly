@@ -1,7 +1,18 @@
 import numpy as np
 import json
 import logging
+import h5py
 
+def load_hdf5(infile):
+    logging.info("Loading hdf5 from {}".format(infile))
+    with h5py.File(infile, 'r') as f:
+        return {key : f[key][:] for key in list(f.keys())}
+
+def save_hdf5(outfile, arr_dict):
+    logging.info("Saving hdf5 to {}".format(outfile))
+    with h5py.File(outfile, 'w') as f:
+        for key in arr_dict.keys():
+            f.create_dataset(key, data=arr_dict[key])
 
 def print_to_json(data):
     new_data = dict((k, str(v)) for k, v in data.items())

@@ -5,6 +5,7 @@ import torch
 import numpy as np
 from collections import defaultdict
 from common.sliding import BatchSlidingWindow
+from common.utils import load_hdf5, save_hdf5
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler, StandardScaler, RobustScaler
 from IPython import embed
 
@@ -110,10 +111,15 @@ def normalize(data_dict, method="minmax"):
     return normalized_dict
 
 
-def generate_windows(data_dict, window_size=100, nrows=None):
+def generate_windows(data_dict, data_hdf5_path, window_size=100, nrows=None):
     train_windows = []
     test_windows = []
     results = {}
+    cache_file = os.path.join(data_hdf5_path, "hdf5" ,"window_dict_ws={}_nrows={}.hdf5".format(window_size, nrows))
+    os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+
+    if os.path.isfile(cache_file):
+        return load_hdf5(cache_file)
 
     for data_name, sub_dict in data_dict.items():
         if not isinstance(sub_dict, dict): continue
@@ -140,6 +146,7 @@ def generate_windows(data_dict, window_size=100, nrows=None):
             results["test_labels"] = test_labels.cpu().numpy()
         else:
             results["test_windows"] = test_windows.cpu().numpy()
+    save_hdf5(cache_file, results)
     return results
         
         
