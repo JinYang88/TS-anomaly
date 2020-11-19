@@ -93,12 +93,12 @@ class TimeSeriesEncoder(torch.nn.Module):
                 loss.backward()
                 self.optimizer.step()
                 i += 1
-                if i % nb_steps_per_verbose == 0:
-                    logging.info("Step: {}, loss: {:.3f}".format(i, loss.item()))
-
-                    self.score(test_iterator, test_labels, percent)
+                # if i % nb_steps_per_verbose == 0:
+                #     logging.info("Step: {}, loss: {:.3f}".format(i, loss.item()))
+                #     self.score(test_iterator, test_labels, percent)
                 if i >= self.nb_steps:
                     break
+            self.score(test_iterator, test_labels, percent)
             epochs += 1
         return self
 
