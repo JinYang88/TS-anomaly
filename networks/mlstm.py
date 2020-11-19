@@ -36,7 +36,8 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         batch_window, y = batch_window[:,0:-1,:], batch_window[:,-1,:]
 
         lstm_out, lstm_hidden = self.lstm(batch_window)
-        outputs = lstm_out.max(dim=1)[0] # consider every dim of all timestamps
+        outputs = lstm_out.mean(dim=1)[0] # consider every dim of all timestamps
+
 
         recst = self.linear(outputs)
         loss = self.loss_fn(recst, y)
