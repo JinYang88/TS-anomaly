@@ -8,7 +8,6 @@
 from torch import nn
 from networks.wrappers import TimeSeriesEncoder
 
-# TimeSeriesEncoder
 class MultiLSTMEncoder(TimeSeriesEncoder):
     """
     Encoder of a time series using a LSTM, ccomputing a linear transformation
