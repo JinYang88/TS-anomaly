@@ -48,7 +48,7 @@ if __name__ == '__main__':
         vocab_size = pp.build_vocab(data_dict)
     pp.save(params["save_path"])
 
-    train_windows, test_windows, test_labels = data_preprocess.generate_windows(data_dict, window_size=params["window_size"], nrows=None)
+    train_windows, test_windows, test_labels = data_preprocess.generate_windows(data_dict, window_size=params["window_size"], nrows=params["nrows"])
 
     train_iterator = WindowIterator(train_windows, batch_size=params["batch_size"], shuffle=True)
     test_iterator = WindowIterator(test_windows, batch_size=params["batch_size"], shuffle=False)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     if params["load"]:
         encoder.load_encoder()
     else:
-        encoder.fit(train_iterator, test_iterator=test_iterator.loader, test_labels=test_labels)
+        encoder.fit(train_iterator, test_iterator=test_iterator.loader, test_labels=test_labels, **params)
         encoder.save_encoder()
 
     encoder.score(test_iterator.loader, test_labels)

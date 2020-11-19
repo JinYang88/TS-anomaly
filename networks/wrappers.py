@@ -73,7 +73,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         logging.info("Loading model from {}".format(model_save_file))
         self.load_state_dict(torch.load(model_save_file, map_location=self.device))
 
-    def fit(self, train_iterator, test_iterator=None, test_labels=None, percent=88, nb_steps_per_verbose=10, save_memory=False):
+    def fit(self, train_iterator, test_iterator=None, test_labels=None, percent=88, nb_steps_per_verbose=100, save_memory=False, **kwargs):
         # Check if the given time series have unequal lengths
         train = train_iterator.fetch_windows()
         i = 0  # Number of performed optimization steps
