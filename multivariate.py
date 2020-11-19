@@ -46,9 +46,11 @@ if __name__ == '__main__':
     if params["discretized"]:
         data_dict = pp.discretize(data_dict)
         vocab_size = pp.build_vocab(data_dict)
+    if params["normalize"]:
+        data_dict = pp.normalize(data_dict)
     pp.save(params["save_path"])
 
-    window_dict = data_preprocess.generate_windows(data_dict, data_hdf5_path=params["path"], window_size=params["window_size"], nrows=params["nrows"], )
+    window_dict = data_preprocess.generate_windows(data_dict, data_hdf5_path=params["path"], **params)
 
     train_iterator = WindowIterator(window_dict["train_windows"], batch_size=params["batch_size"], shuffle=True)
     test_iterator = WindowIterator(window_dict["test_windows"], batch_size=params["batch_size"], shuffle=False)

@@ -77,53 +77,53 @@ class preprocessor():
         return self.vocab_size
 
 
-def normalize(data_dict, method="minmax"):
-    # method: minmax, standard, robust
-    normalized_dict = defaultdict(dict)
-    for data_name, sub_dict in data_dict.items():
-        if not isinstance(sub_dict, dict):
-            normalized_dict[data_name] = sub_dict
-            continue
-        
-        if isinstance(n_bins, dict):
-            n_bins_ = n_bins[data_name]
-        else:
-            n_bins_ = n_bins
+    def normalize(self, data_dict, method="minmax"):
+        logging.info("Normalizing data")
+        # method: minmax, standard, robust
+        normalized_dict = defaultdict(dict)
+        for data_name, sub_dict in data_dict.items():
+            if not isinstance(sub_dict, dict):
+                normalized_dict[data_name] = sub_dict
+                continue
 
-        # fit_transform using train
-        train = sub_dict["train"] # shape: time x dim
-        if method == "minmax":
-            est = MinMaxScaler()
-        elif method == "standard":
-            est = StandardScaler()
-        elif method == "robust":
-            est = RobustScaler()
+            # fit_transform using train
+            train = sub_dict["train"] # shape: time x dim
+            if method == "minmax":
+                est = MinMaxScaler()
+            elif method == "standard":
+                est = StandardScaler()
+            elif method == "robust":
+                est = RobustScaler()
 
-        train_ = est.fit_transform(train)
+            train_ = est.fit_transform(train)
 
-        # transform test
-        test = sub_dict["test"]
-        test_ = est.transform(test)
+            # transform test
+            test = sub_dict["test"]
+            test_ = est.transform(test)
 
-        # assign back
-        normalized_dict[data_name]["train"] = train_.astype(int)
-        normalized_dict[data_name]["test"] = test_.astype(int)
-    return normalized_dict
+            # assign back
+            normalized_dict[data_name]["train"] = train_
+            normalized_dict[data_name]["test"] = test_
+
+            for k,v in sub_dict.items():
+                if k not in ["train", "test"]:
+                    normalized_dict[data_name][k] = v
+        return normalized_dict
 
 
-def generate_windows(data_dict, data_hdf5_path, window_size=100, nrows=None):
+def generate_windows(data_dict, data_hdf5_path, window_size=100, nrows=None, clear=False, **kwargs):
     train_windows = []
     test_windows = []
     results = {}
     cache_file = os.path.join(data_hdf5_path, "hdf5" ,"window_dict_ws={}_nrows={}.hdf5".format(window_size, nrows))
     os.makedirs(os.path.dirname(cache_file), exist_ok=True)
 
-    if os.path.isfile(cache_file):
+    if not clear and os.path.isfile(cache_file):
         return load_hdf5(cache_file)
 
     for data_name, sub_dict in data_dict.items():
         if not isinstance(sub_dict, dict): continue
-        logging.info("Generating sliding windows for dataset [{}]".format(data_name))
+        logging.info("Generating sliding windows (size {}) for dataset [{}]".format(window_size, data_name))
         test = sub_dict["test"][0:nrows]
         test_label = None if "test_label" not in sub_dict else sub_dict["test_label"][0:nrows]
         test_win = BatchSlidingWindow(test.shape[0], window_size=window_size, batch_size=1000, shuffle=False).get_windows(test, test_label)
@@ -133,7 +133,6 @@ def generate_windows(data_dict, data_hdf5_path, window_size=100, nrows=None):
             train = sub_dict["train"][0:nrows]
             train_win = BatchSlidingWindow(train.shape[0], window_size=window_size, batch_size=1000, shuffle=False).get_windows(train)
             train_windows.append(train_win)
-            
 
     if train_windows:
         train_windows = torch.cat(train_windows,dim=0)
@@ -146,6 +145,7 @@ def generate_windows(data_dict, data_hdf5_path, window_size=100, nrows=None):
             results["test_labels"] = test_labels.cpu().numpy()
         else:
             results["test_windows"] = test_windows.cpu().numpy()
+
     save_hdf5(cache_file, results)
     return results
         
