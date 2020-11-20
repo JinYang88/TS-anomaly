@@ -142,6 +142,7 @@ class TimeSeriesEncoder(torch.nn.Module):
 
         logging.info("F1: {:.3f}, PS: {:.3f}, RC:{:.3f}".format(f1, ps, rc))
         self = self.train()
+        return {"diff_list": diff_list, "pred": pred, "anomaly_label": anomaly_label}
 
 
 class CausalCNNEncoder(TimeSeriesEncoder):
