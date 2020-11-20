@@ -47,7 +47,7 @@ if __name__ == '__main__':
         data_dict = pp.discretize(data_dict)
         vocab_size = pp.build_vocab(data_dict)
     if params["normalize"]:
-        data_dict = pp.normalize(data_dict)
+        data_dict = pp.normalize(data_dict, method=params["normalize"])
     pp.save(params["save_path"])
 
     window_dict = data_preprocess.generate_windows(data_dict, data_hdf5_path=params["path"], **params)

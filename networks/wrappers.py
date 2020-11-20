@@ -93,6 +93,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 self.optimizer.step()
             self.score(test_iterator, test_labels, percent)
             epochs += 1
+            self.save_encoder()
         return self
 
     def encode(self, iterator):

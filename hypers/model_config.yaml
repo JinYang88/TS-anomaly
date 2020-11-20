@@ -16,11 +16,10 @@ casualCnn:
     kernel_size: 3 # 同时考虑多少个token
     out_channels: 64
     reduced_size: 32
-    # embedding_dim: 0
     discretized: False
 
 mlstm:
     hidden_size: 64
     num_layers: 2
     discretized: False
-    normalize: True
+    normalize: minmax # minmax, standard, robust
