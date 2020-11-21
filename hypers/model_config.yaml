@@ -1,5 +1,5 @@
 Base:
-    window_size: 150
+    window_size: 250
     batch_size: 64
     compared_length: null
     penalty: null
@@ -23,3 +23,4 @@ mlstm:
     num_layers: 2
     discretized: False
     normalize: False # minmax, standard, robust
+    use_dim: 1

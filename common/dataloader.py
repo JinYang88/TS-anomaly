@@ -19,9 +19,12 @@ def get_data_dim(dataset):
     else:
         raise ValueError('unknown dataset '+str(dataset))
 
-def load_SMAP_MSL_dataset(path, dataset="MSL"):
+def load_SMAP_MSL_dataset(path, dataset="MSL", use_dim="all"):
     data_dict = defaultdict(dict)
-    data_dict["dim"] = get_data_dim(dataset)
+    if use_dim == "all":
+        data_dict["dim"] = get_data_dim(dataset)
+    else:
+        data_dict["dim"] = 1
     pkl_files = glob(os.path.join(path, "pkls_" + dataset, "*.pkl"))
 
     for f in pkl_files:
@@ -29,11 +32,11 @@ def load_SMAP_MSL_dataset(path, dataset="MSL"):
         with open(f, "rb") as fr:
             array = pickle.load(fr)
         if basename.startswith(dataset+"_train"):
-            data_dict[dataset]["train"] = array
+            data_dict[dataset]["train"] = array if use_dim == "all" else array[:, use_dim]
         if basename.startswith(dataset+"_test_label"):
             data_dict[dataset]["test_label"] = array
         if basename.startswith(dataset+"_test"):
-            data_dict[dataset]["test"] = array
+            data_dict[dataset]["test"] = array if use_dim == "all" else array[:, use_dim]
 
     return data_dict
 
