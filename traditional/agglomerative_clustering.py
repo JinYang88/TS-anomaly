@@ -8,6 +8,7 @@ import os
 import sys
 
 sys.path.append("../")
+import argparse
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
@@ -115,75 +116,78 @@ def get_windows(ts, labels=None, dim=None, window_size=128, stride=None):
         return np.array(windows)
 
 
-# datasets/anomaly/SMD/processed/machine-1-1_test.pkl
-nrows = 10000
-dataset = "SMAP"
+if __name__ == "__main__":
 
-if dataset.lower().startswith("smd"):
-    data_dict = load_SMD_dataset(
-        "../datasets/anomaly/SMD/processed", "machine-{}*".format(dataset[-1])
+    parser = argparse.ArgumentParser(
+        description="Anomaly detection with traditional ways"
     )
-elif dataset.lower() == "kddcup":
-    data_dict = load_kddcup_dataset(path="../datasets/anomaly/Kddcup9")
-elif dataset.lower() == "smap" or dataset.lower() == "msl":
-    data_dict = load_SMAP_MSL_dataset("../datasets/anomaly/SMAP-MSL", dataset)
+    parser.add_argument("--dataset", type=str, default="SMD1")
+    args = parser.parse_args()
+    # datasets/anomaly/SMD/processed/machine-1-1_test.pkl
+    nrows = None
+    dataset = args.dataset
 
-
-if nrows is not None:
-    data_dict["test_label"] = data_dict["test_label"][0:nrows]
-    data_dict["train"] = data_dict["train"][0:nrows]
-    data_dict["test"] = data_dict["test"][0:nrows]
-
-print(
-    "Anomaly ratio for {} = {:.3f}".format(
-        dataset, data_dict["test_label"].sum() / len(data_dict["test_label"])
-    )
-)
-print("Length for train: {} = {}".format(dataset, len(data_dict["train"])))
-print("Length for test: {} = {}".format(dataset, len(data_dict["test"])))
-
-
-# Get windows
-# window_size = 100
-# train_df = pd.DataFrame(data_dict["train"])
-# test_df = pd.DataFrame(data_dict["test"])
-# test_label = pd.DataFrame(data_dict["test_label"])
-# train_windows = get_windows(data_dict["train"], dim=None, window_size=window_size)
-# test_windows, test_labels = get_windows(data_dict["test"], labels=data_dict["test_label"], dim=None, window_size=window_size)
-
-
-info_save_list = []
-for linkage in ["complete", "single", "average"]:
-    n_clusters = 30
-    clusters = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage).fit(
-        data_dict["train"]
-    )
-    print("Clustering finished.")
-
-    cluster_ts = defaultdict(list)
-    for k, v in zip(clusters.labels_, data_dict["train"]):
-        cluster_ts[k].append(v)
-    centers = np.array([np.array(v).mean(axis=0) for k, v in cluster_ts.items()])
-    print("Computing centers done")
-
-    for anomaly_ratio in np.linspace(1e-3, 0.1, 20):
-        info_save = {}
-        info_save["linkage"] = linkage
-        test_dist_mat = cosine_similarity(data_dict["test"], centers)
-        anomaly_rate = 1 - test_dist_mat.max(axis=1)
-        adjusted_anomaly = adjust_predicts(
-            anomaly_rate, data_dict["test_label"], percent=100 * (1 - anomaly_ratio)
+    if dataset.lower().startswith("smd"):
+        data_dict = load_SMD_dataset(
+            "../datasets/anomaly/SMD/processed", "machine-{}*".format(dataset[-1])
         )
-        f1 = f1_score(adjusted_anomaly, data_dict["test_label"])
-        rc = recall_score(adjusted_anomaly, data_dict["test_label"])
-        pr = precision_score(adjusted_anomaly, data_dict["test_label"])
-        info_save["F1"] = f1
-        info_save["Recall"] = rc
-        info_save["Precision"] = pr
-        info_save["Anomaly_ratio"] = anomaly_ratio
-        #     print("F1: {:.2f} RC: {:.2f} PR: {:.2f}".format(f1, rc, pr))
-        info_save_list.append(info_save)
+    elif dataset.lower() == "kddcup":
+        data_dict = load_kddcup_dataset(path="../datasets/anomaly/Kddcup9")
+    elif dataset.lower() == "smap" or dataset.lower() == "msl":
+        data_dict = load_SMAP_MSL_dataset("../datasets/anomaly/SMAP-MSL", dataset)
 
+    if nrows is not None:
+        data_dict["test_label"] = data_dict["test_label"][0:nrows]
+        data_dict["train"] = data_dict["train"][0:nrows]
+        data_dict["test"] = data_dict["test"][0:nrows]
 
-df = pd.DataFrame(info_save_list)
-df.to_csv("exp_results_{}.csv".format(dataset), index=False)
+    print(
+        "Anomaly ratio for {} = {:.3f}".format(
+            dataset, data_dict["test_label"].sum() / len(data_dict["test_label"])
+        )
+    )
+    print("Length for train: {} = {}".format(dataset, len(data_dict["train"])))
+    print("Length for test: {} = {}".format(dataset, len(data_dict["test"])))
+
+    # Get windows
+    # window_size = 100
+    # train_df = pd.DataFrame(data_dict["train"])
+    # test_df = pd.DataFrame(data_dict["test"])
+    # test_label = pd.DataFrame(data_dict["test_label"])
+    # train_windows = get_windows(data_dict["train"], dim=None, window_size=window_size)
+    # test_windows, test_labels = get_windows(data_dict["test"], labels=data_dict["test_label"], dim=None, window_size=window_size)
+
+    info_save_list = []
+    for linkage in ["complete", "single", "average"]:
+        n_clusters = 30
+        clusters = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage).fit(
+            data_dict["train"]
+        )
+        print("Clustering finished.")
+
+        cluster_ts = defaultdict(list)
+        for k, v in zip(clusters.labels_, data_dict["train"]):
+            cluster_ts[k].append(v)
+        centers = np.array([np.array(v).mean(axis=0) for k, v in cluster_ts.items()])
+        print("Computing centers done")
+
+        for anomaly_ratio in np.linspace(1e-3, 0.1, 20):
+            info_save = {}
+            info_save["linkage"] = linkage
+            test_dist_mat = cosine_similarity(data_dict["test"], centers)
+            anomaly_rate = 1 - test_dist_mat.max(axis=1)
+            adjusted_anomaly = adjust_predicts(
+                anomaly_rate, data_dict["test_label"], percent=100 * (1 - anomaly_ratio)
+            )
+            f1 = f1_score(adjusted_anomaly, data_dict["test_label"])
+            rc = recall_score(adjusted_anomaly, data_dict["test_label"])
+            pr = precision_score(adjusted_anomaly, data_dict["test_label"])
+            info_save["F1"] = f1
+            info_save["Recall"] = rc
+            info_save["Precision"] = pr
+            info_save["Anomaly_ratio"] = anomaly_ratio
+            #     print("F1: {:.2f} RC: {:.2f} PR: {:.2f}".format(f1, rc, pr))
+            info_save_list.append(info_save)
+
+    df = pd.DataFrame(info_save_list)
+    df.to_csv("exp_results_{}.csv".format(dataset), index=False)
