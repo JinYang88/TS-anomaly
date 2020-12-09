@@ -1,23 +1,26 @@
-import pickle
+import logging
 import os
-import pandas as pd
-import numpy as np
-import weka.core.jvm
-import weka.core.converters
-
-from IPython import embed
-from glob import glob
+import pickle
 from collections import defaultdict
+from glob import glob
+
+import numpy as np
+import pandas as pd
+import weka.core.converters
+import weka.core.jvm
+from IPython import embed
+
 
 def get_data_dim(dataset):
-    if dataset == 'SMAP':
+    if dataset == "SMAP":
         return 25
-    elif dataset == 'MSL':
+    elif dataset == "MSL":
         return 55
-    elif dataset == 'SMD' or str(dataset).startswith('machine'):
+    elif dataset == "SMD" or str(dataset).startswith("machine"):
         return 38
     else:
-        raise ValueError('unknown dataset '+str(dataset))
+        raise ValueError("unknown dataset " + str(dataset))
+
 
 def load_SMAP_MSL_dataset(path, dataset="MSL", use_dim="all"):
     data_dict = defaultdict(dict)
@@ -31,18 +34,19 @@ def load_SMAP_MSL_dataset(path, dataset="MSL", use_dim="all"):
         basename = os.path.basename(f)
         with open(f, "rb") as fr:
             array = pickle.load(fr)
-        if basename.startswith(dataset+"_train"):
-            data_dict[dataset]["train"] = array if use_dim == "all" else array[:, use_dim]
-        if basename.startswith(dataset+"_test_label"):
-            data_dict[dataset]["test_label"] = array
-        if basename.startswith(dataset+"_test"):
-            data_dict[dataset]["test"] = array if use_dim == "all" else array[:, use_dim]
+        if basename.startswith(dataset + "_train"):
+            data_dict["train"] = array if use_dim == "all" else array[:, use_dim]
+        if basename.startswith(dataset + "_test_label"):
+            data_dict["test_label"] = array
+        if basename.startswith(dataset + "_test"):
+            data_dict["test"] = array if use_dim == "all" else array[:, use_dim]
 
     return data_dict
 
+
 def load_CSV_dataset(path, dataset="all", test_ratio=0.2):
     df = pd.read_csv(path)
-    train_size = int(df.shape[0] * (1-test_ratio))
+    train_size = int(df.shape[0] * (1 - test_ratio))
     train_df = df[:train_size]
     test_df = df[train_size:]
 
@@ -50,14 +54,35 @@ def load_CSV_dataset(path, dataset="all", test_ratio=0.2):
     data_dict["dim"] = 1
     columns = train_df.columns if dataset == "all" else [dataset]
     for f_name in columns:
-        data_dict[f_name]["train"] = np.array(train_df[f_name]).reshape(-1,1)
-        data_dict[f_name]["test"] = np.array(test_df[f_name]).reshape(-1,1)
+        data_dict[f_name]["train"] = np.array(train_df[f_name]).reshape(-1, 1)
+        data_dict[f_name]["test"] = np.array(test_df[f_name]).reshape(-1, 1)
     return data_dict
 
+
+def load_kddcup_dataset(path):
+    kdd_df = pd.read_csv(os.path.join(path, "kddcup.csv"), header=None, nrows=None)
+    kdd_test_df = pd.read_csv(
+        os.path.join(path, "corrected.csv"), header=None, nrows=None
+    )
+    label_column = kdd_df.columns[-1]
+    kdd_df = kdd_df.drop(label_column, axis=1)
+    kdd_test_df[label_column] = kdd_test_df[label_column].map(
+        lambda x: 1 if x == "normal." else 0
+    )
+
+    data_dict = {}
+    data_dict["dim"] = kdd_df.shape
+    data_dict["train"] = kdd_df
+    data_dict["test"] = kdd_test_df.drop(label_column, axis=1)
+    data_dict["test_label"] = kdd_test_df.loc[:, label_column]
+    return data_dict
+
+
 def load_SMD_dataset(path, dataset, use_dim="all"):
+    logging.info("Loading {} dataset".format(dataset))
     x_dim = get_data_dim(dataset)
 
-    if str(dataset).startswith('machine'):
+    if str(dataset).startswith("machine"):
         prefix = dataset
     else:
         prefix = "*"
@@ -66,8 +91,12 @@ def load_SMD_dataset(path, dataset, use_dim="all"):
     test_files = glob(os.path.join(path, prefix + "_test.pkl"))
     label_files = glob(os.path.join(path, prefix + "_test_label.pkl"))
 
+    print("{} files found.".format(len(train_files)))
+
     data_dict = defaultdict(dict)
     data_dict["dim"] = x_dim if use_dim == "all" else 1
+
+    train_data_list = []
     for idx, f_name in enumerate(train_files):
         machine_name = os.path.basename(f_name).split("_")[0]
         f = open(f_name, "rb")
@@ -75,8 +104,11 @@ def load_SMD_dataset(path, dataset, use_dim="all"):
         f.close()
         if use_dim != "all":
             train_data = train_data[:, use_dim].reshape(-1, 1)
-        data_dict[machine_name]["train"] = train_data
+        if len(train_data) > 0:
+            train_data_list.append(train_data)
+    data_dict["train"] = np.concatenate(train_data_list, axis=0)
 
+    test_data_list = []
     for idx, f_name in enumerate(test_files):
         machine_name = os.path.basename(f_name).split("_")[0]
         f = open(f_name, "rb")
@@ -84,18 +116,23 @@ def load_SMD_dataset(path, dataset, use_dim="all"):
         f.close()
         if use_dim != "all":
             test_data = test_data[:, use_dim].reshape(-1, 1)
-        data_dict[machine_name]["test"] = test_data
+        if len(test_data) > 0:
+            test_data_list.append(test_data)
+    data_dict["test"] = np.concatenate(test_data_list, axis=0)
 
+    label_data_list = []
     for idx, f_name in enumerate(label_files):
         machine_name = os.path.basename(f_name).split("_")[0]
         f = open(f_name, "rb")
-        test_label = pickle.load(f).reshape((-1))
+        label_data = pickle.load(f)
         f.close()
-        data_dict[machine_name]["test_label"] = test_label
-    
+        if len(label_data) > 0:
+            label_data_list.append(label_data)
+    data_dict["test_label"] = np.concatenate(label_data_list, axis=0)
+
     return data_dict
 
-    
+
 def load_UCR_dataset(path, dataset):
     """
     Loads the UCR dataset given in input in numpy arrays.
@@ -108,8 +145,8 @@ def load_UCR_dataset(path, dataset):
     """
     train_file = os.path.join(path, dataset, dataset + "_TRAIN.tsv")
     test_file = os.path.join(path, dataset, dataset + "_TEST.tsv")
-    train_df = pd.read_csv(train_file, sep='\t', header=None)
-    test_df = pd.read_csv(test_file, sep='\t', header=None)
+    train_df = pd.read_csv(train_file, sep="\t", header=None)
+    test_df = pd.read_csv(test_file, sep="\t", header=None)
     train_array = np.array(train_df)
     test_array = np.array(test_df)
 
@@ -128,40 +165,40 @@ def load_UCR_dataset(path, dataset):
     # To keep the amplitude information, we do not normalize values over
     # individual time series, but on the whole dataset
     if dataset not in [
-        'AllGestureWiimoteX',
-        'AllGestureWiimoteY',
-        'AllGestureWiimoteZ',
-        'BME',
-        'Chinatown',
-        'Crop',
-        'EOGHorizontalSignal',
-        'EOGVerticalSignal',
-        'Fungi',
-        'GestureMidAirD1',
-        'GestureMidAirD2',
-        'GestureMidAirD3',
-        'GesturePebbleZ1',
-        'GesturePebbleZ2',
-        'GunPointAgeSpan',
-        'GunPointMaleVersusFemale',
-        'GunPointOldVersusYoung',
-        'HouseTwenty',
-        'InsectEPGRegularTrain',
-        'InsectEPGSmallTrain',
-        'MelbournePedestrian',
-        'PickupGestureWiimoteZ',
-        'PigAirwayPressure',
-        'PigArtPressure',
-        'PigCVP',
-        'PLAID',
-        'PowerCons',
-        'Rock',
-        'SemgHandGenderCh2',
-        'SemgHandMovementCh2',
-        'SemgHandSubjectCh2',
-        'ShakeGestureWiimoteZ',
-        'SmoothSubspace',
-        'UMD'
+        "AllGestureWiimoteX",
+        "AllGestureWiimoteY",
+        "AllGestureWiimoteZ",
+        "BME",
+        "Chinatown",
+        "Crop",
+        "EOGHorizontalSignal",
+        "EOGVerticalSignal",
+        "Fungi",
+        "GestureMidAirD1",
+        "GestureMidAirD2",
+        "GestureMidAirD3",
+        "GesturePebbleZ1",
+        "GesturePebbleZ2",
+        "GunPointAgeSpan",
+        "GunPointMaleVersusFemale",
+        "GunPointOldVersusYoung",
+        "HouseTwenty",
+        "InsectEPGRegularTrain",
+        "InsectEPGSmallTrain",
+        "MelbournePedestrian",
+        "PickupGestureWiimoteZ",
+        "PigAirwayPressure",
+        "PigArtPressure",
+        "PigCVP",
+        "PLAID",
+        "PowerCons",
+        "Rock",
+        "SemgHandGenderCh2",
+        "SemgHandMovementCh2",
+        "SemgHandSubjectCh2",
+        "ShakeGestureWiimoteZ",
+        "SmoothSubspace",
+        "UMD",
     ]:
         return train, train_labels, test, test_labels
     # Post-publication note:
@@ -173,6 +210,3 @@ def load_UCR_dataset(path, dataset):
     train = (train - mean) / math.sqrt(var)
     test = (test - mean) / math.sqrt(var)
     return train, train_labels, test, test_labels
-
-
-

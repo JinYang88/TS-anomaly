@@ -16,26 +16,27 @@
 # under the License.
 
 
-import os
 import json
+import logging
 import math
-import torch
+import os
+
 import numpy
 import pandas
-import logging
-
+import torch
 from IPython import embed
-from common import data_preprocess 
-from common.utils import print_to_json
-from common.dataloader import load_SMAP_MSL_dataset, load_CSV_dataset
+
+from common import data_preprocess
+from common.config import initialize_config, parse_arguments, set_logger
+from common.dataloader import load_CSV_dataset, load_SMAP_MSL_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
-from common.config import parse_arguments, set_logger, initialize_config
+from common.utils import print_to_json
 from networks.mlstm import MultiLSTMEncoder
 
-# python univariate_smd.py 
-if __name__ == '__main__':
+# python univariate_smd.py
+if __name__ == "__main__":
     args = parse_arguments()
-    
+
     # load config
     config_dir = "./hypers/" if not args["load"] else args["load"]
     params = initialize_config(config_dir, args)
@@ -50,25 +51,35 @@ if __name__ == '__main__':
         data_dict = pp.normalize(data_dict, method=params["normalize"])
     pp.save(params["save_path"])
 
-    window_dict = data_preprocess.generate_windows(data_dict, data_hdf5_path=params["path"], **params)
+    window_dict = data_preprocess.generate_windows(
+        data_dict, data_hdf5_path=params["path"], **params
+    )
 
-    train_iterator = WindowIterator(window_dict["train_windows"], batch_size=params["batch_size"], shuffle=True)
-    test_iterator = WindowIterator(window_dict["test_windows"], batch_size=params["batch_size"], shuffle=False)
-    params['in_channels'] = data_dict["dim"]
+    train_iterator = WindowIterator(
+        window_dict["train_windows"], batch_size=params["batch_size"], shuffle=True
+    )
+    test_iterator = WindowIterator(
+        window_dict["test_windows"], batch_size=params["batch_size"], shuffle=False
+    )
+    params["in_channels"] = data_dict["dim"]
 
     logging.info("Proceeding using {}...".format(params["device"]))
     logging.info(print_to_json(params))
     # training
     encoder = MultiLSTMEncoder(**params)
-    
+
     if params["load"]:
         encoder.load_encoder()
     else:
-        encoder.fit(train_iterator, test_iterator=test_iterator.loader, test_labels=window_dict["test_labels"], **params)
+        encoder.fit(
+            train_iterator,
+            test_iterator=test_iterator.loader,
+            test_labels=window_dict["test_labels"],
+            **params
+        )
         encoder.save_encoder()
 
     encoder.score(test_iterator.loader, window_dict["test_labels"])
     # inference
     # features = encoder.encode(test_iterator.loader)
     # logging.info("Final features have shape: {}".format(features.shape))
-    

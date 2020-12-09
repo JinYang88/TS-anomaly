@@ -15,37 +15,55 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import joblib
 import logging
 import math
+import os
+import sys
+from glob import glob
+
+import joblib
 import numpy
-import torch
 import sklearn
-import sklearn.svm
 import sklearn.externals
 import sklearn.model_selection
-import networks
-import sys
-import os
-from glob import glob
+import sklearn.svm
+import torch
 from common import triplet_loss
 from common.utils import adjust_predicts
 from IPython import embed
 from sklearn.metrics import f1_score, precision_score, recall_score
 
+import networks
+
+
 class TimeSeriesEncoder(torch.nn.Module):
-    def __init__(self, save_path, trial_id, compared_length, nb_random_samples, negative_penalty, batch_size, nb_steps, lr, architecture="BaseEncoder", device="cpu", **kwargs):
+    def __init__(
+        self,
+        save_path,
+        trial_id,
+        compared_length,
+        nb_random_samples,
+        negative_penalty,
+        batch_size,
+        nb_steps,
+        lr,
+        architecture="BaseEncoder",
+        device="cpu",
+        **kwargs
+    ):
         super().__init__()
         self.architecture = architecture
         self.save_path = save_path
         self.trial_id = trial_id
-        self.model_save_file = os.path.join(self.save_path, "{}_{}.pth".format(self.architecture, self.trial_id))
+        self.model_save_file = os.path.join(
+            self.save_path, "{}_{}.pth".format(self.architecture, self.trial_id)
+        )
 
         self.device = device
         self.batch_size = batch_size
         self.nb_steps = nb_steps
         self.lr = lr
-    
+
     def compile(self):
         logging.info("Compiling finished.")
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
@@ -55,15 +73,12 @@ class TimeSeriesEncoder(torch.nn.Module):
         logging.info("Saving model to {}".format(self.model_save_file))
         try:
             torch.save(
-            self.state_dict(),
-            self.model_save_file,
-            _use_new_zipfile_serialization=False 
-        )
+                self.state_dict(),
+                self.model_save_file,
+                _use_new_zipfile_serialization=False,
+            )
         except:
-            torch.save(
-            self.state_dict(),
-            self.model_save_file
-        )
+            torch.save(self.state_dict(), self.model_save_file)
 
     def load_encoder(self, model_save_path=""):
         if model_save_path:
@@ -73,16 +88,26 @@ class TimeSeriesEncoder(torch.nn.Module):
         logging.info("Loading model from {}".format(model_save_file))
         self.load_state_dict(torch.load(model_save_file, map_location=self.device))
 
-    def fit(self, train_iterator, test_iterator=None, test_labels=None, percent=88, nb_steps_per_verbose=300, save_memory=False, **kwargs):
+    def fit(
+        self,
+        train_iterator,
+        test_iterator=None,
+        test_labels=None,
+        percent=88,
+        nb_steps_per_verbose=300,
+        save_memory=False,
+        **kwargs
+    ):
         # Check if the given time series have unequal lengths
         train = train_iterator.fetch_windows()
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
-
+        num_batches = len(train_iterator.loader)
         logging.info("Start training for {} steps.".format(self.nb_steps))
         # Encoder training
         while epochs < self.nb_steps:
-            logging.info('Epoch: {}'.format(epochs + 1))
+            logging.info("Epoch: {}".format(epochs + 1))
+            running_loss = 0
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
                 batch = batch.to(self.device)
@@ -91,10 +116,17 @@ class TimeSeriesEncoder(torch.nn.Module):
                 loss = return_dict["loss"]
                 loss.backward()
                 self.optimizer.step()
-            self.score(test_iterator, test_labels, percent)
+                running_loss += loss.item()
+            logging.info(
+                "Epoch: {}, loss: {:.3f}".format(epochs + 1, running_loss / num_batches)
+            )
+            if test_labels is not None:
+                self.score(test_iterator, test_labels, percent)
             epochs += 1
             self.save_encoder()
         return self
+
+    # def __early_stop(self, loss):
 
     def encode(self, iterator):
         # Check if the given time series have unequal lengths
@@ -123,19 +155,19 @@ class TimeSeriesEncoder(torch.nn.Module):
     def score(self, iterator, anomaly_label, percent=88):
         logging.info("Evaluating ")
         self = self.eval()
-        anomaly_label = anomaly_label[:, -1] # actually predict the last window
+        anomaly_label = anomaly_label[:, -1]  # actually predict the last window
         with torch.no_grad():
             diff_list = []
             for batch in iterator:
                 batch = batch.to(self.device)
                 return_dict = self(batch)
                 # diff = return_dict["diff"].max(dim=-1)[0] # chose the most anomaous ts
-                diff = return_dict["diff"].mean(dim=-1) # chose the most anomaous ts
+                diff = return_dict["diff"].mean(dim=-1)  # chose the most anomaous ts
                 diff_list.append(diff)
 
         diff_list = torch.cat(diff_list)
         pred = adjust_predicts(diff_list.cpu().numpy(), anomaly_label, percent)
-        
+
         f1 = f1_score(pred, anomaly_label)
         ps = precision_score(pred, anomaly_label)
         rc = recall_score(pred, anomaly_label)
@@ -146,19 +178,57 @@ class TimeSeriesEncoder(torch.nn.Module):
 
 
 class CausalCNNEncoder(TimeSeriesEncoder):
-    def __init__(self, in_channels=1, channels=10, depth=1,reduced_size=10, out_channels=10, kernel_size=4, device="cpu", **kwargs):
+    def __init__(
+        self,
+        in_channels=1,
+        channels=10,
+        depth=1,
+        reduced_size=10,
+        out_channels=10,
+        kernel_size=4,
+        device="cpu",
+        **kwargs
+    ):
         super(CausalCNNEncoder, self).__init__(
             architecture="CausalCNN",
-            encoder=self.__create_encoder(in_channels, channels, depth, reduced_size, out_channels, kernel_size, device, **kwargs), device=device, **kwargs)
+            encoder=self.__create_encoder(
+                in_channels,
+                channels,
+                depth,
+                reduced_size,
+                out_channels,
+                kernel_size,
+                device,
+                **kwargs
+            ),
+            device=device,
+            **kwargs
+        )
         self.channels = channels
         self.depth = depth
         self.reduced_size = reduced_size
         self.kernel_size = kernel_size
 
-    def __create_encoder(self, in_channels, channels, depth, reduced_size, out_channels, kernel_size, device, **kwargs):
+    def __create_encoder(
+        self,
+        in_channels,
+        channels,
+        depth,
+        reduced_size,
+        out_channels,
+        kernel_size,
+        device,
+        **kwargs
+    ):
         encoder = networks.causal_cnn.CausalCNNEncoder(
-            in_channels, channels, depth, reduced_size, out_channels,
-            kernel_size, **kwargs)
+            in_channels,
+            channels,
+            depth,
+            reduced_size,
+            out_channels,
+            kernel_size,
+            **kwargs
+        )
         encoder = encoder.double().to(device)
         return encoder
 

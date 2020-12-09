@@ -1,5 +1,5 @@
 Base:
-    window_size: 250
+    window_size: 128
     batch_size: 64
     compared_length: null
     penalty: null
@@ -19,7 +19,7 @@ casualCnn:
     discretized: False
 
 mlstm:
-    hidden_size: 64
+    hidden_size: 128
     num_layers: 2
     discretized: False
     normalize: False # minmax, standard, robust
