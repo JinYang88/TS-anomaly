@@ -125,7 +125,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # datasets/anomaly/SMD/processed/machine-1-1_test.pkl
     nrows = None
-    dataset = "smd_1-2"
+    dataset = args.dataset
 
     if dataset.lower().startswith("smd"):
         data_dict = load_SMD_dataset(
