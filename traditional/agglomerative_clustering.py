@@ -29,6 +29,7 @@ from IPython import embed
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
 
 def adjust_predicts(
@@ -121,7 +122,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Anomaly detection with traditional ways"
     )
-    parser.add_argument("--dataset", type=str, default="SMD1")
+    parser.add_argument("--dataset", type=str, default="SMD_1-1")
+    parser.add_argument("--inter", action="store_true")
+    parser.add_argument("--norm", action="store_true")
+
     args = parser.parse_args()
     # datasets/anomaly/SMD/processed/machine-1-1_test.pkl
     nrows = None
@@ -150,6 +154,18 @@ if __name__ == "__main__":
     print("Length for train: {} = {}".format(dataset, len(data_dict["train"])))
     print("Length for test: {} = {}".format(dataset, len(data_dict["test"])))
 
+    if args.inter:
+        print("Doing feature interaction")
+        pf = PolynomialFeatures(include_bias=True, degree=2)
+        data_dict["train"] = pf.fit_transform(data_dict["train"])
+        data_dict["test"] = pf.fit_transform(data_dict["test"])
+
+    if args.norm:
+        print("Doing feature normalization")
+        sd = StandardScaler()
+        data_dict["train"] = sd.fit_transform(data_dict["train"])
+        data_dict["test"] = sd.transform(data_dict["train"])
+
     # Get windows
     # window_size = 100
     # train_df = pd.DataFrame(data_dict["train"])
@@ -172,9 +188,11 @@ if __name__ == "__main__":
         centers = np.array([np.array(v).mean(axis=0) for k, v in cluster_ts.items()])
         print("Computing centers done")
 
-        for anomaly_ratio in np.linspace(1e-3, 0.2, 20):
+        for anomaly_ratio in np.linspace(1e-3, 0.5, 50):
             info_save = {}
             info_save["linkage"] = linkage
+            info_save["inter"] = args.inter
+            info_save["norm"] = args.norm
             test_dist_mat = cosine_similarity(data_dict["test"], centers)
             anomaly_rate = 1 - test_dist_mat.max(axis=1)
             adjusted_anomaly = adjust_predicts(
@@ -191,4 +209,9 @@ if __name__ == "__main__":
             info_save_list.append(info_save)
 
     df = pd.DataFrame(info_save_list)
-    df.to_csv("exp_results_{}.csv".format(dataset), index=False)
+    filename = "exp_results_" + dataset
+    if args.inter:
+        filename += "_inter"
+    if args.norm:
+        filename += "_norm"
+    df.to_csv(filename + ".csv", index=False)
