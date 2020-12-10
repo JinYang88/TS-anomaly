@@ -172,7 +172,7 @@ if __name__ == "__main__":
         centers = np.array([np.array(v).mean(axis=0) for k, v in cluster_ts.items()])
         print("Computing centers done")
 
-        for anomaly_ratio in np.linspace(1e-3, 0.1, 20):
+        for anomaly_ratio in np.linspace(1e-3, 0.2, 20):
             info_save = {}
             info_save["linkage"] = linkage
             test_dist_mat = cosine_similarity(data_dict["test"], centers)
