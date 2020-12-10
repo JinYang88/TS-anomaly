@@ -125,16 +125,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # datasets/anomaly/SMD/processed/machine-1-1_test.pkl
     nrows = None
-    dataset = args.dataset
+    dataset = "smd_1-2"
 
     if dataset.lower().startswith("smd"):
         data_dict = load_SMD_dataset(
-            "../datasets/anomaly/SMD/processed", "machine-{}*".format(dataset[-1])
+            "datasets/anomaly/SMD/processed",
+            "machine-{}".format(dataset.split("_")[-1]),
         )
     elif dataset.lower() == "kddcup":
-        data_dict = load_kddcup_dataset(path="../datasets/anomaly/Kddcup9")
+        data_dict = load_kddcup_dataset(path="datasets/anomaly/Kddcup9")
     elif dataset.lower() == "smap" or dataset.lower() == "msl":
-        data_dict = load_SMAP_MSL_dataset("../datasets/anomaly/SMAP-MSL", dataset)
+        data_dict = load_SMAP_MSL_dataset("datasets/anomaly/SMAP-MSL", dataset)
 
     if nrows is not None:
         data_dict["test_label"] = data_dict["test_label"][0:nrows]
