@@ -34,11 +34,11 @@ def load_SMAP_MSL_dataset(path, dataset="MSL", use_dim="all"):
         basename = os.path.basename(f)
         with open(f, "rb") as fr:
             array = pickle.load(fr)
-        if basename.startswith(dataset + "_train"):
+        if basename == dataset + "_train.pkl":
             data_dict["train"] = array if use_dim == "all" else array[:, use_dim]
-        if basename.startswith(dataset + "_test_label"):
+        if basename == dataset + "_test_label.pkl":
             data_dict["test_label"] = array
-        if basename.startswith(dataset + "_test"):
+        if basename == dataset + "_test.pkl":
             data_dict["test"] = array if use_dim == "all" else array[:, use_dim]
 
     return data_dict
