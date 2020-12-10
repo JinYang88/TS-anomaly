@@ -125,6 +125,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="SMD_1-1")
     parser.add_argument("--inter", action="store_true")
     parser.add_argument("--norm", action="store_true")
+    parser.add_argument("--pca", action="store_true")
 
     args = parser.parse_args()
     # datasets/anomaly/SMD/processed/machine-1-1_test.pkl
@@ -159,6 +160,13 @@ if __name__ == "__main__":
         pf = PolynomialFeatures(include_bias=True, degree=2)
         data_dict["train"] = pf.fit_transform(data_dict["train"])
         data_dict["test"] = pf.fit_transform(data_dict["test"])
+
+    if args.pca:
+        print("Redcuing dimensions")
+        pca = PCA(n_components=30)
+        data_dict["train"] = pca.fit_transform(data_dict["train"])
+        data_dict["test"] = pca.transform(data_dict["test"])
+        print("Redcuing dimensions done.")
 
     if args.norm:
         print("Doing feature normalization")
@@ -214,4 +222,6 @@ if __name__ == "__main__":
         filename += "_inter"
     if args.norm:
         filename += "_norm"
+    if args.pca:
+        filename += "_pca"
     df.to_csv(filename + ".csv", index=False)
