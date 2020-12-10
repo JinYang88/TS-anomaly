@@ -164,7 +164,7 @@ if __name__ == "__main__":
         print("Doing feature normalization")
         sd = StandardScaler()
         data_dict["train"] = sd.fit_transform(data_dict["train"])
-        data_dict["test"] = sd.transform(data_dict["train"])
+        data_dict["test"] = sd.transform(data_dict["test"])
 
     # Get windows
     # window_size = 100
