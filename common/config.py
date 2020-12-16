@@ -42,8 +42,8 @@ def initialize_config(config_dir, args):
     found_params = find_config(model_configs, args["expid"])
     base_config = found_params.get('Base', {})
     model_config = found_params.get(args["expid"]) 
-    params.update(args)
     params.update(base_config)
+    params.update(args)
     params.update(model_config)
 
     params = set_logger(params)

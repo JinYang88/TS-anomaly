@@ -53,7 +53,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         self.compile()
 
     def forward(self, batch_window):
-        batch_window = batch_window.permute(0, 2, 1)  # b x win x ts_dim
+        # batch_window = batch_window.permute(0, 2, 1)  # b x win x ts_dim
         batch_window, y = batch_window[:, 0:-1, :], batch_window[:, -1, :]
 
         if self.embedder:

@@ -28,10 +28,11 @@ import sklearn.externals
 import sklearn.model_selection
 import sklearn.svm
 import torch
+import numpy as np
 from common import triplet_loss
 from common.utils import adjust_predicts
 from IPython import embed
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import roc_auc_score, f1_score, recall_score, precision_score
 
 import networks
 
@@ -63,6 +64,8 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.batch_size = batch_size
         self.nb_steps = nb_steps
         self.lr = lr
+        self.performance_list = []
+
 
     def compile(self):
         logging.info("Compiling finished.")
@@ -96,6 +99,8 @@ class TimeSeriesEncoder(torch.nn.Module):
         percent=88,
         nb_steps_per_verbose=300,
         save_memory=False,
+        monitor="AUC",
+        patience=10,
         **kwargs
     ):
         # Check if the given time series have unequal lengths
@@ -106,11 +111,10 @@ class TimeSeriesEncoder(torch.nn.Module):
         logging.info("Start training for {} steps.".format(self.nb_steps))
         # Encoder training
         while epochs < self.nb_steps:
-            logging.info("Epoch: {}".format(epochs + 1))
             running_loss = 0
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
-                batch = batch.to(self.device)
+                batch = batch.to(self.device).float()
                 return_dict = self(batch)
                 self.optimizer.zero_grad()
                 loss = return_dict["loss"]
@@ -121,12 +125,25 @@ class TimeSeriesEncoder(torch.nn.Module):
                 "Epoch: {}, loss: {:.3f}".format(epochs + 1, running_loss / num_batches)
             )
             if test_labels is not None:
-                self.score(test_iterator, test_labels, percent)
+                eval_result = self.score(test_iterator, test_labels, percent)
             epochs += 1
-            self.save_encoder()
+            stopping = self.__on_epoch_end(eval_result[monitor], patience+1)
+            if stopping :
+                logging.info("Early stop at epoch={}".format(epochs))
+                break
         return self
 
-    # def __early_stop(self, loss):
+    def __on_epoch_end(self, monitor_value, patience):
+        self.performance_list.append(monitor_value)
+        num_record = len(self.performance_list)
+        latest = np.array(self.performance_list[-patience: ])
+        if num_record == 1 or monitor_value > max(latest):
+            logging.info("Saving model for performance: {:3f}".format(monitor_value))
+            self.save_encoder()
+            return False
+        elif all(latest[0:-1] - latest[1:] > 0):
+            return True
+
 
     def encode(self, iterator):
         # Check if the given time series have unequal lengths
@@ -135,7 +152,7 @@ class TimeSeriesEncoder(torch.nn.Module):
 
         with torch.no_grad():
             for batch in iterator:
-                batch = batch.to(self.device)
+                batch = batch.to(self.device).float()
                 return_dict = self(batch)
                 features.append(return_dict["recst"])
         features = torch.cat(features)
@@ -144,7 +161,7 @@ class TimeSeriesEncoder(torch.nn.Module):
 
     def encode_windows(self, windows):
         # window: n_batch x dim x time
-        windows = torch.Tensor(windows).double()
+        windows = torch.Tensor(windows)
         if len(windows.size()) == 2:
             windows = windows.unsqueeze(0)
         return self(windows)
@@ -152,29 +169,45 @@ class TimeSeriesEncoder(torch.nn.Module):
     def predict(self, X):
         raise NotImplementedError("TBD")
 
+    def __iter_thresholds(self, score, label):
+        best_f1 = -float("inf")
+        best_theta = None
+        best_adjust = None
+        for anomaly_ratio in np.linspace(1e-3, 0.3, 50):
+            info_save = {}
+            adjusted_anomaly = adjust_predicts(score, label , percent=100 * (1-anomaly_ratio))
+            f1 = f1_score(adjusted_anomaly, label)
+            if f1 > best_f1:
+                best_f1 = f1
+                best_adjust = adjusted_anomaly
+                best_theta = anomaly_ratio
+        return best_f1, best_theta, best_adjust
+
     def score(self, iterator, anomaly_label, percent=88):
-        logging.info("Evaluating ")
+        logging.info("Evaluating")
         self = self.eval()
-        anomaly_label = anomaly_label[:, -1]  # actually predict the last window
         with torch.no_grad():
             diff_list = []
             for batch in iterator:
-                batch = batch.to(self.device)
+                batch = batch.to(self.device).float()
                 return_dict = self(batch)
-                # diff = return_dict["diff"].max(dim=-1)[0] # chose the most anomaous ts
-                diff = return_dict["diff"].mean(dim=-1)  # chose the most anomaous ts
+                # diff = return_dict["diff"].min(dim=-1)[0] # chose the most anomaous ts
+                diff = return_dict["diff"].sum(dim=-1).sigmoid()  # chose the most anomaous ts
                 diff_list.append(diff)
+        logging.info("Forwarding done.")
 
-        diff_list = torch.cat(diff_list)
-        pred = adjust_predicts(diff_list.cpu().numpy(), anomaly_label, percent)
+        anomaly_label = anomaly_label[:, -1]  # actually predict the last window
+        diff_list = torch.cat(diff_list).cpu().numpy()
+        auc = roc_auc_score(anomaly_label, diff_list)
 
-        f1 = f1_score(pred, anomaly_label)
-        ps = precision_score(pred, anomaly_label)
-        rc = recall_score(pred, anomaly_label)
-
-        logging.info("F1: {:.3f}, PS: {:.3f}, RC:{:.3f}".format(f1, ps, rc))
+        f1, theta, pred_adjusted = self.__iter_thresholds(diff_list, anomaly_label)
+        logging.info("Searching and adjust done.")
+        ps = precision_score(pred_adjusted, anomaly_label)
+        rc = recall_score(pred_adjusted, anomaly_label)
+        
+        logging.info("AUC: {:.3f}, F1: {:.3f}, PS: {:.3f}, RC:{:.3f}".format(auc, f1, ps, rc))
         self = self.train()
-        return {"diff_list": diff_list, "pred": pred, "anomaly_label": anomaly_label}
+        return {"score": diff_list, "pred": pred_adjusted, "anomaly_label": anomaly_label, "theta": theta, "AUC": auc , "F1": f1 , "PS": ps , "RC": rc}
 
 
 class CausalCNNEncoder(TimeSeriesEncoder):
@@ -229,7 +262,7 @@ class CausalCNNEncoder(TimeSeriesEncoder):
             kernel_size,
             **kwargs
         )
-        encoder = encoder.double().to(device)
+        encoder = encoder.to(device)
         return encoder
 
     def set_params(self, **kwargs):

@@ -87,7 +87,7 @@ class preprocessor:
 
     def normalize(self, data_dict, method="standard"):
         logging.info("Normalizing data")
-        # method: minmax, standard, robust
+       # method: minmax, standard, robust
         normalized_dict = defaultdict(dict)
         for data_name, sub_dict in data_dict.items():
             if not isinstance(sub_dict, dict):
@@ -118,17 +118,32 @@ class preprocessor:
                     normalized_dict[data_name][k] = v
         return normalized_dict
 
+def get_windows(ts, labels=None, window_size=128, stride=1, dim=None):
+    i = 0
+    ts_len = ts.shape[0]
+    windows = []
+    label_windows = []
+    while i + window_size < ts_len:
+        if dim is not None:
+            windows.append(ts[i : i + window_size, dim])
+        else:
+            windows.append(ts[i : i + window_size])
+        if labels is not None:
+            label_windows.append(labels[i : i + window_size])
+        i += stride
+    if labels is not None:
+        return np.array(windows, dtype=np.float32), np.array(label_windows, dtype=np.float32)
+    else:
+        return np.array(windows, dtype=np.float32), None
 
 def generate_windows(
-    data_dict, data_hdf5_path, window_size=100, nrows=None, clear=False, **kwargs
+    data_dict, data_hdf5_path, window_size=100, nrows=None, clear=False, stride=1, **kwargs
 ):
-    train_windows = []
-    test_windows = []
     results = {}
     cache_file = os.path.join(
         data_hdf5_path,
         "hdf5",
-        "window_dict_ws={}_nrows={}.hdf5".format(window_size, nrows),
+        "window_dict_ws={}_st={}_nrows={}.hdf5".format(window_size, stride, nrows),
     )
     os.makedirs(os.path.dirname(cache_file), exist_ok=True)
 
@@ -136,42 +151,35 @@ def generate_windows(
         return load_hdf5(cache_file)
 
     logging.info(
-        "Generating sliding windows (size {}) for dataset [{}]".format(
-            window_size, data_name
+        "Generating sliding windows (size {}).".format(
+            window_size
         )
     )
+
+
+    if "train" in data_dict:
+        train = data_dict["train"][0:nrows]
+        train_windows, _ = get_windows(train, window_size=window_size, stride=stride)
+
 
     if "test" in data_dict:
         test = data_dict["test"][0:nrows]
         test_label = (
             None if "test_label" not in data_dict else data_dict["test_label"][0:nrows]
         )
-        test_win = BatchSlidingWindow(
-            test.shape[0], window_size=window_size, batch_size=1000, shuffle=False
-        ).get_windows(test, test_label)
-        test_windows.append(test_win)
+        test_windows, test_labels = get_windows(test, test_label, window_size=window_size, stride=stride)
 
-    if "train" in data_dict:
-        train = data_dict["train"][0:nrows]
-        train_win = BatchSlidingWindow(
-            train.shape[0], window_size=window_size, batch_size=1000, shuffle=False
-        ).get_windows(train)
-        train_windows.append(train_win)
+    if len(train_windows) > 0:
+        results["train_windows"] = train_windows
+        logging.info("Train windows #: {}".format(train_windows.shape))
 
-    if train_windows:
-        train_windows = torch.cat(train_windows, dim=0)
-        results["train_windows"] = train_windows.cpu().numpy()
-        logging.info("Training windows shape: {}".format(train_windows.shape))
-
-    if test_windows:
-        test_windows = torch.cat(test_windows, dim=0)
+    if len(test_windows) > 0:
         if test_label is not None:
-            test_windows, test_labels = test_windows[:, 0:-1], test_windows[:, -1]
-            results["test_windows"] = test_windows.cpu().numpy()
-            results["test_labels"] = test_labels.cpu().numpy()
+            results["test_windows"] = test_windows
+            results["test_labels"] = test_labels
         else:
-            results["test_windows"] = test_windows.cpu().numpy()
-        logging.info("Training windows shape: {}".format(test_windows.shape))
+            results["test_windows"] = test_windows
+        logging.info("Test windows #: {}".format(test_windows.shape))
 
     save_hdf5(cache_file, results)
     return results

@@ -24,3 +24,12 @@ mlstm:
     discretized: False
     normalize: False # minmax, standard, robust
     use_dim: 1
+
+mlstm_250:
+    stride: 32
+    window_size: 32
+    hidden_size: 250
+    num_layers: 2
+    discretized: False
+    normalize: minmax # minmax, standard, robust
+    use_dim: 1
