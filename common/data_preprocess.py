@@ -135,33 +135,34 @@ def generate_windows(
     if not clear and os.path.isfile(cache_file):
         return load_hdf5(cache_file)
 
-    for data_name, sub_dict in data_dict.items():
-        if not isinstance(sub_dict, dict):
-            continue
-        logging.info(
-            "Generating sliding windows (size {}) for dataset [{}]".format(
-                window_size, data_name
-            )
+    logging.info(
+        "Generating sliding windows (size {}) for dataset [{}]".format(
+            window_size, data_name
         )
-        test = sub_dict["test"][0:nrows]
+    )
+
+    if "test" in data_dict:
+        test = data_dict["test"][0:nrows]
         test_label = (
-            None if "test_label" not in sub_dict else sub_dict["test_label"][0:nrows]
+            None if "test_label" not in data_dict else data_dict["test_label"][0:nrows]
         )
         test_win = BatchSlidingWindow(
             test.shape[0], window_size=window_size, batch_size=1000, shuffle=False
         ).get_windows(test, test_label)
         test_windows.append(test_win)
 
-        if "train" in sub_dict:
-            train = sub_dict["train"][0:nrows]
-            train_win = BatchSlidingWindow(
-                train.shape[0], window_size=window_size, batch_size=1000, shuffle=False
-            ).get_windows(train)
-            train_windows.append(train_win)
+    if "train" in data_dict:
+        train = data_dict["train"][0:nrows]
+        train_win = BatchSlidingWindow(
+            train.shape[0], window_size=window_size, batch_size=1000, shuffle=False
+        ).get_windows(train)
+        train_windows.append(train_win)
 
     if train_windows:
         train_windows = torch.cat(train_windows, dim=0)
         results["train_windows"] = train_windows.cpu().numpy()
+        logging.info("Training windows shape: {}".format(train_windows.shape))
+
     if test_windows:
         test_windows = torch.cat(test_windows, dim=0)
         if test_label is not None:
@@ -170,6 +171,7 @@ def generate_windows(
             results["test_labels"] = test_labels.cpu().numpy()
         else:
             results["test_windows"] = test_windows.cpu().numpy()
+        logging.info("Training windows shape: {}".format(test_windows.shape))
 
     save_hdf5(cache_file, results)
     return results
