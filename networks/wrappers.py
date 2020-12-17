@@ -19,6 +19,7 @@ import logging
 import math
 import os
 import sys
+from collections import defaultdict
 from glob import glob
 
 import joblib
@@ -148,17 +149,18 @@ class TimeSeriesEncoder(torch.nn.Module):
 
     def encode(self, iterator):
         # Check if the given time series have unequal lengths
-        features = []
+        save_dict = defaultdict(list)
         self = self.eval()
 
+        used_keys = ["recst", "y", "diff"]
         with torch.no_grad():
             for batch in iterator:
                 batch = batch.to(self.device).float()
                 return_dict = self(batch)
-                features.append(return_dict["recst"])
-        features = torch.cat(features)
+                for k in used_keys:
+                    save_dict[k].append(return_dict[k])
         self = self.train()
-        return features
+        return {torch.cat(v) for k, v in save_dict.items()}
 
     def encode_windows(self, windows):
         # window: n_batch x dim x time
