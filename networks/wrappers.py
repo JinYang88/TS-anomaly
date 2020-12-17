@@ -34,7 +34,8 @@ import torch
 from common import triplet_loss
 from common.utils import adjust_predicts
 from IPython import embed
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import (f1_score, precision_score, recall_score,
+                             roc_auc_score)
 
 import networks
 
@@ -160,7 +161,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 for k in used_keys:
                     save_dict[k].append(return_dict[k])
         self = self.train()
-        return {torch.cat(v) for k, v in save_dict.items()}
+        return {k: torch.cat(v) for k, v in save_dict.items()}
 
     def encode_windows(self, windows):
         # window: n_batch x dim x time
