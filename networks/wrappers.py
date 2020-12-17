@@ -124,14 +124,14 @@ class TimeSeriesEncoder(torch.nn.Module):
             #     eval_result = self.score(test_iterator, test_labels, percent)
             #     nni.report_intermediate_result(eval_result["AUC"])
             epochs += 1
-            stopping = self.__on_epoch_end(eval_result[monitor], patience + 1)
-            if stopping:
-                logging.info(
-                    "Early stop at epoch={}, best={:.3f}".format(
-                        epochs, self.best_metric
-                    )
-                )
-                break
+            # stopping = self.__on_epoch_end(eval_result[monitor], patience + 1)
+            # if stopping:
+            #     logging.info(
+            #         "Early stop at epoch={}, best={:.3f}".format(
+            #             epochs, self.best_metric
+            #         )
+            #     )
+            #     break
         return self
 
     def __on_epoch_end(self, monitor_value, patience):
