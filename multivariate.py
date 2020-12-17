@@ -21,10 +21,10 @@ import logging
 import math
 import os
 
+import nni
 import numpy
 import pandas
 import torch
-import nni
 from IPython import embed
 
 from common import data_preprocess
@@ -85,7 +85,9 @@ if __name__ == "__main__":
     eval_result_dict = encoder.score(test_iterator.loader, window_dict["test_labels"])
 
     logfile = "./exp_results/{}.log".format(params["dataset"])
-    log = "{} | AUC-{:.3f} F1-{:.3f}\n".format(params["trial_id"], eval_result_dict["AUC"], eval_result_dict["F1"])
+    log = "{} | AUC-{:.3f} F1-{:.3f}\n".format(
+        params["trial_id"], eval_result_dict["AUC"], eval_result_dict["F1"]
+    )
 
     with open(logfile, "a+") as fw:
         fw.write(log)

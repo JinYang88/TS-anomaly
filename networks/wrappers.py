@@ -19,21 +19,21 @@ import logging
 import math
 import os
 import sys
-import nni
 from glob import glob
 
 import joblib
+import nni
 import numpy
+import numpy as np
 import sklearn
 import sklearn.externals
 import sklearn.model_selection
 import sklearn.svm
 import torch
-import numpy as np
 from common import triplet_loss
 from common.utils import adjust_predicts
 from IPython import embed
-from sklearn.metrics import roc_auc_score, f1_score, recall_score, precision_score
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
 import networks
 
@@ -43,9 +43,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         self,
         save_path,
         trial_id,
-        compared_length,
-        nb_random_samples,
-        negative_penalty,
         batch_size,
         nb_steps,
         lr,
@@ -66,7 +63,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.nb_steps = nb_steps
         self.lr = lr
         self.best_metric = -float("inf")
-
 
     def compile(self):
         logging.info("Compiling finished.")
@@ -128,9 +124,13 @@ class TimeSeriesEncoder(torch.nn.Module):
                 eval_result = self.score(test_iterator, test_labels, percent)
                 nni.report_intermediate_result(eval_result["AUC"])
             epochs += 1
-            stopping = self.__on_epoch_end(eval_result[monitor], patience+1)
-            if stopping :
-                logging.info("Early stop at epoch={}, best={:.3f}".format(epochs, self.best_metric))
+            stopping = self.__on_epoch_end(eval_result[monitor], patience + 1)
+            if stopping:
+                logging.info(
+                    "Early stop at epoch={}, best={:.3f}".format(
+                        epochs, self.best_metric
+                    )
+                )
                 break
         return self
 
@@ -145,7 +145,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         if self.worse_count >= patience:
             return True
         return False
-
 
     def encode(self, iterator):
         # Check if the given time series have unequal lengths
@@ -177,7 +176,9 @@ class TimeSeriesEncoder(torch.nn.Module):
         best_adjust = None
         for anomaly_ratio in np.linspace(1e-3, 0.3, 50):
             info_save = {}
-            adjusted_anomaly = adjust_predicts(score, label , percent=100 * (1-anomaly_ratio))
+            adjusted_anomaly = adjust_predicts(
+                score, label, percent=100 * (1 - anomaly_ratio)
+            )
             f1 = f1_score(adjusted_anomaly, label)
             if f1 > best_f1:
                 best_f1 = f1
@@ -193,20 +194,36 @@ class TimeSeriesEncoder(torch.nn.Module):
             for batch in iterator:
                 batch = batch.to(self.device).float()
                 return_dict = self(batch)
-                # diff = return_dict["diff"].min(dim=-1)[0] # chose the most anomaous ts
-                diff = return_dict["diff"].sum(dim=-1).sigmoid()  # chose the most anomaous ts
-                diff_list.append(diff)
+                diff = (
+                    # sum all dimension
+                    return_dict["diff"]
+                    .sum(dim=-1)
+                    .sigmoid()  # b x prediction_length
+                )
+                # mean all timestamp
+                diff_list.append(diff.mean(dim=-1))
         anomaly_label = anomaly_label[:, -1]  # actually predict the last window
-        diff_list = torch.cat(diff_list).cpu().numpy()
+        diff_list = torch.cat(diff_list, dim=0).cpu().numpy()
         auc = roc_auc_score(anomaly_label, diff_list)
 
         f1, theta, pred_adjusted = self.__iter_thresholds(diff_list, anomaly_label)
         ps = precision_score(pred_adjusted, anomaly_label)
         rc = recall_score(pred_adjusted, anomaly_label)
-        
-        logging.info("AUC: {:.3f}, F1: {:.3f}, PS: {:.3f}, RC:{:.3f}".format(auc, f1, ps, rc))
+
+        logging.info(
+            "AUC: {:.3f}, F1: {:.3f}, PS: {:.3f}, RC:{:.3f}".format(auc, f1, ps, rc)
+        )
         self = self.train()
-        return {"score": diff_list, "pred": pred_adjusted, "anomaly_label": anomaly_label, "theta": theta, "AUC": auc , "F1": f1 , "PS": ps , "RC": rc}
+        return {
+            "score": diff_list,
+            "pred": pred_adjusted,
+            "anomaly_label": anomaly_label,
+            "theta": theta,
+            "AUC": auc,
+            "F1": f1,
+            "PS": ps,
+            "RC": rc,
+        }
 
 
 class CausalCNNEncoder(TimeSeriesEncoder):

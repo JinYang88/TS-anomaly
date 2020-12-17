@@ -28,10 +28,17 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         vocab_size=None,
         embedding_dim=None,
         dropout=0,
-        **kwargs
+        prediction_length=1,
+        prediction_dims=[],
+        **kwargs,
     ):
         super().__init__(architecture="MultiLSTM", **kwargs)
         # super().__init__()
+
+        self.prediction_dims = (
+            prediction_dims if prediction_dims else list(range(in_channels))
+        )
+        self.prediction_length = prediction_length
 
         if vocab_size is not None and embedding_dim is not None:
             self.embedder = nn.Embedding(vocab_size, embedding_dim)
@@ -39,6 +46,8 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         else:
             self.embedder = None
             lstm_input_dim = in_channels
+
+        final_output_dim = prediction_length * len(self.prediction_dims)
 
         self.lstm = nn.LSTM(
             input_size=lstm_input_dim,
@@ -48,32 +57,38 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             batch_first=True,
         )
         self.max_pooling = nn.MaxPool1d(kernel_size=hidden_size)
-        # self.linear = nn.Linear(hidden_size, in_channels)
-        self.linear = nn.Sequential(nn.Linear(hidden_size, hidden_size), nn.Tanh(), nn.Linear(hidden_size, in_channels))
+        self.linear = nn.Linear(hidden_size, final_output_dim)
 
+        self.dropout = nn.Dropout(dropout)
         self.loss_fn = nn.MSELoss(reduction="none")
 
         self.compile()
 
     def forward(self, batch_window):
         # batch_window = batch_window.permute(0, 2, 1)  # b x win x ts_dim
-        batch_window, y = batch_window[:, 0:-1, :], batch_window[:, -1, :]
+        batch_window, y = (
+            batch_window[:, 0 : -self.prediction_length, :],
+            batch_window[:, -self.prediction_length :, self.prediction_dims],
+        )
 
         if self.embedder:
             batch_window = self.embedder(batch_window.long().squeeze())
 
         lstm_out, lstm_hidden = self.lstm(batch_window)
-        outputs = lstm_out.sum(dim=1)  # consider every dim of all timestamps
+        outputs = lstm_out.sum(dim=1)  # b x
 
-        recst = self.linear(outputs)
+        recst = self.linear(outputs).view(
+            self.batch_size, self.prediction_length, len(self.prediction_dims)
+        )
         loss = self.loss_fn(recst, y)
         return_dict = {
             "loss": loss.sum(),
             "recst": recst,
             "repr": outputs,
             "diff": loss,
-            "anomaly_label": y,
+            "y": y,
         }
+
         return return_dict
 
 

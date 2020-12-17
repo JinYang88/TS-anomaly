@@ -1,13 +1,10 @@
 Base:
     window_size: 128
     batch_size: 64
-    compared_length: null
-    penalty: null
-    negative_penalty: 1
     nb_steps: 2000
     lr: 0.001
-    nb_random_samples: 5
-    nb_steps_per_verbose: 2000
+    prediction_length: 10
+    prediction_dims: [0] # a list or empty indicating "all"
 
 casualCnn:
     channels: 40
@@ -31,5 +28,5 @@ mlstm_250:
     hidden_size: 250
     num_layers: 2
     discretized: False
-    normalize: minmax # minmax, standard, robust
+    normalize: False # minmax, standard, robust
     use_dim: 1
