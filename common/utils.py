@@ -2,6 +2,7 @@ import numpy as np
 import json
 import logging
 import h5py
+import nni
 
 def load_hdf5(infile):
     logging.info("Loading hdf5 from {}".format(infile))
@@ -17,6 +18,12 @@ def save_hdf5(outfile, arr_dict):
 def print_to_json(data):
     new_data = dict((k, str(v)) for k, v in data.items())
     return json.dumps(new_data, indent=4, sort_keys=True)
+
+
+def update_from_nni_params(params, nni_params):
+    if nni_params:
+        params.update(nni_params)
+    return params
 
 
 def adjust_predicts(score, label, percent=None,

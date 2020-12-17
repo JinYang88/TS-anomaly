@@ -24,13 +24,14 @@ import os
 import numpy
 import pandas
 import torch
+import nni
 from IPython import embed
 
 from common import data_preprocess
 from common.config import initialize_config, parse_arguments, set_logger
 from common.dataloader import load_CSV_dataset, load_SMAP_MSL_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
-from common.utils import print_to_json
+from common.utils import print_to_json, update_from_nni_params
 from networks.mlstm import MultiLSTMEncoder
 
 # python univariate_smd.py
@@ -40,6 +41,7 @@ if __name__ == "__main__":
     # load config
     config_dir = "./hypers/" if not args["load"] else args["load"]
     params = initialize_config(config_dir, args)
+    params = update_from_nni_params(params, nni.get_next_parameter())
 
     # load & preprocess data
     data_dict = load_SMAP_MSL_dataset(params["path"], params["dataset"])
@@ -79,7 +81,16 @@ if __name__ == "__main__":
         )
         encoder.save_encoder()
 
-    encoder.score(test_iterator.loader, window_dict["test_labels"])
+    encoder.load_encoder()
+    eval_result_dict = encoder.score(test_iterator.loader, window_dict["test_labels"])
+
+    logfile = "./exp_results/{}.log".format(params["dataset"])
+    log = "{} | AUC-{:.3f} F1-{:.3f}\n".format(params["trial_id"], eval_result_dict["AUC"], eval_result_dict["F1"])
+
+    with open(logfile, "a+") as fw:
+        fw.write(log)
+
+    nni.report_final_result(eval_result_dict["AUC"])
     # inference
     # features = encoder.encode(test_iterator.loader)
     # logging.info("Final features have shape: {}".format(features.shape))

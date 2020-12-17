@@ -167,7 +167,7 @@ def generate_windows(
         test_label = (
             None if "test_label" not in data_dict else data_dict["test_label"][0:nrows]
         )
-        test_windows, test_labels = get_windows(test, test_label, window_size=window_size, stride=stride)
+        test_windows, test_labels = get_windows(test, test_label, window_size=window_size, stride=1)
 
     if len(train_windows) > 0:
         results["train_windows"] = train_windows
@@ -181,5 +181,5 @@ def generate_windows(
             results["test_windows"] = test_windows
         logging.info("Test windows #: {}".format(test_windows.shape))
 
-    save_hdf5(cache_file, results)
+    # save_hdf5(cache_file, results)
     return results

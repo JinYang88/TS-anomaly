@@ -19,6 +19,7 @@ import logging
 import math
 import os
 import sys
+import nni
 from glob import glob
 
 import joblib
@@ -64,7 +65,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.batch_size = batch_size
         self.nb_steps = nb_steps
         self.lr = lr
-        self.performance_list = []
+        self.best_metric = -float("inf")
 
 
     def compile(self):
@@ -104,7 +105,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         **kwargs
     ):
         # Check if the given time series have unequal lengths
-        train = train_iterator.fetch_windows()
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
         num_batches = len(train_iterator.loader)
@@ -126,23 +126,25 @@ class TimeSeriesEncoder(torch.nn.Module):
             )
             if test_labels is not None:
                 eval_result = self.score(test_iterator, test_labels, percent)
+                nni.report_intermediate_result(eval_result["AUC"])
             epochs += 1
             stopping = self.__on_epoch_end(eval_result[monitor], patience+1)
             if stopping :
-                logging.info("Early stop at epoch={}".format(epochs))
+                logging.info("Early stop at epoch={}, best={:.3f}".format(epochs, self.best_metric))
                 break
         return self
 
     def __on_epoch_end(self, monitor_value, patience):
-        self.performance_list.append(monitor_value)
-        num_record = len(self.performance_list)
-        latest = np.array(self.performance_list[-patience: ])
-        if num_record == 1 or monitor_value > max(latest):
+        if monitor_value > self.best_metric:
+            self.best_metric = monitor_value
             logging.info("Saving model for performance: {:3f}".format(monitor_value))
             self.save_encoder()
-            return False
-        elif all(latest[0:-1] - latest[1:] > 0):
+            self.worse_count = 0
+        else:
+            self.worse_count += 1
+        if self.worse_count >= patience:
             return True
+        return False
 
 
     def encode(self, iterator):
@@ -194,14 +196,11 @@ class TimeSeriesEncoder(torch.nn.Module):
                 # diff = return_dict["diff"].min(dim=-1)[0] # chose the most anomaous ts
                 diff = return_dict["diff"].sum(dim=-1).sigmoid()  # chose the most anomaous ts
                 diff_list.append(diff)
-        logging.info("Forwarding done.")
-
         anomaly_label = anomaly_label[:, -1]  # actually predict the last window
         diff_list = torch.cat(diff_list).cpu().numpy()
         auc = roc_auc_score(anomaly_label, diff_list)
 
         f1, theta, pred_adjusted = self.__iter_thresholds(diff_list, anomaly_label)
-        logging.info("Searching and adjust done.")
         ps = precision_score(pred_adjusted, anomaly_label)
         rc = recall_score(pred_adjusted, anomaly_label)
         

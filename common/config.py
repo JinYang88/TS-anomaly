@@ -20,7 +20,7 @@ def parse_arguments():
     parser.add_argument('--save_path', type=str, metavar='PATH', default="./checkpoints", help='path where the estimator is/should be saved')
 
     parser.add_argument('--gpu', type=int, default=0, metavar='GPU', help='index of GPU used for computations (default: 0)')
-    parser.add_argument('--expid', type=str, default="mlstm",help='Expid in hypers')
+    parser.add_argument('--expid', type=str, default="mlstm_250",help='Expid in hypers')
     parser.add_argument('--load', type=str, default="",help='Load a pretrained model from the specific directory')
     parser.add_argument('--nrows', type=int, default=None,help='Read only first nrows for test')
     parser.add_argument('--clear', type=int, default=None,help='Set to 1 if data re-processsing is needed')

@@ -27,6 +27,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         num_layers=1,
         vocab_size=None,
         embedding_dim=None,
+        dropout=0,
         **kwargs
     ):
         super().__init__(architecture="MultiLSTM", **kwargs)
@@ -43,10 +44,12 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             input_size=lstm_input_dim,
             hidden_size=hidden_size,
             num_layers=num_layers,
+            dropout=dropout,
             batch_first=True,
         )
         self.max_pooling = nn.MaxPool1d(kernel_size=hidden_size)
-        self.linear = nn.Linear(hidden_size, in_channels)
+        # self.linear = nn.Linear(hidden_size, in_channels)
+        self.linear = nn.Sequential(nn.Linear(hidden_size, hidden_size), nn.Tanh(), nn.Linear(hidden_size, in_channels))
 
         self.loss_fn = nn.MSELoss(reduction="none")
 
@@ -60,12 +63,12 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             batch_window = self.embedder(batch_window.long().squeeze())
 
         lstm_out, lstm_hidden = self.lstm(batch_window)
-        outputs = lstm_out.mean(dim=1)  # consider every dim of all timestamps
+        outputs = lstm_out.sum(dim=1)  # consider every dim of all timestamps
 
         recst = self.linear(outputs)
         loss = self.loss_fn(recst, y)
         return_dict = {
-            "loss": loss.mean(),
+            "loss": loss.sum(),
             "recst": recst,
             "repr": outputs,
             "diff": loss,
