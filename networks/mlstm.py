@@ -77,13 +77,14 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
 
         lstm_out, lstm_hidden = self.lstm(batch_window)
         outputs = lstm_out.sum(dim=1)  # b x
+        outputs = self.dropout(outputs)
 
         recst = self.linear(outputs).view(
             self.batch_size, self.prediction_length, len(self.prediction_dims)
         )
         loss = self.loss_fn(recst, y)
         return_dict = {
-            "loss": loss.sum(),
+            "loss": loss.mean(),
             "recst": recst,
             "repr": outputs,
             "diff": loss,

@@ -29,4 +29,5 @@ mlstm_250:
     num_layers: 2
     discretized: False
     normalize: False # minmax, standard, robust
+    dropout: 0.1
     use_dim: 1
