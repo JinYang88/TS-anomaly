@@ -75,6 +75,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         if self.embedder:
             batch_window = self.embedder(batch_window.long().squeeze())
 
+        batch_window = self.dropout(batch_window)
         lstm_out, lstm_hidden = self.lstm(batch_window)
         outputs = lstm_out.sum(dim=1)  # b x
         # outputs = lstm_out[:, -1, :]  # b x
