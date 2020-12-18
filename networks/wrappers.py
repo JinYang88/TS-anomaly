@@ -106,7 +106,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
         num_batches = len(train_iterator.loader)
-        logging.info("Start training for {} steps.".format(self.nb_steps))
+        logging.info("Start training for {} batches.".format(num_batches))
         # Encoder training
         while epochs < self.nb_steps:
             running_loss = 0
@@ -119,8 +119,9 @@ class TimeSeriesEncoder(torch.nn.Module):
                 loss.backward()
                 self.optimizer.step()
                 running_loss += loss.item()
+            avg_loss = running_loss / num_batches
             logging.info(
-                "Epoch: {}, loss: {:.3f}".format(epochs + 1, running_loss / num_batches)
+                "Epoch: {}, loss: {:.3f}".format(epochs + 1, avg_loss)
             )
             # if test_labels is not None:
             #     eval_result = self.score(test_iterator, test_labels, percent)

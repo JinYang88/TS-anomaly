@@ -3,7 +3,7 @@ Base:
     batch_size: 64
     nb_steps: 2000
     lr: 0.001
-    prediction_length: 10
+    prediction_length: 1
     prediction_dims: [0] # a list or empty indicating "all"
 
 casualCnn:
