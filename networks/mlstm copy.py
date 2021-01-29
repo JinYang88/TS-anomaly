@@ -3,7 +3,7 @@
 # import sys
 from IPython import embed
 from torch import nn
-import torch.nn.functional as F
+
 from networks.wrappers import TimeSeriesEncoder
 
 
@@ -27,7 +27,6 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         dropout=0,
         prediction_length=1,
         prediction_dims=[],
-        pretrain_mat=None,
         **kwargs,
     ):
         super().__init__(architecture="MultiLSTM", **kwargs)
@@ -37,18 +36,15 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             prediction_dims if prediction_dims else list(range(in_channels))
         )
         self.prediction_length = prediction_length
-        self.in_channels = in_channels
+
         if vocab_size is not None and embedding_dim is not None:
-            if pretrain_mat is not None:
-                self.embedder = nn.Embedding.from_pretrained(pretrain_mat)
-            else:
-                self.embedder = nn.Embedding(vocab_size, embedding_dim)
+            self.embedder = nn.Embedding(vocab_size, embedding_dim)
             lstm_input_dim = embedding_dim
         else:
             self.embedder = None
             lstm_input_dim = in_channels
 
-        final_output_dim = in_channels * vocab_size
+        final_output_dim = prediction_length * len(self.prediction_dims)
 
         self.lstm = nn.LSTM(
             input_size=lstm_input_dim,
@@ -61,7 +57,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         self.linear = nn.Linear(hidden_size, final_output_dim)
 
         self.dropout = nn.Dropout(dropout)
-        self.loss_fn = nn.NLLLoss(reduction="none")
+        self.loss_fn = nn.MSELoss(reduction="none")
 
         self.compile()
 
@@ -70,34 +66,26 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         self.batch_size = batch_window.size(0)
         x, y = (
             batch_window[:, 0 : -self.prediction_length, :],
-            batch_window[:, -1, :],
+            batch_window[:, -self.prediction_length :, self.prediction_dims],
         )
+
         if self.embedder:
-            x = self.embedder(x.long().squeeze()).sum(-2)  # sum all dims
+            x = self.embedder(x.long().squeeze())
 
         lstm_out, lstm_hidden = self.lstm(x)
         outputs = lstm_out.sum(dim=1)  # b x
         # outputs = lstm_out[:, -1, :]  # b x
         outputs = self.dropout(outputs)
 
-        outputs = self.linear(outputs)
-
-        loss = self.loss_fn(
-            outputs.view(self.batch_size * self.in_channels, -1).log_softmax(dim=-1),
-            y.reshape(-1).long(),
-        ).mean()
-
-        score, recst = (
-            outputs.reshape(self.batch_size, self.in_channels, -1)
-            .softmax(-1)
-            .max(dim=-1)
+        recst = self.linear(outputs).view(
+            self.batch_size, self.prediction_length, len(self.prediction_dims)
         )
-
+        loss = self.loss_fn(recst, y)
         return_dict = {
-            "loss": loss,
+            "loss": loss.mean(),
             "recst": recst,
             "repr": outputs,
-            "score": score,
+            "diff": loss,
             "y": y,
         }
 

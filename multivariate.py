@@ -29,7 +29,7 @@ from IPython import embed
 
 from common import data_preprocess
 from common.config import initialize_config, parse_arguments, set_logger
-from common.dataloader import load_CSV_dataset, load_SMAP_MSL_dataset
+from common.dataloader import load_CSV_dataset, load_SMAP_MSL_dataset, load_SMD_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
 from common.utils import print_to_json, update_from_nni_params
 from networks.mlstm import MultiLSTMEncoder
@@ -44,11 +44,12 @@ if __name__ == "__main__":
     params = update_from_nni_params(params, nni.get_next_parameter())
 
     # load & preprocess data
-    data_dict = load_SMAP_MSL_dataset(params["path"], params["dataset"])
+    data_dict = load_SMD_dataset(params["path"], params["dataset"])
     pp = data_preprocess.preprocessor()
     if params["discretized"]:
-        data_dict = pp.discretize(data_dict)
+        data_dict = pp.discretize(data_dict, params.get("n_bins", None))
         vocab_size = pp.build_vocab(data_dict)
+        params["vocab_size"] = vocab_size
     if params["normalize"]:
         data_dict = pp.normalize(data_dict, method=params["normalize"])
     pp.save(params["save_path"])

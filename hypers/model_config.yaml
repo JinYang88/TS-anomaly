@@ -5,6 +5,7 @@ Base:
     lr: 0.001
     prediction_length: 1
     prediction_dims: [0] # a list or empty indicating "all"
+    normalize: False
 
 casualCnn:
     channels: 40
@@ -18,16 +19,18 @@ casualCnn:
 mlstm:
     hidden_size: 128
     num_layers: 2
-    discretized: False
+    discretized: True
     normalize: False # minmax, standard, robust
-    use_dim: 1
+    # use_dim: 1
 
 mlstm_250:
     stride: 32
     window_size: 32
     hidden_size: 250
     num_layers: 2
-    discretized: False
-    normalize: False # minmax, standard, robust
+    discretized: True
+    # normalize: False # minmax, standard, robust
     dropout: 0.1
-    use_dim: 1
+    n_bins: 50
+    embedding_dim: 5
+    # use_dim: 1
