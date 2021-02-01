@@ -2,7 +2,7 @@ Base:
     window_size: 128
     batch_size: 64
     nb_steps: 2000
-    lr: 0.001
+    lr: 0.0001
     prediction_length: 1
     prediction_dims: [0] # a list or empty indicating "all"
     normalize: False
@@ -24,13 +24,13 @@ mlstm:
     # use_dim: 1
 
 mlstm_250:
-    stride: 32
-    window_size: 32
-    hidden_size: 250
+    stride: 5
+    window_size: 5
+    hidden_size: 128
     num_layers: 2
     discretized: True
     # normalize: False # minmax, standard, robust
     dropout: 0.1
     n_bins: 50
-    embedding_dim: 5
-    # use_dim: 1
+    embedding_dim: 16
+    use_dim: 1

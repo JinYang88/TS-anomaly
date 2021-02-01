@@ -44,7 +44,9 @@ if __name__ == "__main__":
     params = update_from_nni_params(params, nni.get_next_parameter())
 
     # load & preprocess data
-    data_dict = load_SMD_dataset(params["path"], params["dataset"])
+    data_dict = load_SMD_dataset(
+        params["path"], params["dataset"], params.get("use_dim", "all")
+    )
     pp = data_preprocess.preprocessor()
     if params["discretized"]:
         data_dict = pp.discretize(data_dict, params.get("n_bins", None))

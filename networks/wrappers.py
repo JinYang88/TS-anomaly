@@ -67,7 +67,9 @@ class TimeSeriesEncoder(torch.nn.Module):
 
     def compile(self):
         logging.info("Compiling finished.")
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        self.optimizer = torch.optim.Adam(
+            self.parameters(), lr=self.lr, weight_decay=0.001
+        )
         self = self.to(self.device)
 
     def save_encoder(self):
@@ -116,6 +118,9 @@ class TimeSeriesEncoder(torch.nn.Module):
                 self.optimizer.zero_grad()
                 loss = return_dict["loss"]
                 loss.backward()
+
+                # torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=20)
+
                 self.optimizer.step()
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
