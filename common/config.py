@@ -14,16 +14,18 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--dataset", type=str, metavar="D", default="machine-1-1", help="dataset name"
+        "--dataset", type=str, metavar="D", default="SMAP", help="dataset name"
     )
 
     # SMD: "./datasets/SMD/processed"
+    # SMAP: "./datasets/anomaly/SMAP-MSL/pkls_SMAP"
+    # MSL: "./datasets/anomaly/SMAP-MSL/pkls_MSL"
     # Simulated: "./datasets/Simulated/simulated_p0.1.csv"
     parser.add_argument(
         "--path",
         type=str,
         metavar="PATH",
-        default="./datasets/anomaly/SMD/processed",
+        default="./datasets/anomaly/SMAP-MSL/",
         help="path where the dataset is located",
     )
 

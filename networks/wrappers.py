@@ -32,7 +32,7 @@ import sklearn.model_selection
 import sklearn.svm
 import torch
 from common import triplet_loss
-from common.utils import adjust_predicts
+from common.utils import score2pred
 from IPython import embed
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
@@ -124,7 +124,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 self.optimizer.step()
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
-            logging.info("Epoch: {}, loss: {:.3f}".format(epochs + 1, avg_loss))
+            logging.info("Epoch: {}, loss: {:.5f}".format(epochs + 1, avg_loss))
             # if test_labels is not None:
             #     eval_result = self.score(test_iterator, test_labels, percent)
             #     nni.report_intermediate_result(eval_result["AUC"])
@@ -176,15 +176,16 @@ class TimeSeriesEncoder(torch.nn.Module):
     def predict(self, X):
         raise NotImplementedError("TBD")
 
-    def __iter_thresholds(self, score, label):
+    def __iter_thresholds(self, score, label, adjust=True):
         best_f1 = -float("inf")
         best_theta = None
         best_adjust = None
-        for anomaly_ratio in np.linspace(1e-3, 0.3, 50):
+        for anomaly_ratio in np.linspace(1e-3, 0.3, 100):
             info_save = {}
-            adjusted_anomaly = adjust_predicts(
-                score, label, percent=100 * (1 - anomaly_ratio)
+            adjusted_anomaly = score2pred(
+                score, label, percent=100 * (1 - anomaly_ratio), adjust=adjust
             )
+
             f1 = f1_score(adjusted_anomaly, label)
             if f1 > best_f1:
                 best_f1 = f1
@@ -203,7 +204,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 score = (
                     # sum all dimension
                     return_dict["score"]
-                    .sum(dim=-1)
+                    .mean(dim=-1)
                     .sigmoid()  # b x prediction_length
                 )
                 # mean all timestamp
@@ -212,12 +213,28 @@ class TimeSeriesEncoder(torch.nn.Module):
         score_list = torch.cat(score_list, dim=0).cpu().numpy()
         auc = roc_auc_score(anomaly_label, score_list)
 
-        f1, theta, pred_adjusted = self.__iter_thresholds(score_list, anomaly_label)
-        ps = precision_score(pred_adjusted, anomaly_label)
-        rc = recall_score(pred_adjusted, anomaly_label)
+        f1_adjusted, theta, pred_adjusted = self.__iter_thresholds(
+            score_list, anomaly_label, adjust=True
+        )
+        ps_adjusted = precision_score(pred_adjusted, anomaly_label)
+        rc_adjusted = recall_score(pred_adjusted, anomaly_label)
+
+        f1_raw, theta, pred_raw = self.__iter_thresholds(
+            score_list, anomaly_label, adjust=False
+        )
+        ps_raw = precision_score(pred_raw, anomaly_label)
+        rc_raw = recall_score(pred_raw, anomaly_label)
 
         logging.info(
-            "AUC: {:.3f}, F1: {:.3f}, PS: {:.3f}, RC:{:.3f}".format(auc, f1, ps, rc)
+            "AUC: {:.3f}, F1: {:.3f}({:.3f}), PS: {:.3f}({:.3f}), RC:{:.3f}({:.3f})".format(
+                auc,
+                f1_raw,
+                f1_adjusted,
+                ps_raw,
+                ps_adjusted,
+                rc_raw,
+                rc_adjusted,
+            )
         )
         self = self.train()
         return {
@@ -226,9 +243,12 @@ class TimeSeriesEncoder(torch.nn.Module):
             "anomaly_label": anomaly_label,
             "theta": theta,
             "AUC": auc,
-            "F1": f1,
-            "PS": ps,
-            "RC": rc,
+            "F1": f1_raw,
+            "PS": ps_raw,
+            "RC": rc_raw,
+            "F1_adj": f1_adjusted,
+            "PS_adj": ps_adjusted,
+            "RC_adj": rc_adjusted,
         }
 
 
