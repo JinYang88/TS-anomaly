@@ -4,7 +4,7 @@ Base:
     nb_steps: 20
     lr: 0.001
     prediction_length: 1
-    prediction_dims: [] # a list or empty indicating "all"
+    prediction_dims: [0] # a list or empty indicating "all"
     normalize: False
 
 casualCnn:
