@@ -32,7 +32,7 @@ from common.config import initialize_config, parse_arguments, set_logger
 from common.dataloader import load_CSV_dataset, load_SMAP_MSL_dataset, load_SMD_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything
-from networks.mlstm_token_clf import MultiLSTMEncoder
+from networks.mlstm import MultiLSTMEncoder
 
 seed_everything(2021)
 
