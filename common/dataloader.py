@@ -6,8 +6,6 @@ from glob import glob
 
 import numpy as np
 import pandas as pd
-import weka.core.converters
-import weka.core.jvm
 from IPython import embed
 
 
