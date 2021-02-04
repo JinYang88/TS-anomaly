@@ -78,10 +78,13 @@ def score2pred(
     else:
         predict = pred
 
+    import copy
+
+    raw_predict = copy.deepcopy(predict)
     if not adjust:
         return predict
     else:
-        actual = label > 0.1
+        actual = label == 1
         anomaly_state = False
         anomaly_count = 0
         for i in range(len(predict)):
@@ -103,4 +106,4 @@ def score2pred(
         if calc_latency:
             return predict, latency / (anomaly_count + 1e-4)
         else:
-            return predict
+            return predict, raw_predict
