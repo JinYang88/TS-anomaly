@@ -109,7 +109,7 @@ def parse_arguments():
         "--subdataset",
         type=str,
         metavar="D",
-        default="machine-1-1",
+        default="",
         help="dataset name",
     )
 

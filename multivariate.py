@@ -46,13 +46,12 @@ seed_everything(2021)
 
 def run(params):
     # load & preprocess data
-    if params["dataset"] == "SMAP":
-        data_dict = load_dataset(
-            params["path"],
-            params["dataset"],
-            params["subdataset"],
-            params.get("use_dim", "all"),
-        )
+    data_dict = load_dataset(
+        params["path"],
+        params["dataset"],
+        params["subdataset"],
+        params.get("use_dim", "all"),
+    )
 
     pp = data_preprocess.preprocessor()
     if params["discretized"]:
