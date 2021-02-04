@@ -56,7 +56,12 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.save_path = save_path
         self.trial_id = trial_id
         self.model_save_file = os.path.join(
-            self.save_path, "{}_{}.pth".format(self.architecture, self.trial_id)
+            self.save_path,
+            "{}_{}_{}.pth".format(
+                self.architecture,
+                kwargs.get("subdataset", kwargs["dataset"]),
+                self.trial_id,
+            ),
         )
 
         self.device = device

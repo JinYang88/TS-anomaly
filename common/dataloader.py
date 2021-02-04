@@ -20,13 +20,13 @@ def get_data_dim(dataset):
         raise ValueError("unknown dataset " + str(dataset))
 
 
-def load_SMAP_MSL_dataset(path, dataset="MSL", use_dim="all"):
+def load_SMAP_MSL_dataset(path, dataset="MSL", subdataset="A-1", use_dim="all"):
     data_dict = defaultdict(dict)
     if use_dim == "all":
         data_dict["dim"] = get_data_dim(dataset)
     else:
         data_dict["dim"] = 1
-    pkl_files = glob(os.path.join(path, "pkls_" + dataset, "*.pkl"))
+    pkl_files = glob(os.path.join(path, "pkls_" + subdataset, "*.pkl"))
 
     for f in pkl_files:
         basename = os.path.basename(f)
@@ -79,20 +79,16 @@ def load_kddcup_dataset(path):
     return data_dict
 
 
-def load_SMD_dataset(path, dataset, use_dim="all"):
-    logging.info("Loading {} dataset".format(dataset))
+def load_dataset(path, dataset, subdataset, use_dim="all"):
+    logging.info("Loading {} of {} dataset".format(subdataset, dataset))
     x_dim = get_data_dim(dataset)
 
-    if str(dataset).startswith("machine"):
-        prefix = dataset
-    else:
-        prefix = "*"
-
+    prefix = subdataset
     train_files = glob(os.path.join(path, prefix + "_train.pkl"))
     test_files = glob(os.path.join(path, prefix + "_test.pkl"))
     label_files = glob(os.path.join(path, prefix + "_test_label.pkl"))
 
-    print("{} files found.".format(len(train_files)))
+    logging.info("{} files found.".format(len(train_files)))
 
     data_dict = defaultdict(dict)
     data_dict["dim"] = x_dim if use_dim == "all" else 1

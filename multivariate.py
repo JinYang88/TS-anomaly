@@ -25,33 +25,33 @@ import nni
 import numpy
 import pandas
 import torch
+import pandas as pd
 from IPython import embed
 
 from common import data_preprocess
-from common.config import initialize_config, parse_arguments, set_logger
-from common.dataloader import load_CSV_dataset, load_SMAP_MSL_dataset, load_SMD_dataset
+from common.config import (
+    initialize_config,
+    parse_arguments,
+    set_logger,
+    subdatasets,
+    get_trial_id,
+)
+from common.dataloader import load_CSV_dataset, load_dataset
 from common.sliding import BatchSlidingWindow, WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything
 from networks.mlstm import MultiLSTMEncoder
 
 seed_everything(2021)
 
-# python univariate_smd.py
-if __name__ == "__main__":
-    args = parse_arguments()
-    # load config
-    config_dir = "./hypers/" if not args["load"] else args["load"]
-    params = initialize_config(config_dir, args)
-    params = update_from_nni_params(params, nni.get_next_parameter())
 
+def run(params):
     # load & preprocess data
-    if "machine" in params["dataset"]:
-        data_dict = load_SMD_dataset(
-            params["path"], params["dataset"], params.get("use_dim", "all")
-        )
-    elif "SMAP" in params["dataset"]:
-        data_dict = load_SMAP_MSL_dataset(
-            params["path"], params["dataset"], params.get("use_dim", "all")
+    if params["dataset"] == "SMAP":
+        data_dict = load_dataset(
+            params["path"],
+            params["dataset"],
+            params["subdataset"],
+            params.get("use_dim", "all"),
         )
 
     pp = data_preprocess.preprocessor()
@@ -92,24 +92,66 @@ if __name__ == "__main__":
         encoder.save_encoder()
 
     encoder.load_encoder()
-    eval_result_dict = encoder.score(test_iterator.loader, window_dict["test_labels"])
-    params.update(eval_result_dict)
+    records = encoder.score(test_iterator.loader, window_dict["test_labels"])
+
+    records.update(
+        {
+            "trial_id": params["trial_id"],
+            "expid": params["expid"],
+            "dataset": params["dataset"],
+        }
+    )
 
     logfile = "./experiment_results.csv"
     log = "{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
-        params["trial_id"],
-        params["expid"],
-        params["dataset"],
-        params["AUC"],
-        params["F1"],
-        params["F1_adj"],
+        records["trial_id"],
+        records["expid"],
+        records["dataset"],
+        records["AUC"],
+        records["F1"],
+        records["F1_adj"],
     )
 
     with open(logfile, "a+") as fw:
         fw.write(log)
 
-    nni.report_final_result(params["AUC"])
+    nni.report_final_result(records["AUC"])
 
     # inference
     # features = encoder.encode(test_iterator.loader)
     # logging.info("Final features have shape: {}".format(features.shape))
+    return records
+
+
+# python univariate_smd.py
+if __name__ == "__main__":
+    args = parse_arguments()
+    # load config
+    config_dir = "./hypers/" if not args["load"] else args["load"]
+    params = initialize_config(config_dir, args)
+    params = update_from_nni_params(params, nni.get_next_parameter())
+
+    if not params["subdataset"]:
+        start_time = get_trial_id()
+        records = []
+        # run each subdataset
+        for dataset in subdatasets[params["dataset"]][0:5]:
+            params["subdataset"] = dataset
+            records.append(run(params))
+        records = pd.DataFrame(records)
+        records.to_csv(
+            "{}-{}-all.csv".format(params["dataset"], start_time), index=False
+        )
+        log = "{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
+            start_time,
+            params["expid"],
+            params["dataset"] + "_all",
+            records["AUC"].mean(),
+            records["F1"].mean(),
+            records["F1_adj"].mean(),
+        )
+        with open("./experiment_results.csv", "a+") as fw:
+            fw.write(log)
+
+    else:
+        run(params)
