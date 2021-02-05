@@ -117,7 +117,7 @@ def parse_arguments():
         "--dataset", type=str, metavar="D", default="SMD", help="dataset name"
     )
 
-    # SMD: "./datasets/SMD/processed"
+    # SMD: "./datasets/anomaly/SMD/processed"
     # SMAP: "./datasets/anomaly/SMAP-MSL/processed_SMAP"
     # MSL: "./datasets/anomaly/SMAP-MSL/processed_MSL"
     # Simulated: "./datasets/Simulated/simulated_p0.1.csv"

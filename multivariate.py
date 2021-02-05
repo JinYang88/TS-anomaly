@@ -47,7 +47,6 @@ seed_everything(2021)
 def run(params):
     # load & preprocess data
     data_dict = load_dataset(
-        params["path"],
         params["dataset"],
         params["subdataset"],
         params.get("use_dim", "all"),

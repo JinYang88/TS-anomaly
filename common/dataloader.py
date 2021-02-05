@@ -8,6 +8,12 @@ import numpy as np
 import pandas as pd
 from IPython import embed
 
+data_path_dict = {
+    "SMD": "./datasets/anomaly/SMD/processed",
+    "SMAP": "./datasets/anomaly/SMAP-MSL/processed_SMAP",
+    "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
+}
+
 
 def get_data_dim(dataset):
     if dataset == "SMAP":
@@ -79,9 +85,10 @@ def load_kddcup_dataset(path):
     return data_dict
 
 
-def load_dataset(path, dataset, subdataset, use_dim="all"):
+def load_dataset(dataset, subdataset, use_dim="all"):
     logging.info("Loading {} of {} dataset".format(subdataset, dataset))
     x_dim = get_data_dim(dataset)
+    path = data_path_dict[dataset]
 
     prefix = subdataset
     train_files = glob(os.path.join(path, prefix + "_train.pkl"))
