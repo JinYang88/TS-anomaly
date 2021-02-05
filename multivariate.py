@@ -133,7 +133,7 @@ if __name__ == "__main__":
         start_time = get_trial_id()
         records = []
         # run each subdataset
-        for dataset in subdatasets[params["dataset"]][0:5]:
+        for dataset in subdatasets[params["dataset"]]:
             params["subdataset"] = dataset
             records.append(run(params))
         records = pd.DataFrame(records)

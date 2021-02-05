@@ -29,8 +29,8 @@ mlstm_250:
     hidden_size: 128
     num_layers: 2
     discretized: False
-    # normalize: False # minmax, standard, robust
     dropout: 0.1
+    # normalize: False # minmax, standard, robust
     # n_bins: 50
     # embedding_dim: 16
     # use_dim: 1
