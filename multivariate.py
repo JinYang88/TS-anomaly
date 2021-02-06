@@ -41,7 +41,7 @@ from common.sliding import BatchSlidingWindow, WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything
 from networks.mlstm import MultiLSTMEncoder
 
-seed_everything(2021)
+seed_everything(2020)
 
 
 def run(params):
@@ -96,7 +96,7 @@ def run(params):
         {
             "trial_id": params["trial_id"],
             "expid": params["expid"],
-            "dataset": params["dataset"],
+            "dataset": "{}-{}".format(params["dataset"], params["subdataset"]),
         }
     )
 
