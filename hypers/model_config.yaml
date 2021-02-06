@@ -25,7 +25,7 @@ mlstm:
 
 mlstm_250:
     stride: 5
-    window_size: 32
+    window_size: 64
     hidden_size: 128
     num_layers: 2
     discretized: False
