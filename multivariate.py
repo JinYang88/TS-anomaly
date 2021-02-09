@@ -130,6 +130,8 @@ if __name__ == "__main__":
     params = update_from_nni_params(params, nni.get_next_parameter())
 
     if not params["subdataset"]:
+        detail_dir = "./details"
+        os.makedirs(detail_dir)
         start_time = get_trial_id()
         records = []
         # run each subdataset
@@ -138,7 +140,7 @@ if __name__ == "__main__":
             records.append(run(params))
         records = pd.DataFrame(records)
         records.to_csv(
-            "{}-{}-all.csv".format(params["dataset"], start_time), index=False
+            "./{}/{}-{}-all.csv".format(detail_dir, params["dataset"], start_time), index=False
         )
         log = "{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
             start_time,
@@ -148,7 +150,7 @@ if __name__ == "__main__":
             records["F1"].mean(),
             records["F1_adj"].mean(),
         )
-        with open("./experiment_results.csv", "a+") as fw:
+        with open("./total_results.csv", "a+") as fw:
             fw.write(log)
 
     else:
