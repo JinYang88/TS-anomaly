@@ -76,7 +76,6 @@ def run(params):
     logging.info("Proceeding using {}...".format(params["device"]))
     logging.info(print_to_json(params))
 
-    embed()
     # training
     encoder = MultiLSTMEncoder(**params)
 
