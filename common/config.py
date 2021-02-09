@@ -100,11 +100,22 @@ subdatasets = {
 }
 
 
+def parse_multi_setting(setting):
+    result_dict = {}
+    if setting:
+        for item in setting:
+            k, v = item.strip().split("=")
+            try:
+                result_dict[k] = eval(v)
+            except NameError:
+                result_dict[k] = str(v)
+    return result_dict
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Anomaly detection repository for TS datasets"
     )
-
     parser.add_argument(
         "--subdataset",
         type=str,
@@ -137,6 +148,8 @@ def parse_arguments():
         default="./checkpoints",
         help="path where the estimator is/should be saved",
     )
+
+    parser.add_argument("--set", metavar="KEY=VALUE", nargs="+")
 
     parser.add_argument(
         "--gpu",
@@ -178,6 +191,7 @@ def initialize_config(config_dir, args):
     model_configs = glob.glob(os.path.join(config_dir, "*/*.yaml")) + glob.glob(
         os.path.join(config_dir, "*.yaml")
     )
+
     if not model_configs:
         raise RuntimeError("config_dir={} is not valid!".format(config_dir))
     found_params = find_config(model_configs, args["expid"])
@@ -188,6 +202,7 @@ def initialize_config(config_dir, args):
     params.update(model_config)
 
     params = set_logger(params)
+    params.update(parse_multi_setting(args["set"]))
 
     with open(os.path.join(params["save_path"], "model_config.yaml"), "w") as fr:
         found_params["Base"]["save_path"] = params["save_path"]

@@ -75,6 +75,8 @@ def run(params):
 
     logging.info("Proceeding using {}...".format(params["device"]))
     logging.info(print_to_json(params))
+
+    embed()
     # training
     encoder = MultiLSTMEncoder(**params)
 
@@ -97,12 +99,14 @@ def run(params):
             "trial_id": params["trial_id"],
             "expid": params["expid"],
             "dataset": "{}-{}".format(params["dataset"], params["subdataset"]),
+            "set": params["set"],
         }
     )
 
     logfile = "./experiment_results.csv"
-    log = "{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
+    log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
         records["trial_id"],
+        records["set"],
         records["expid"],
         records["dataset"],
         records["AUC"],
@@ -140,10 +144,12 @@ if __name__ == "__main__":
             records.append(run(params))
         records = pd.DataFrame(records)
         records.to_csv(
-            "./{}/{}-{}-all.csv".format(detail_dir, params["dataset"], start_time), index=False
+            "./{}/{}-{}-all.csv".format(detail_dir, params["dataset"], start_time),
+            index=False,
         )
-        log = "{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
+        log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
             start_time,
+            params["set"],
             params["expid"],
             params["dataset"] + "_all",
             records["AUC"].mean(),
