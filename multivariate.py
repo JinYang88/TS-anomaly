@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
     if not params["subdataset"]:
         detail_dir = "./details"
-        os.makedirs(detail_dir)
+        os.makedirs(detail_dir, exist_ok=True)
         start_time = get_trial_id()
         records = []
         # run each subdataset
