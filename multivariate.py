@@ -146,7 +146,8 @@ if __name__ == "__main__":
             "./{}/{}-{}-all.csv".format(detail_dir, params["dataset"], start_time),
             index=False,
         )
-        log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
+
+        log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1_adj-{:.3f}\tPS_adj-{:.3f}\tRC_adj-{:.3f}\n".format(
             start_time,
             params["set"],
             params["expid"],
@@ -154,6 +155,8 @@ if __name__ == "__main__":
             records["AUC"].mean(),
             records["F1"].mean(),
             records["F1_adj"].mean(),
+            records["PS_adj"].mean(),
+            records["RC_adj"].mean(),
         )
         with open("./total_results.csv", "a+") as fw:
             fw.write(log)
