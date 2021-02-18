@@ -103,7 +103,7 @@ def run(params):
     )
 
     logfile = "./experiment_results.csv"
-    log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\tRCadj-{:.3f}\tPSadj-{:.3f}\n".format(
+    log = "{}\t{}\t{}\t{}\tAUC-{:.4f}\tF1-{:.4f}\tF1adj-{:.4f}\tRCadj-{:.4f}\tPSadj-{:.4f}\n".format(
         records["trial_id"],
         records["set"],
         records["expid"],
