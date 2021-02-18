@@ -186,7 +186,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         best_theta = None
         best_adjust = None
         best_raw = None
-        for anomaly_ratio in np.linspace(1e-3, 0.3, 100):
+        for anomaly_ratio in np.linspace(1e-3, 1, 500):
             info_save = {}
             adjusted_anomaly, raw_predict = score2pred(
                 score, label, percent=100 * (1 - anomaly_ratio), adjust=adjust

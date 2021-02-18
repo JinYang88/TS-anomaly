@@ -103,7 +103,7 @@ def run(params):
     )
 
     logfile = "./experiment_results.csv"
-    log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\n".format(
+    log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1adj-{:.3f}\tRCadj-{:.3f}\tPSadj-{:.3f}\n".format(
         records["trial_id"],
         records["set"],
         records["expid"],
@@ -111,6 +111,8 @@ def run(params):
         records["AUC"],
         records["F1"],
         records["F1_adj"],
+        records["RC_adj"],
+        records["PS_adj"],
     )
 
     with open(logfile, "a+") as fw:
