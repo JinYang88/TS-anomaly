@@ -149,7 +149,7 @@ if __name__ == "__main__":
             index=False,
         )
 
-        log = "{}\t{}\t{}\t{}\tAUC-{:.3f}\tF1-{:.3f}\tF1_adj-{:.3f}\tPS_adj-{:.3f}\tRC_adj-{:.3f}\n".format(
+        log = "{}\t{}\t{}\t{}\tAUC-{:.4f}\tF1-{:.4f}\tF1_adj-{:.4f}\tPS_adj-{:.4f}\tRC_adj-{:.4f}\n".format(
             start_time,
             params["set"],
             params["expid"],
