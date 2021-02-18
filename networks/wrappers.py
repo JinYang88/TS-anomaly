@@ -25,6 +25,7 @@ from glob import glob
 import joblib
 import nni
 import numpy
+import time
 import numpy as np
 import sklearn
 import sklearn.externals
@@ -69,6 +70,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.nb_steps = nb_steps
         self.lr = lr
         self.best_metric = -float("inf")
+        self.time_tracker = {}
 
     def compile(self):
         logging.info("Compiling finished.")
@@ -113,6 +115,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         epochs = 0  # Number of performed epochs
         num_batches = len(train_iterator.loader)
         logging.info("Start training for {} batches.".format(num_batches))
+        train_start = time.time()
         # Encoder training
         while epochs < self.nb_steps:
             running_loss = 0
@@ -142,6 +145,9 @@ class TimeSeriesEncoder(torch.nn.Module):
             #         )
             #     )
             #     break
+        train_end = time.time()
+
+        self.time_tracker["train"] = train_end - train_start
         return self
 
     def __on_epoch_end(self, monitor_value, patience):
@@ -203,6 +209,7 @@ class TimeSeriesEncoder(torch.nn.Module):
     def score(self, iterator, anomaly_label, percent=88):
         logging.info("Evaluating")
         self = self.eval()
+        test_start = time.time()
         with torch.no_grad():
             score_list = []
             for batch in iterator:
@@ -216,6 +223,8 @@ class TimeSeriesEncoder(torch.nn.Module):
                 )
                 # mean all timestamp
                 score_list.append(score.mean(dim=-1))
+        test_end = time.time()
+        self.time_tracker["test"] = test_end - test_start
         anomaly_label = anomaly_label[:, -1]  # actually predict the last window
         score_list = torch.cat(score_list, dim=0).cpu().numpy()
         auc = roc_auc_score(anomaly_label, score_list)

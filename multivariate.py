@@ -99,6 +99,8 @@ def run(params):
             "expid": params["expid"],
             "dataset": "{}-{}".format(params["dataset"], params["subdataset"]),
             "set": params["set"],
+            "train_time": encoder.time_tracker["train"],
+            "test_time": encoder.time_tracker["test"],
         }
     )
 
@@ -149,7 +151,7 @@ if __name__ == "__main__":
             index=False,
         )
 
-        log = "{}\t{}\t{}\t{}\tAUC-{:.4f}\tF1-{:.4f}\tF1_adj-{:.4f}\tPS_adj-{:.4f}\tRC_adj-{:.4f}\n".format(
+        log = "{}\t{}\t{}\t{}\tAUC-{:.4f}\tF1-{:.4f}\tF1_adj-{:.4f}\tPS_adj-{:.4f}\tRC_adj-{:.4f}\ttrain-{}s\ttest-{}s\n".format(
             start_time,
             params["set"],
             params["expid"],
@@ -159,6 +161,8 @@ if __name__ == "__main__":
             records["F1_adj"].mean(),
             records["PS_adj"].mean(),
             records["RC_adj"].mean(),
+            records["train_time"].sum(),
+            records["test_time"].sum(),
         )
         with open("./total_results.csv", "a+") as fw:
             fw.write(log)

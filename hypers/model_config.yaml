@@ -1,7 +1,7 @@
 Base:
     window_size: 250
     batch_size: 64
-    nb_steps: 80
+    nb_steps: 20
     lr: 0.001
     prediction_length: 1
     prediction_dims: [0] # a list or empty indicating "all"
