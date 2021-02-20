@@ -126,25 +126,11 @@ class TimeSeriesEncoder(torch.nn.Module):
                 self.optimizer.zero_grad()
                 loss = return_dict["loss"]
                 loss.backward()
-
-                # torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=20)
-
                 self.optimizer.step()
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
             logging.info("Epoch: {}, loss: {:.5f}".format(epochs + 1, avg_loss))
-            # if test_labels is not None:
-            #     eval_result = self.score(test_iterator, test_labels, percent)
-            #     nni.report_intermediate_result(eval_result["AUC"])
             epochs += 1
-            # stopping = self.__on_epoch_end(eval_result[monitor], patience + 1)
-            # if stopping:
-            #     logging.info(
-            #         "Early stop at epoch={}, best={:.3f}".format(
-            #             epochs, self.best_metric
-            #         )
-            #     )
-            #     break
         train_end = time.time()
 
         self.time_tracker["train"] = train_end - train_start

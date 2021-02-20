@@ -27,6 +27,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         dropout=0,
         prediction_length=1,
         prediction_dims=[],
+        inter="fm",
         **kwargs,
     ):
         super().__init__(architecture="MultiLSTM", **kwargs)
@@ -36,6 +37,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             prediction_dims if prediction_dims else list(range(in_channels))
         )
         self.prediction_length = prediction_length
+        self.inter = inter
 
         if vocab_size is not None and embedding_dim is not None:
             self.embedder = nn.Embedding(vocab_size, embedding_dim)
@@ -46,20 +48,15 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
 
         final_output_dim = prediction_length * len(self.prediction_dims)
 
-        # self.lstm = nn.LSTM(
-        #     input_size=lstm_input_dim,
-        #     hidden_size=hidden_size,
-        #     num_layers=num_layers,
-        #     dropout=dropout,
-        #     batch_first=True,
-        # )
-
-        # self.linear = nn.Linear(
-        #     kwargs["window_size"] + in_channels - 1, final_output_dim
-        # )
+        if self.inter == "TIME":
+            clf_input_dim = in_channels
+        elif self.inter == "DIM":
+            clf_input_dim = kwargs["window_size"] - 1
+        else:
+            clf_input_dim = kwargs["window_size"] - 1 + in_channels
 
         self.linear = nn.Sequential(
-            nn.Linear(kwargs["window_size"] + in_channels - 1, 128),
+            nn.Linear(clf_input_dim, 128),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(128, 64),
@@ -90,12 +87,22 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             batch_window[:, -self.prediction_length :, self.prediction_dims],
         )
 
-        time_inter = self.FM_interaction(x)
-        dim_inter = self.FM_interaction(x.transpose(2, 1))
+        if self.inter == "FM":
+            time_inter = self.FM_interaction(x)
+            dim_inter = self.FM_interaction(x.transpose(2, 1))
+            outputs = torch.cat([time_inter, dim_inter], dim=-1)
+        elif self.inter == "SUM":
+            time_inter = x.sum(dim=1)
+            dim_inter = x.transpose(2, 1).sum(dim=1)
+            outputs = torch.cat([time_inter, dim_inter], dim=-1)
+        elif self.inter == "TIME":
+            time_inter = self.FM_interaction(x)
+            outputs = time_inter
+        elif self.inter == "DIM":
+            dim_inter = self.FM_interaction(x.transpose(2, 1))
+            outputs = dim_inter
 
-        outputs = torch.cat([time_inter, dim_inter], dim=-1)
         outputs = self.dropout(outputs)
-
         recst = self.linear(outputs).view(
             self.batch_size, self.prediction_length, len(self.prediction_dims)
         )
