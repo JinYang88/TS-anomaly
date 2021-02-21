@@ -28,6 +28,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         prediction_length=1,
         prediction_dims=[],
         inter="FM",
+        gamma=0.01,
         **kwargs,
     ):
         super().__init__(architecture="MultiLSTM", **kwargs)
@@ -37,6 +38,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         )
         self.prediction_length = prediction_length
         self.inter = inter
+        self.gamma = gamma
 
         if vocab_size is not None and embedding_dim is not None:
             self.embedder = nn.Embedding(vocab_size, embedding_dim)
@@ -54,7 +56,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         elif self.inter == "CONCAT":
             clf_input_dim = in_channels * (kwargs["window_size"] - 1)
         elif self.inter == "FM":
-            clf_input_dim = 2 * (kwargs["window_size"] - 1 + in_channels)
+            clf_input_dim = kwargs["window_size"] - 1 + in_channels
         else:
             clf_input_dim = kwargs["window_size"] - 1 + in_channels
 
@@ -107,9 +109,8 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             dim_inter = self.FM_interaction(x.transpose(2, 1))
             # print(dim_inter.shape)
             raw = self.res_w(x.reshape(self.batch_size, -1))
-            inter = self.res_i(torch.cat([time_inter, dim_inter], dim=-1))
-            outputs = torch.cat([raw, inter], dim=-1)
-
+            inter = self.gamma * self.res_i(torch.cat([time_inter, dim_inter], dim=-1))
+            outputs = raw + inter
         elif self.inter == "MEAN":
             outputs = x.mean(dim=1)
         elif self.inter == "TIME":

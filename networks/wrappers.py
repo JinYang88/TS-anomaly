@@ -183,7 +183,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 batch = batch.to(self.device).float()
                 return_dict = self(batch)
                 score = (
-                    # sum all dimension
+                    # average all dimension
                     return_dict["score"]
                     .mean(dim=-1)
                     .sigmoid()  # b x prediction_length

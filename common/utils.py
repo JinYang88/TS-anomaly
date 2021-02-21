@@ -50,7 +50,7 @@ def iter_thresholds(score, label):
     best_raw = None
     for anomaly_ratio in np.linspace(1e-3, 1, 500):
         info_save = {}
-        adjusted_anomaly, raw_predict = score2pred(
+        adjusted_anomaly, raw_predict, threshold = score2pred(
             score, label, percent=100 * (1 - anomaly_ratio)
         )
 
@@ -59,7 +59,7 @@ def iter_thresholds(score, label):
             best_f1 = f1
             best_adjust = adjusted_anomaly
             best_raw = raw_predict
-            best_theta = anomaly_ratio
+            best_theta = threshold
     return best_f1, best_theta, best_adjust, best_raw
 
 
@@ -125,4 +125,4 @@ def score2pred(
     if calc_latency:
         return predict, latency / (anomaly_count + 1e-4)
     else:
-        return predict, raw_predict
+        return predict, raw_predict, threshold
