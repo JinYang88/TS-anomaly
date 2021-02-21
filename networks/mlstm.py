@@ -51,20 +51,22 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             clf_input_dim = in_channels
         elif self.inter == "DIM":
             clf_input_dim = kwargs["window_size"] - 1
+        elif self.inter == "CONCAT":
+            clf_input_dim = in_channels * (kwargs["window_size"] - 1)
         else:
             clf_input_dim = kwargs["window_size"] - 1 + in_channels
 
-        # self.linear = nn.Sequential(
-        #     nn.Linear(clf_input_dim, 128),
-        #     nn.ReLU(),
-        #     nn.Dropout(dropout),
-        #     nn.Linear(128, 64),
-        #     nn.ReLU(),
-        #     nn.Dropout(dropout),
-        #     nn.Linear(64, final_output_dim),
-        # )
+        self.linear = nn.Sequential(
+            nn.Linear(clf_input_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(64, final_output_dim),
+        )
 
-        self.linear = nn.Sequential(nn.Linear(clf_input_dim, final_output_dim))
+        # self.linear = nn.Sequential(nn.Linear(clf_input_dim, final_output_dim))
 
         self.dropout = nn.Dropout(dropout)
         self.loss_fn = nn.MSELoss(reduction="none")
@@ -100,6 +102,8 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         elif self.inter == "DIM":
             dim_inter = self.FM_interaction(x.transpose(2, 1))
             outputs = dim_inter
+        elif self.inter == "CONCAT":
+            outputs = x.reshape(self.batch_size, -1)
 
         outputs = self.dropout(outputs)
         recst = self.linear(outputs).view(
