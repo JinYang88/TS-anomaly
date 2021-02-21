@@ -6,7 +6,7 @@ import nni
 import random
 import os
 import torch
-
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
 
 
@@ -44,6 +44,26 @@ def update_from_nni_params(params, nni_params):
     return params
 
 
+def iter_thresholds(score, label):
+    best_f1 = -float("inf")
+    best_theta = None
+    best_adjust = None
+    best_raw = None
+    for anomaly_ratio in np.linspace(1e-3, 1, 500):
+        info_save = {}
+        adjusted_anomaly, raw_predict = score2pred(
+            score, label, percent=100 * (1 - anomaly_ratio)
+        )
+
+        f1 = f1_score(adjusted_anomaly, label)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_adjust = adjusted_anomaly
+            best_raw = raw_predict
+            best_theta = anomaly_ratio
+    return best_f1, best_theta, best_adjust, best_raw
+
+
 def score2pred(
     score,
     label,
@@ -51,7 +71,6 @@ def score2pred(
     threshold=None,
     pred=None,
     calc_latency=False,
-    adjust=True,
 ):
     """
     Calculate adjusted predict labels using given `score`, `threshold` (or given `pred`) and `label`.
@@ -84,29 +103,27 @@ def score2pred(
     import copy
 
     raw_predict = copy.deepcopy(predict)
-    if not adjust:
-        return predict
-    else:
-        actual = label == 1
-        anomaly_state = False
-        anomaly_count = 0
-        for i in range(len(predict)):
-            if actual[i] and predict[i] and not anomaly_state:
-                anomaly_state = True
-                anomaly_count += 1
-                for j in range(i, 0, -1):
-                    if not actual[j]:
-                        break
-                    else:
-                        if not predict[j]:
-                            predict[j] = True
-                            latency += 1
-            elif not actual[i]:
-                anomaly_state = False
-            if anomaly_state:
-                predict[i] = True
 
-        if calc_latency:
-            return predict, latency / (anomaly_count + 1e-4)
-        else:
-            return predict, raw_predict
+    actual = label == 1
+    anomaly_state = False
+    anomaly_count = 0
+    for i in range(len(predict)):
+        if actual[i] and predict[i] and not anomaly_state:
+            anomaly_state = True
+            anomaly_count += 1
+            for j in range(i, 0, -1):
+                if not actual[j]:
+                    break
+                else:
+                    if not predict[j]:
+                        predict[j] = True
+                        latency += 1
+        elif not actual[i]:
+            anomaly_state = False
+        if anomaly_state:
+            predict[i] = True
+
+    if calc_latency:
+        return predict, latency / (anomaly_count + 1e-4)
+    else:
+        return predict, raw_predict

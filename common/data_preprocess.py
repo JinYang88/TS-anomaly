@@ -119,7 +119,7 @@ def get_windows(ts, labels=None, window_size=128, stride=1, dim=None):
 
 def generate_windows(
     data_dict,
-    data_hdf5_path,
+    data_hdf5_path=None,
     window_size=100,
     nrows=None,
     clear=False,
@@ -127,15 +127,17 @@ def generate_windows(
     **kwargs
 ):
     results = {}
-    cache_file = os.path.join(
-        data_hdf5_path,
-        "hdf5",
-        "window_dict_ws={}_st={}_nrows={}.hdf5".format(window_size, stride, nrows),
-    )
-    os.makedirs(os.path.dirname(cache_file), exist_ok=True)
 
-    if not clear and os.path.isfile(cache_file):
-        return load_hdf5(cache_file)
+    if data_hdf5_path:
+        cache_file = os.path.join(
+            data_hdf5_path,
+            "hdf5",
+            "window_dict_ws={}_st={}_nrows={}.hdf5".format(window_size, stride, nrows),
+        )
+        os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+
+        if not clear and os.path.isfile(cache_file):
+            return load_hdf5(cache_file)
 
     logging.info("Generating sliding windows (size {}).".format(window_size))
 

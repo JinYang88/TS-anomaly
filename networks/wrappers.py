@@ -33,7 +33,7 @@ import sklearn.model_selection
 import sklearn.svm
 import torch
 from common import triplet_loss
-from common.utils import score2pred
+from common.utils import iter_thresholds
 from IPython import embed
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
@@ -173,25 +173,6 @@ class TimeSeriesEncoder(torch.nn.Module):
     def predict(self, X):
         raise NotImplementedError("TBD")
 
-    def iter_thresholds(self, score, label, adjust=True):
-        best_f1 = -float("inf")
-        best_theta = None
-        best_adjust = None
-        best_raw = None
-        for anomaly_ratio in np.linspace(1e-3, 1, 500):
-            info_save = {}
-            adjusted_anomaly, raw_predict = score2pred(
-                score, label, percent=100 * (1 - anomaly_ratio), adjust=adjust
-            )
-
-            f1 = f1_score(adjusted_anomaly, label)
-            if f1 > best_f1:
-                best_f1 = f1
-                best_adjust = adjusted_anomaly
-                best_raw = raw_predict
-                best_theta = anomaly_ratio
-        return best_f1, best_theta, best_adjust, best_raw
-
     def score(self, iterator, anomaly_label, percent=88):
         logging.info("Evaluating")
         self = self.eval()
@@ -215,13 +196,13 @@ class TimeSeriesEncoder(torch.nn.Module):
         score_list = torch.cat(score_list, dim=0).cpu().numpy()
         auc = roc_auc_score(anomaly_label, score_list)
 
-        f1_adjusted, theta, pred_adjusted, pred_raw = self.iter_thresholds(
-            score_list, anomaly_label, adjust=True
+        f1_adjusted, theta, pred_adjusted, pred_raw = iter_thresholds(
+            score_list, anomaly_label
         )
         ps_adjusted = precision_score(pred_adjusted, anomaly_label)
         rc_adjusted = recall_score(pred_adjusted, anomaly_label)
 
-        # f1_raw, theta, pred_raw = self.iter_thresholds(
+        # f1_raw, theta, pred_raw = iter_thresholds(
         #     score_list, anomaly_label, adjust=False
         # )
         f1_raw = f1_score(pred_raw, anomaly_label)
