@@ -124,13 +124,16 @@ if __name__ == "__main__":
     records = []
     # run each subdataset
     for subdataset in subdatasets[dataset]:
-        records.append(
-            run(
-                dataset,
-                subdataset,
-                window_size,
+        try:
+            records.append(
+                run(
+                    dataset,
+                    subdataset,
+                    window_size,
+                )
             )
-        )
+        except:
+            print("Run {} failed.".format(subdataset))
     records = pd.DataFrame(records)
     records.to_csv(
         "./{}/{}-{}-all.csv".format(detail_dir, dataset, start_time),
