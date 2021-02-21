@@ -54,15 +54,17 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         else:
             clf_input_dim = kwargs["window_size"] - 1 + in_channels
 
-        self.linear = nn.Sequential(
-            nn.Linear(clf_input_dim, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(64, final_output_dim),
-        )
+        # self.linear = nn.Sequential(
+        #     nn.Linear(clf_input_dim, 128),
+        #     nn.ReLU(),
+        #     nn.Dropout(dropout),
+        #     nn.Linear(128, 64),
+        #     nn.ReLU(),
+        #     nn.Dropout(dropout),
+        #     nn.Linear(64, final_output_dim),
+        # )
+
+        self.linear = nn.Sequential(nn.Linear(clf_input_dim, final_output_dim))
 
         self.dropout = nn.Dropout(dropout)
         self.loss_fn = nn.MSELoss(reduction="none")
