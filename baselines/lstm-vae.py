@@ -54,12 +54,12 @@ def run(dataset, subdataset, window_size):
     train_start = time.time()
     vae.fit(
         df_train,
-        learning_rate=0.0005,
+        learning_rate=0.001,
         batch_size=64,
         num_epochs=20,
         opt=tf.train.AdamOptimizer,
         REG_LAMBDA=0.01,
-        grad_clip_norm=10,
+        grad_clip_norm=2,
         optimizer_params=None,
         verbose=True,
     )
