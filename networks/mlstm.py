@@ -53,8 +53,15 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             clf_input_dim = kwargs["window_size"] - 1
         elif self.inter == "CONCAT":
             clf_input_dim = in_channels * (kwargs["window_size"] - 1)
+        elif self.inter == "FM":
+            clf_input_dim = 2 * (kwargs["window_size"] - 1 + in_channels)
         else:
             clf_input_dim = kwargs["window_size"] - 1 + in_channels
+
+        self.res_w = nn.Linear(
+            in_channels * (kwargs["window_size"] - 1),
+            kwargs["window_size"] - 1 + in_channels,
+        )
 
         self.linear = nn.Sequential(
             nn.Linear(clf_input_dim, 128),
@@ -80,6 +87,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         sum_of_square = torch.sum(x, dim=1) ** 2
         square_of_sum = torch.sum(x ** 2, dim=1)
         bi_interaction_vector = (sum_of_square - square_of_sum) * 0.5
+        # return bi_interaction_vector.sum(dim=-1, keepdim=True)
         return bi_interaction_vector
 
     def forward(self, batch_window):
@@ -93,7 +101,11 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         if self.inter == "FM":
             time_inter = self.FM_interaction(x)
             dim_inter = self.FM_interaction(x.transpose(2, 1))
-            outputs = torch.cat([time_inter, dim_inter], dim=-1)
+            # print(dim_inter.shape)
+            raw = self.res_w(x.reshape(self.batch_size, -1))
+            inter = torch.cat([time_inter, dim_inter], dim=-1)
+            outputs = torch.cat([raw, inter])
+
         elif self.inter == "MEAN":
             outputs = x.mean(dim=1)
         elif self.inter == "TIME":
@@ -111,7 +123,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         )
         loss = self.loss_fn(recst, y)
         return_dict = {
-            "loss": loss.mean(),
+            "loss": loss.sum(),
             "recst": recst,
             "repr": outputs,
             "score": loss,

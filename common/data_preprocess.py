@@ -67,7 +67,7 @@ class preprocessor:
 
         # fit_transform using train
         if method == "minmax":
-            est = MinMaxScaler()
+            est = MinMaxScaler(clip=True)
         elif method == "standard":
             est = StandardScaler()
         elif method == "robust":
