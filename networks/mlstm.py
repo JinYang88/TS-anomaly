@@ -48,7 +48,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
 
         final_output_dim = prediction_length * len(self.prediction_dims)
 
-        if self.inter == "TIME":
+        if self.inter == "TIME" or self.inter == "MEAN":
             clf_input_dim = in_channels
         elif self.inter == "DIM":
             clf_input_dim = kwargs["window_size"] - 1
@@ -91,10 +91,8 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             time_inter = self.FM_interaction(x)
             dim_inter = self.FM_interaction(x.transpose(2, 1))
             outputs = torch.cat([time_inter, dim_inter], dim=-1)
-        elif self.inter == "SUM":
-            time_inter = x.sum(dim=1)
-            dim_inter = x.transpose(2, 1).sum(dim=1)
-            outputs = torch.cat([time_inter, dim_inter], dim=-1)
+        elif self.inter == "MEAN":
+            outputs = x.mean(dim=1)
         elif self.inter == "TIME":
             time_inter = self.FM_interaction(x)
             outputs = time_inter
