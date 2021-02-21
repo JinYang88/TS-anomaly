@@ -53,17 +53,17 @@ def run(dataset, subdataset, window_size):
     )  # default stateful = False
 
     train_start = time.time()
-    # vae.fit(
-    #     df_train,
-    #     learning_rate=0.001,
-    #     batch_size=64,
-    #     num_epochs=20,
-    #     opt=tf.train.AdamOptimizer,
-    #     REG_LAMBDA=0.01,
-    #     grad_clip_norm=2,
-    #     optimizer_params=None,
-    #     verbose=True,
-    # )
+    vae.fit(
+        df_train,
+        learning_rate=0.001,
+        batch_size=64,
+        num_epochs=1,
+        opt=tf.train.AdamOptimizer,
+        REG_LAMBDA=0.01,
+        grad_clip_norm=2,
+        optimizer_params=None,
+        verbose=True,
+    )
     train_time = time.time() - train_start
 
     test_start = time.time()
