@@ -12,7 +12,6 @@ from sklearn.preprocessing import (
     StandardScaler,
 )
 
-from common.sliding import BatchSlidingWindow
 from common.utils import load_hdf5, save_hdf5
 
 
