@@ -62,6 +62,10 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             in_channels * (kwargs["window_size"] - 1),
             kwargs["window_size"] - 1 + in_channels,
         )
+        self.res_i = nn.Linear(
+            kwargs["window_size"] - 1 + in_channels,
+            kwargs["window_size"] - 1 + in_channels,
+        )
 
         self.linear = nn.Sequential(
             nn.Linear(clf_input_dim, 128),
@@ -103,8 +107,8 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
             dim_inter = self.FM_interaction(x.transpose(2, 1))
             # print(dim_inter.shape)
             raw = self.res_w(x.reshape(self.batch_size, -1))
-            inter = torch.cat([time_inter, dim_inter], dim=-1)
-            outputs = torch.cat([raw, inter])
+            inter = self.res_i(torch.cat([time_inter, dim_inter], dim=-1))
+            outputs = torch.cat([raw, inter], dim=-1)
 
         elif self.inter == "MEAN":
             outputs = x.mean(dim=1)
