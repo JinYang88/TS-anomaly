@@ -124,7 +124,7 @@ if __name__ == "__main__":
     start_time = get_trial_id()
     records = []
     # run each subdataset
-    for subdataset in subdatasets[dataset][0:2]:
+    for subdataset in subdatasets[dataset]:
         records.append(
             run(
                 dataset,
