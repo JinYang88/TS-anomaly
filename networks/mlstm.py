@@ -27,7 +27,7 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         dropout=0,
         prediction_length=1,
         prediction_dims=[],
-        inter="fm",
+        inter="FM",
         **kwargs,
     ):
         super().__init__(architecture="MultiLSTM", **kwargs)
