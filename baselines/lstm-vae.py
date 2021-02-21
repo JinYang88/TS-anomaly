@@ -48,21 +48,21 @@ def run(dataset, subdataset, window_size):
     df_test = test.reshape(-1, *test.shape[-2:])
 
     vae = LSTM_Var_Autoencoder(
-        intermediate_dim=15, z_dim=3, n_dim=df_train.shape[-1], stateful=True
+        intermediate_dim=64, z_dim=3, n_dim=df_train.shape[-1], stateful=True
     )  # default stateful = False
 
     train_start = time.time()
-    vae.fit(
-        df_train,
-        learning_rate=0.001,
-        batch_size=64,
-        num_epochs=20,
-        opt=tf.train.AdamOptimizer,
-        REG_LAMBDA=0.01,
-        grad_clip_norm=2,
-        optimizer_params=None,
-        verbose=True,
-    )
+    # vae.fit(
+    #     df_train,
+    #     learning_rate=0.001,
+    #     batch_size=64,
+    #     num_epochs=20,
+    #     opt=tf.train.AdamOptimizer,
+    #     REG_LAMBDA=0.01,
+    #     grad_clip_norm=2,
+    #     optimizer_params=None,
+    #     verbose=True,
+    # )
     train_time = time.time() - train_start
 
     test_start = time.time()
