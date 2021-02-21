@@ -14,6 +14,7 @@ from IPython import embed
 from common import data_preprocess
 from common.dataloader import load_dataset
 from common.utils import score2pred, iter_thresholds
+import traceback
 from common.config import (
     subdatasets,
     get_trial_id,
@@ -134,6 +135,7 @@ if __name__ == "__main__":
             )
         except:
             print("Run {} failed.".format(subdataset))
+            print(traceback.format_exc())
     records = pd.DataFrame(records)
     records.to_csv(
         "./{}/{}-{}-all.csv".format(detail_dir, dataset, start_time),
