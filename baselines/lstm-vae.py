@@ -13,7 +13,6 @@ from LstmVAE import preprocess
 from IPython import embed
 from common import data_preprocess
 from common.dataloader import load_dataset
-from common.sliding import WindowIterator
 from common.utils import score2pred, iter_thresholds
 from common.config import (
     subdatasets,
