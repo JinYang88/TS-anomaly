@@ -51,7 +51,7 @@ def run(params):
         window_dict["train_windows"], batch_size=params["batch_size"], shuffle=True
     )
     test_iterator = WindowIterator(
-        window_dict["test_windows"], batch_size=params["batch_size"], shuffle=False
+        window_dict["test_windows"], batch_size=4096, shuffle=False
     )
     params["in_channels"] = data_dict["dim"]
 
