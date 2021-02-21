@@ -31,7 +31,6 @@ class MultiLSTMEncoder(TimeSeriesEncoder):
         **kwargs,
     ):
         super().__init__(architecture="MultiLSTM", **kwargs)
-        # super().__init__()
 
         self.prediction_dims = (
             prediction_dims if prediction_dims else list(range(in_channels))
