@@ -4,7 +4,6 @@ import pickle
 from collections import defaultdict
 
 import numpy as np
-import torch
 from IPython import embed
 from sklearn.preprocessing import (
     KBinsDiscretizer,
