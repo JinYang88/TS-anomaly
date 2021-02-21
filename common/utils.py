@@ -5,13 +5,12 @@ import h5py
 import nni
 import random
 import os
-import torch
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
 
-
-
 def seed_everything(seed=1029):
+    import torch
+
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
