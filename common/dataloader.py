@@ -132,7 +132,7 @@ def load_dataset(dataset, subdataset, use_dim="all"):
         f.close()
         if len(label_data) > 0:
             label_data_list.append(label_data)
-    data_dict["test_label"] = np.concatenate(label_data_list, axis=0)
+    data_dict["test_labels"] = np.concatenate(label_data_list, axis=0)
 
     return data_dict
 

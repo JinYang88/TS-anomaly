@@ -64,33 +64,25 @@ class preprocessor:
         logging.info("Normalizing data")
         # method: minmax, standard, robust
         normalized_dict = defaultdict(dict)
-        for data_name, sub_dict in data_dict.items():
-            if not isinstance(sub_dict, dict):
-                normalized_dict[data_name] = sub_dict
-                continue
 
-            # fit_transform using train
-            train = sub_dict["train"]  # shape: time x dim
-            if method == "minmax":
-                est = MinMaxScaler()
-            elif method == "standard":
-                est = StandardScaler()
-            elif method == "robust":
-                est = RobustScaler()
+        # fit_transform using train
+        if method == "minmax":
+            est = MinMaxScaler()
+        elif method == "standard":
+            est = StandardScaler()
+        elif method == "robust":
+            est = RobustScaler()
 
-            train_ = est.fit_transform(train)
+        train_ = est.fit_transform(data_dict["train"])
+        test_ = est.transform(data_dict["test"])
 
-            # transform test
-            test = sub_dict["test"]
-            test_ = est.transform(test)
+        # assign back
+        normalized_dict["train"] = train_
+        normalized_dict["test"] = test_
 
-            # assign back
-            normalized_dict[data_name]["train"] = train_
-            normalized_dict[data_name]["test"] = test_
-
-            for k, v in sub_dict.items():
-                if k not in ["train", "test"]:
-                    normalized_dict[data_name][k] = v
+        for k, v in data_dict.items():
+            if k not in ["train", "test"]:
+                normalized_dict[k] = v
         return normalized_dict
 
 
@@ -146,7 +138,9 @@ def generate_windows(
     if "test" in data_dict:
         test = data_dict["test"][0:nrows]
         test_label = (
-            None if "test_label" not in data_dict else data_dict["test_label"][0:nrows]
+            None
+            if "test_labels" not in data_dict
+            else data_dict["test_labels"][0:nrows]
         )
         test_windows, test_labels = get_windows(
             test, test_label, window_size=window_size, stride=1

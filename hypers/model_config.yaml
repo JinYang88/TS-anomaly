@@ -30,7 +30,7 @@ mlstm_250:
     num_layers: 2
     discretized: False
     dropout: 0.1
-    # normalize: False # minmax, standard, robust
+    normalize: minmax # minmax, standard, robust
     # n_bins: 50
     # embedding_dim: 16
     # use_dim: 1
