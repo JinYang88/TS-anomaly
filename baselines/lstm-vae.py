@@ -143,7 +143,7 @@ if __name__ == "__main__":
     )
     log = "{}\t{}\t{}\t{}\tAUC-{:.4f}\tF1-{:.4f}\tF1_adj-{:.4f}\tPS_adj-{:.4f}\tRC_adj-{:.4f}\ttrain-{:.4f}s\ttest-{:.4f}s\n".format(
         start_time,
-        "",
+        "ws=" + str(window_size),
         "lstm-vae",
         dataset + "_all",
         records["AUC"].mean(),
