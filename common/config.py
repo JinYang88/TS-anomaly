@@ -208,6 +208,12 @@ def initialize_config(config_dir, args):
         found_params["Base"]["save_path"] = params["save_path"]
         found_params["Base"]["trial_id"] = params["trial_id"]
         yaml.dump(found_params, fr)
+
+    if params["dataset"] in ["SMAP", "MSL"]:
+        params["prediction_dims"] = [0]
+    else:
+        params["prediction_dims"] = []
+
     return params
 
 
