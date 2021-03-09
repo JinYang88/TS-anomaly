@@ -202,9 +202,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         ps_adjusted = precision_score(pred_adjusted, anomaly_label)
         rc_adjusted = recall_score(pred_adjusted, anomaly_label)
 
-        # f1_raw, theta, pred_raw = iter_thresholds(
-        #     score_list, anomaly_label, adjust=False
-        # )
         f1_raw = f1_score(pred_raw, anomaly_label)
         ps_raw = precision_score(pred_raw, anomaly_label)
         rc_raw = recall_score(pred_raw, anomaly_label)
@@ -235,63 +232,3 @@ class TimeSeriesEncoder(torch.nn.Module):
             "PS_adj": ps_adjusted,
             "RC_adj": rc_adjusted,
         }
-
-
-class CausalCNNEncoder(TimeSeriesEncoder):
-    def __init__(
-        self,
-        in_channels=1,
-        channels=10,
-        depth=1,
-        reduced_size=10,
-        out_channels=10,
-        kernel_size=4,
-        device="cpu",
-        **kwargs
-    ):
-        super(CausalCNNEncoder, self).__init__(
-            architecture="CausalCNN",
-            encoder=self.__create_encoder(
-                in_channels,
-                channels,
-                depth,
-                reduced_size,
-                out_channels,
-                kernel_size,
-                device,
-                **kwargs
-            ),
-            device=device,
-            **kwargs
-        )
-        self.channels = channels
-        self.depth = depth
-        self.reduced_size = reduced_size
-        self.kernel_size = kernel_size
-
-    def __create_encoder(
-        self,
-        in_channels,
-        channels,
-        depth,
-        reduced_size,
-        out_channels,
-        kernel_size,
-        device,
-        **kwargs
-    ):
-        encoder = networks.causal_cnn.CausalCNNEncoder(
-            in_channels,
-            channels,
-            depth,
-            reduced_size,
-            out_channels,
-            kernel_size,
-            **kwargs
-        )
-        encoder = encoder.to(device)
-        return encoder
-
-    def set_params(self, **kwargs):
-        self.__init__(**kwargs)
-        return self

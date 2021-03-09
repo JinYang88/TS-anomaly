@@ -60,7 +60,7 @@ class preprocessor:
 
         return self.vocab_size
 
-    def normalize(self, data_dict, method="standard"):
+    def normalize(self, data_dict, method="minmax"):
         logging.info("Normalizing data")
         # method: minmax, standard, robust
         normalized_dict = defaultdict(dict)

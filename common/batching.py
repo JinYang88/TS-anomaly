@@ -1,7 +1,7 @@
 import torch
+from torch.utils.data import DataLoader
 import numpy as np
 from IPython import embed
-from torch.utils.data import DataLoader
 
 
 class WindowIterator:
@@ -10,6 +10,3 @@ class WindowIterator:
         self.loader = DataLoader(
             windows, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
         )
-
-    def fetch_windows(self):
-        return self.windows
