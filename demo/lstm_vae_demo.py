@@ -36,6 +36,8 @@ if __name__ == "__main__":
     pp = preprocessor()
     data_dict = pp.normalize(data_dict)
 
+    print(data_dict)
+
     # generate sliding windows
     window_dict = generate_windows(data_dict, window_size=window_size, stride=stride)
 
