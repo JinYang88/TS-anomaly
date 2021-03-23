@@ -166,7 +166,7 @@ class DAGMM:
 
             self.saver = tf.train.Saver()
 
-    def predict(self, x):
+    def predict_prob(self, x):
         """ Calculate anormaly scores (sample energy) on samples in X.
 
         Parameters

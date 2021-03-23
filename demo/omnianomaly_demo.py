@@ -14,6 +14,7 @@ import pandas as pd
 from argparse import ArgumentParser
 from tfsnippet.examples.utils import MLResults
 from common.dataloader import load_dataset, get_data_dim
+from common.utils import pprint
 from common.data_preprocess import generate_windows, preprocessor
 from networks.omni_anomaly.detector import OmniDetector
 from IPython import embed
@@ -70,6 +71,7 @@ class ExpConfig(Config):
     rnn_cell = "GRU"  # 'GRU', 'LSTM' or 'Basic'
     rnn_num_hidden = 500
     window_length = 100
+    stride = 5
     dense_dim = 500
     posterior_flow_type = "nf"  # 'nf' or None
     nf_layers = 20  # for nf
@@ -142,13 +144,13 @@ if __name__ == "__main__":
 
     # generate sliding windows
     window_dict = generate_windows(
-        data_dict, window_size=config.window_length, stride=5
+        data_dict, window_size=config.window_length, stride=stride
     )
 
     # batch data
-    x_train = DataGenerator(window_dict["train_windows"][0:100])
-    x_test = DataGenerator(window_dict["test_windows"][0:100])
-    test_labels = DataGenerator(window_dict["test_labels"][0:100])
+    x_train = DataGenerator(window_dict["train_windows"])
+    x_test = DataGenerator(window_dict["test_windows"])
+    test_labels = DataGenerator(window_dict["test_labels"])
 
     with warnings.catch_warnings():
         # suppress DeprecationWarning from NumPy caused by codes in TensorFlow-Probability
@@ -156,11 +158,10 @@ if __name__ == "__main__":
 
         od = OmniDetector(config)
         od.fit(x_train)
+        anomaly_score = od.predict_prob(x_test)
+        anomaly_label = window_dict["test_labels"][:, -1]
 
-        od.predict_prob(x_test)
-
-        anomaly_score = vae.predict_prob(x_test)
-
+        print(anomaly_score.shape, anomaly_label.shape)
         # Make evaluation
         eva = evaluator(
             ["auc", "f1", "pc", "rc"],
