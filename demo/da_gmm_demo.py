@@ -36,21 +36,28 @@ if __name__ == "__main__":
     pp = preprocessor()
     data_dict = pp.normalize(data_dict)
 
-    x_train = data_dict['train']
-    x_test = data_dict['test']
-    x_test_labels = data_dict['test_labels']
+    x_train = data_dict["train"]
+    x_test = data_dict["test"]
+    x_test_labels = data_dict["test_labels"]
 
     dagmm = DAGMM(
-        comp_hiddens=[32, 16, 2], comp_activation=tf.nn.tanh,
-        est_hiddens=[80, 40], est_activation=tf.nn.tanh,
-        est_dropout_ratio=0.25, minibatch_size=1024, epoch_size=100,
-        learning_rate=0.0001, lambda1=0.1, lambda2=0.0001,
-        normalize=True, random_seed=123
+        comp_hiddens=[32, 16, 2],
+        comp_activation=tf.nn.tanh,
+        est_hiddens=[80, 40],
+        est_activation=tf.nn.tanh,
+        est_dropout_ratio=0.25,
+        minibatch_size=1024,
+        epoch_size=100,
+        learning_rate=0.0001,
+        lambda1=0.1,
+        lambda2=0.0001,
+        normalize=True,
+        random_seed=123,
     )
 
     # predict anomaly score
     dagmm.fit(x_train)
-    anomaly_score = dagmm.predict(x_test)
+    anomaly_score = dagmm.predict_prob(x_test)
     anomaly_label = x_test_labels
 
     # print(anomaly_score.shape)

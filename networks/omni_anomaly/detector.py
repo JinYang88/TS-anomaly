@@ -66,8 +66,17 @@ class OmniDetector:
                     saver.save()
                 print("=" * 30 + "result" + "=" * 30)
 
+            # score, z, pred_speed = self.predictor.get_score(iterator)
+
     def predict_prob(self, iterator):
         with tf.variable_scope("model") as model_vs:
             with tf.Session().as_default():
+                if self.config.save_dir is not None:
+                    # Restore variables from `save_dir`.
+                    saver = VariableSaver(
+                        get_variables_as_dict(model_vs), self.config.save_dir
+                    )
+                    saver.restore()
+
                 score, z, pred_speed = self.predictor.get_score(iterator)
         return score

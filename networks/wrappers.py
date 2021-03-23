@@ -32,8 +32,7 @@ import sklearn.externals
 import sklearn.model_selection
 import sklearn.svm
 import torch
-from common import triplet_loss
-from common.utils import iter_thresholds
+from common.evaluation import iter_thresholds
 from IPython import embed
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 

@@ -18,10 +18,10 @@ from common.config import (
     subdatasets,
     get_trial_id,
 )
-from common.dataloader import load_CSV_dataset, load_dataset
-from common.sliding import WindowIterator
+from common.dataloader import load_dataset
+from common.batching import WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything
-from networks.mlstm import MultiLSTMEncoder
+from networks.cmanomaly import CMAnomaly
 
 seed_everything(2020)
 
@@ -59,7 +59,7 @@ def run(params):
     logging.info(print_to_json(params))
 
     # training
-    encoder = MultiLSTMEncoder(**params)
+    encoder = CMAnomaly(**params)
 
     if params["load"]:
         encoder.load_encoder()
