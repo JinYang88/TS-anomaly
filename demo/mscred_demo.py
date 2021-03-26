@@ -14,6 +14,7 @@ from IPython import embed
 
 dataset = "SMD"
 subdataset = "machine-1-1"
+device = torch.device("cpu")
 in_channels_encoder = 3
 in_channels_decoder = 256
 point_adjustment = True
@@ -58,7 +59,7 @@ if __name__ == "__main__":
         torch.load("./mscred_data/checkpoints/model-" + subdataset + ".pth")
     )
     mscred.to(device)
-    test(dataLoader["test"], mscred, subdataset, x_test)
+    test(dataLoader["test"], mscred, subdataset, x_test, device)
     print("测试 %s 完成" % subdataset)
 
     anomaly_score = evaluate(subdataset)
