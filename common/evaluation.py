@@ -34,6 +34,7 @@ class evaluator:
         self.score = score
         self.label = label
         self.pred = None
+        self.pred_raw = None
         self.threshold = None
         self.__iterate_threshold = True
         self.__iterate_metric = "f1"
@@ -50,6 +51,7 @@ class evaluator:
                 adjustment=self.__point_adjustment,
             )
             self.pred = best_adjust
+            self.pred_raw = best_raw
         return self.pred
 
     def compute_metrics(self):
@@ -61,6 +63,10 @@ class evaluator:
                 results[metric] = metric_func[metric](self.label, self.score)
             else:
                 results[metric] = metric_func[metric](self.pred, self.label)
+                results["raw_" + metric] = metric_func[metric](
+                    self.pred_raw, self.label
+                )
+
         return results
 
 
