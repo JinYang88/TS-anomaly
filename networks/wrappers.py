@@ -72,14 +72,14 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.time_tracker = {}
 
     def compile(self):
-        logging.info("Compiling finished.")
+        print("Compiling finished.")
         self.optimizer = torch.optim.Adam(
             self.parameters(), lr=self.lr, weight_decay=0.001
         )
         self = self.to(self.device)
 
     def save_encoder(self):
-        logging.info("Saving model to {}".format(self.model_save_file))
+        print("Saving model to {}".format(self.model_save_file))
         try:
             torch.save(
                 self.state_dict(),
@@ -94,7 +94,7 @@ class TimeSeriesEncoder(torch.nn.Module):
             model_save_file = glob(os.path.join(model_save_path, "*.pth"))[0]
         else:
             model_save_file = self.model_save_file
-        logging.info("Loading model from {}".format(model_save_file))
+        print("Loading model from {}".format(model_save_file))
         self.load_state_dict(torch.load(model_save_file, map_location=self.device))
 
     def fit(
@@ -113,7 +113,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         i = 0  # Number of performed optimization steps
         epochs = 0  # Number of performed epochs
         num_batches = len(train_iterator.loader)
-        logging.info("Start training for {} batches.".format(num_batches))
+        print("Start training for {} batches.".format(num_batches))
         train_start = time.time()
         # Encoder training
         while epochs < self.nb_steps:
@@ -128,7 +128,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 self.optimizer.step()
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
-            logging.info("Epoch: {}, loss: {:.5f}".format(epochs + 1, avg_loss))
+            print("Epoch: {}, loss: {:.5f}".format(epochs + 1, avg_loss))
             epochs += 1
         train_end = time.time()
 
@@ -138,7 +138,7 @@ class TimeSeriesEncoder(torch.nn.Module):
     def __on_epoch_end(self, monitor_value, patience):
         if monitor_value > self.best_metric:
             self.best_metric = monitor_value
-            logging.info("Saving model for performance: {:3f}".format(monitor_value))
+            print("Saving model for performance: {:3f}".format(monitor_value))
             self.save_encoder()
             self.worse_count = 0
         else:
@@ -173,7 +173,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         raise NotImplementedError("TBD")
 
     def score(self, iterator, anomaly_label, percent=88):
-        logging.info("Evaluating")
+        print("Evaluating")
         self = self.eval()
         test_start = time.time()
         with torch.no_grad():
@@ -205,17 +205,17 @@ class TimeSeriesEncoder(torch.nn.Module):
         ps_raw = precision_score(pred_raw, anomaly_label)
         rc_raw = recall_score(pred_raw, anomaly_label)
 
-        logging.info(
-            "AUC: {:.3f}, F1: {:.3f}({:.3f}), PS: {:.3f}({:.3f}), RC:{:.3f}({:.3f})".format(
-                auc,
-                f1_raw,
-                f1_adjusted,
-                ps_raw,
-                ps_adjusted,
-                rc_raw,
-                rc_adjusted,
-            )
-        )
+        # print(
+        #     "AUC: {:.3f}, F1: {:.3f}({:.3f}), PS: {:.3f}({:.3f}), RC:{:.3f}({:.3f})".format(
+        #         auc,
+        #         f1_raw,
+        #         f1_adjusted,
+        #         ps_raw,
+        #         ps_adjusted,
+        #         rc_raw,
+        #         rc_adjusted,
+        #     )
+        # )
         self = self.train()
         return {
             "score": score_list,
