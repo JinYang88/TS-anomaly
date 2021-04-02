@@ -8,12 +8,8 @@ from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_sco
 
 
 def pprint(d, indent=0):
-<<<<<<< HEAD
     d = sorted([(k, v) for k, v in d.items()], key=lambda x: x[0])
     for key, value in d:
-=======
-    for key, value in d.items():
->>>>>>> ycdev
         print("\t" * indent + str(key))
         if isinstance(value, dict):
             pprint(value, indent + 1)
