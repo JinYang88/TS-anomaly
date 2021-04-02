@@ -35,9 +35,9 @@ def load_dataset(dataset, subdataset, use_dim="all"):
     path = data_path_dict[dataset]
 
     prefix = subdataset
-    train_files = glob(os.path.join(path, "train/" + prefix + "_train.pkl"))
-    test_files = glob(os.path.join(path, "test/" + prefix + "_test.pkl"))
-    label_files = glob(os.path.join(path, "test_label/" + prefix + "_test_label.pkl"))
+    train_files = glob(os.path.join(path, prefix + "_train.pkl"))
+    test_files = glob(os.path.join(path, prefix + "_test.pkl"))
+    label_files = glob(os.path.join(path, prefix + "_test_label.pkl"))
 
     logging.info("{} files found.".format(len(train_files)))
 
