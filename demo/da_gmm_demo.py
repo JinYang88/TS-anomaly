@@ -12,15 +12,19 @@ from IPython import embed
 import tensorflow as tf
 
 dataset = "SMD"
-subdataset = "machine-1-1"
-window_size = 32
-stride = 5
-intermediate_dim = 64
-z_dim = 3
-stateful = True
-learning_rate = 0.001
-batch_size = 64
-num_epochs = 1
+subdataset = "machine-1-2"
+compression_hiddens = [32, 16, 2]
+compression_activation = tf.nn.tanh
+estimation_hiddens = [80, 40]
+estimation_activation = tf.nn.tanh
+estimation_dropout_ratio = 0.25
+minibatch = 1024
+epoch = 100
+lr = 0.0001
+lambdaone = 0.1
+lambdatwo = 0.0001
+normalize = True
+random_seed = 123
 point_adjustment = True
 iterate_threshold = True
 
@@ -41,27 +45,24 @@ if __name__ == "__main__":
     x_test_labels = data_dict["test_labels"]
 
     dagmm = DAGMM(
-        comp_hiddens=[32, 16, 2],
-        comp_activation=tf.nn.tanh,
-        est_hiddens=[80, 40],
-        est_activation=tf.nn.tanh,
-        est_dropout_ratio=0.25,
-        minibatch_size=1024,
-        epoch_size=100,
-        learning_rate=0.0001,
-        lambda1=0.1,
-        lambda2=0.0001,
-        normalize=True,
-        random_seed=123,
+        comp_hiddens=compression_hiddens,
+        comp_activation=compression_activation,
+        est_hiddens=estimation_hiddens,
+        est_activation=estimation_activation,
+        est_dropout_ratio=estimation_dropout_ratio,
+        minibatch_size=minibatch,
+        epoch_size=epoch,
+        learning_rate=lr,
+        lambda1=lambdaone,
+        lambda2=lambdatwo,
+        normalize=normalize,
+        random_seed=random_seed,
     )
 
     # predict anomaly score
     dagmm.fit(x_train)
     anomaly_score = dagmm.predict_prob(x_test)
     anomaly_label = x_test_labels
-
-    # print(anomaly_score.shape)
-    # print(anomaly_label.shape)
 
     # Make evaluation
     eva = evaluator(
