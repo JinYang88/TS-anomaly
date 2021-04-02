@@ -6,7 +6,7 @@ sys.path.append("./")
 from networks.lstm_vae import LSTM_Var_Autoencoder
 from common.data_preprocess import generate_windows, preprocessor
 from common.dataloader import load_dataset
-from common.evaluation import evaluator
+from common.evaluation import evaluator, store_output
 from common.utils import pprint
 from IPython import embed
 import tensorflow as tf
@@ -20,7 +20,7 @@ z_dim = 3
 stateful = True
 learning_rate = 0.001
 batch_size = 64
-num_epochs = 1
+num_epochs = 10
 point_adjustment = True
 iterate_threshold = True
 
@@ -29,14 +29,12 @@ if __name__ == "__main__":
     data_dict = load_dataset(
         dataset,
         subdataset,
-        "all",
+        0,
     )
 
     # preprocessing
     pp = preprocessor()
     data_dict = pp.normalize(data_dict)
-
-    print(data_dict)
 
     # generate sliding windows
     window_dict = generate_windows(data_dict, window_size=window_size, stride=stride)
@@ -71,7 +69,7 @@ if __name__ == "__main__":
 
     # predict anomaly score for each window
     anomaly_score = vae.predict_prob(df_test).mean(axis=-1)[:, -1]  # mean for all dims
-    anomaly_label = window_dict["test_labels"][:, -1]
+    anomaly_label = window_dict["test_labels"][:, -1]  # last point of each window
 
     # Make evaluation
     eva = evaluator(
@@ -85,3 +83,6 @@ if __name__ == "__main__":
     eval_results = eva.compute_metrics()
 
     pprint(eval_results)
+    store_output(
+        "./demo/output", dataset, "lstm_vae", subdataset, anomaly_score, anomaly_label
+    )

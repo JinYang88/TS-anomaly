@@ -129,6 +129,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
             print("Epoch: {}, loss: {:.5f}".format(epochs + 1, avg_loss))
+            self.__on_epoch_end(avg_loss, patience=patience)
             epochs += 1
         train_end = time.time()
 
@@ -138,7 +139,7 @@ class TimeSeriesEncoder(torch.nn.Module):
     def __on_epoch_end(self, monitor_value, patience):
         if monitor_value > self.best_metric:
             self.best_metric = monitor_value
-            print("Saving model for performance: {:3f}".format(monitor_value))
+            print("Saving model for performance: {:.3f}".format(monitor_value))
             self.save_encoder()
             self.worse_count = 0
         else:
@@ -205,17 +206,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         ps_raw = precision_score(pred_raw, anomaly_label)
         rc_raw = recall_score(pred_raw, anomaly_label)
 
-        # print(
-        #     "AUC: {:.3f}, F1: {:.3f}({:.3f}), PS: {:.3f}({:.3f}), RC:{:.3f}({:.3f})".format(
-        #         auc,
-        #         f1_raw,
-        #         f1_adjusted,
-        #         ps_raw,
-        #         ps_adjusted,
-        #         rc_raw,
-        #         rc_adjusted,
-        #     )
-        # )
         self = self.train()
         return {
             "score": score_list,

@@ -1,3 +1,4 @@
+import os
 import copy
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
@@ -9,6 +10,17 @@ metric_func = {
     "rc": recall_score,
     "auc": roc_auc_score,
 }
+
+
+def store_output(
+    root_dir, dataset, model_name, subdataset, anomaly_score, anomaly_label
+):
+    store_dir = os.path.join(root_dir, dataset, subdataset)
+    os.makedirs(store_dir, exist_ok=True)
+
+    np.savez(os.path.join(store_dir, model_name + "_score"), anomaly_score)
+    np.savez(os.path.join(store_dir, model_name + "_label"), anomaly_label)
+    print("Store output of {} to {} done.".format(model_name, store_dir))
 
 
 class evaluator:
@@ -42,7 +54,7 @@ class evaluator:
 
     def compute_pred(self):
         if self.threshold is not None:
-            self.pred = (self.score >= self.threshold).astype(int)
+            self.pred_raw = self.pred = (self.score >= self.threshold).astype(int)
         if self.__iterate_threshold:
             best_metric, best_theta, best_adjust, best_raw = iter_thresholds(
                 self.score,

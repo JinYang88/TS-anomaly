@@ -9,10 +9,6 @@ import torch
 import pandas as pd
 from IPython import embed
 
-datasets/anomaly/SMD/processed/machine-1-1_test_label.pkl
-datasets/anomaly/SMD/processed/machine-1-1_test.pkl
-datasets/anomaly/SMD/processed/machine-1-1_train.pkl
-
 os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
 sys.path.append("./")
 
@@ -28,10 +24,9 @@ from common.dataloader import load_dataset
 from common.batching import WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything, pprint
 from networks.lstm import LSTM
-from common.evaluation import evaluator
+from common.evaluation import evaluator, store_output
 
 seed_everything(2020)
-
 
 dataset = "SMD"
 subdataset = "machine-1-1"
@@ -41,7 +36,7 @@ batch_size = 64
 device = "cpu"
 window_size = 32
 stride = 5
-nb_epoch = 1
+nb_epoch = 10
 
 lr = 0.001
 hidden_size = 64
@@ -50,13 +45,13 @@ dropout = 0
 prediction_length = 1
 prediction_dims = []
 iterate_threshold = True
-point_adjustment = True
+point_adjustment = False
 
 if __name__ == "__main__":
     data_dict = load_dataset(
         dataset,
         subdataset,
-        "all",
+        0,
     )
 
     pp = data_preprocess.preprocessor()
@@ -86,7 +81,7 @@ if __name__ == "__main__":
         dropout=dropout,
         window_size=window_size,
         prediction_length=prediction_length,
-        prediction_dims=[],
+        prediction_dims=prediction_dims,
         save_path=save_path,
         trial_id="demo",
         batch_size=batch_size,
@@ -121,3 +116,6 @@ if __name__ == "__main__":
     eval_results = eva.compute_metrics()
 
     pprint(eval_results)
+    store_output(
+        "./demo/output", dataset, "lstm", subdataset, anomaly_score, anomaly_label
+    )
