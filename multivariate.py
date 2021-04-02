@@ -59,7 +59,11 @@ def run(params):
     logging.info(print_to_json(params))
 
     # training
+<<<<<<< HEAD
     encoder = CMAnomaly(**params)
+=======
+    encoder = MultiLSTMEncoder(**params)
+>>>>>>> ycdev
 
     if params["load"]:
         encoder.load_encoder()

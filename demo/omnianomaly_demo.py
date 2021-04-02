@@ -71,7 +71,10 @@ class ExpConfig(Config):
     rnn_cell = "GRU"  # 'GRU', 'LSTM' or 'Basic'
     rnn_num_hidden = 500
     window_length = 100
+<<<<<<< HEAD
     stride = 5
+=======
+>>>>>>> ycdev
     dense_dim = 500
     posterior_flow_type = "nf"  # 'nf' or None
     nf_layers = 20  # for nf
@@ -144,6 +147,7 @@ if __name__ == "__main__":
 
     # generate sliding windows
     window_dict = generate_windows(
+<<<<<<< HEAD
         data_dict, window_size=config.window_length, stride=stride
     )
 
@@ -151,6 +155,15 @@ if __name__ == "__main__":
     x_train = DataGenerator(window_dict["train_windows"])
     x_test = DataGenerator(window_dict["test_windows"])
     test_labels = DataGenerator(window_dict["test_labels"])
+=======
+        data_dict, window_size=config.window_length, stride=5
+    )
+
+    # batch data
+    x_train = DataGenerator(window_dict["train_windows"][0:100])
+    x_test = DataGenerator(window_dict["test_windows"][0:100])
+    test_labels = DataGenerator(window_dict["test_labels"][0:100])
+>>>>>>> ycdev
 
     with warnings.catch_warnings():
         # suppress DeprecationWarning from NumPy caused by codes in TensorFlow-Probability
@@ -158,10 +171,18 @@ if __name__ == "__main__":
 
         od = OmniDetector(config)
         od.fit(x_train)
+<<<<<<< HEAD
         anomaly_score = od.predict_prob(x_test)
         anomaly_label = window_dict["test_labels"][:, -1]
 
         print(anomaly_score.shape, anomaly_label.shape)
+=======
+
+        od.predict_prob(x_test)
+
+        anomaly_score = vae.predict_prob(x_test)
+
+>>>>>>> ycdev
         # Make evaluation
         eva = evaluator(
             ["auc", "f1", "pc", "rc"],
