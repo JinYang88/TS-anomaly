@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
 sys.path.append("./")
@@ -21,6 +22,11 @@ point_adjustment = True
 iterate_threshold = True
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s P%(process)d %(levelname)s %(message)s",
+    )
+
     # load dataset
     data_dict = load_dataset(
         dataset,

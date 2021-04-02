@@ -60,10 +60,14 @@ def run(params):
 
     # training
 <<<<<<< HEAD
+<<<<<<< HEAD
     encoder = CMAnomaly(**params)
 =======
     encoder = MultiLSTMEncoder(**params)
 >>>>>>> ycdev
+=======
+    encoder = MultiLSTMEncoder(**params)
+>>>>>>> wwdev-refined
 
     if params["load"]:
         encoder.load_encoder()
