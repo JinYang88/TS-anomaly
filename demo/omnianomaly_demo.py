@@ -14,13 +14,17 @@ import pandas as pd
 from argparse import ArgumentParser
 from tfsnippet.examples.utils import MLResults
 from common.dataloader import load_dataset, get_data_dim
-from common.utils import pprint
 from common.data_preprocess import generate_windows, preprocessor
 from networks.omni_anomaly.detector import OmniDetector
 from IPython import embed
 from common.evaluation import evaluator
 from tfsnippet.utils import Config
 from tensorflow.python.keras.utils import Sequence
+from common.utils import pprint
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 
 dataset = "SMD"
 subdataset = "machine-1-1"
@@ -71,13 +75,6 @@ class ExpConfig(Config):
     rnn_cell = "GRU"  # 'GRU', 'LSTM' or 'Basic'
     rnn_num_hidden = 500
     window_length = 100
-<<<<<<< HEAD
-<<<<<<< HEAD
-    stride = 5
-=======
->>>>>>> ycdev
-=======
->>>>>>> wwdev-refined
     dense_dim = 500
     posterior_flow_type = "nf"  # 'nf' or None
     nf_layers = 20  # for nf
@@ -150,63 +147,29 @@ if __name__ == "__main__":
 
     # generate sliding windows
     window_dict = generate_windows(
-<<<<<<< HEAD
-<<<<<<< HEAD
-        data_dict, window_size=config.window_length, stride=stride
+        data_dict, window_size=config.window_length, stride=5
     )
 
     # batch data
     x_train = DataGenerator(window_dict["train_windows"])
     x_test = DataGenerator(window_dict["test_windows"])
     test_labels = DataGenerator(window_dict["test_labels"])
-=======
-=======
->>>>>>> wwdev-refined
-        data_dict, window_size=config.window_length, stride=5
+
+    od = OmniDetector(config)
+    od.fit(x_train)
+
+    anomaly_score = od.predict_prob(x_test)
+    anomaly_label = window_dict["test_labels"][:, -1]  # last point of each window
+    print(anomaly_score.shape, anomaly_label.shape)
+    # Make evaluation
+    eva = evaluator(
+        ["auc", "f1", "pc", "rc"],
+        anomaly_score,
+        anomaly_label,
+        iterate_threshold=iterate_threshold,
+        iterate_metric="f1",
+        point_adjustment=point_adjustment,
     )
+    eval_results = eva.compute_metrics()
 
-    # batch data
-    x_train = DataGenerator(window_dict["train_windows"][0:100])
-    x_test = DataGenerator(window_dict["test_windows"][0:100])
-    test_labels = DataGenerator(window_dict["test_labels"][0:100])
-<<<<<<< HEAD
->>>>>>> ycdev
-=======
->>>>>>> wwdev-refined
-
-    with warnings.catch_warnings():
-        # suppress DeprecationWarning from NumPy caused by codes in TensorFlow-Probability
-        warnings.filterwarnings("ignore", category=DeprecationWarning, module="numpy")
-
-        od = OmniDetector(config)
-        od.fit(x_train)
-<<<<<<< HEAD
-<<<<<<< HEAD
-        anomaly_score = od.predict_prob(x_test)
-        anomaly_label = window_dict["test_labels"][:, -1]
-
-        print(anomaly_score.shape, anomaly_label.shape)
-=======
-=======
->>>>>>> wwdev-refined
-
-        od.predict_prob(x_test)
-
-        anomaly_score = vae.predict_prob(x_test)
-
-<<<<<<< HEAD
->>>>>>> ycdev
-=======
->>>>>>> wwdev-refined
-        # Make evaluation
-        eva = evaluator(
-            ["auc", "f1", "pc", "rc"],
-            anomaly_score,
-            anomaly_label,
-            iterate_threshold=iterate_threshold,
-            iterate_metric="f1",
-            point_adjustment=point_adjustment,
-        )
-        eval_results = eva.compute_metrics()
-
-        pprint(eval_results)
+    pprint(eval_results)
