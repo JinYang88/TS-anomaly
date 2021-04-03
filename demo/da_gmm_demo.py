@@ -11,8 +11,8 @@ from common.utils import pprint
 from IPython import embed
 import tensorflow as tf
 
-dataset = "SMD"
-subdataset = "machine-1-2"
+dataset = "SMAP"
+subdataset = "A-1"
 compression_hiddens = [32, 16, 2]
 compression_activation = tf.nn.tanh
 estimation_hiddens = [80, 40]
