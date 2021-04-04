@@ -12,7 +12,7 @@ from os.path import exists, join
 
 
 class DAGMM:
-    """ Deep Autoencoding Gaussian Mixture Model.
+    """Deep Autoencoding Gaussian Mixture Model.
 
     This implementation is based on the paper:
     Bo Zong+ (2018) Deep Autoencoding Gaussian Mixture Model
@@ -23,11 +23,21 @@ class DAGMM:
     MODEL_FILENAME = "DAGMM_model"
     SCALER_FILENAME = "DAGMM_scaler"
 
-    def __init__(self, comp_hiddens, comp_activation,
-            est_hiddens, est_activation, est_dropout_ratio=0.5,
-            minibatch_size=1024, epoch_size=100,
-            learning_rate=0.0001, lambda1=0.1, lambda2=0.0001,
-            normalize=True, random_seed=123):
+    def __init__(
+        self,
+        comp_hiddens,
+        comp_activation,
+        est_hiddens,
+        est_activation,
+        est_dropout_ratio=0.5,
+        minibatch_size=1024,
+        epoch_size=100,
+        learning_rate=0.0001,
+        lambda1=0.1,
+        lambda2=0.0001,
+        normalize=True,
+        random_seed=123,
+    ):
         """
         Parameters
         ----------
@@ -91,7 +101,7 @@ class DAGMM:
             self.sess.close()
 
     def fit(self, x):
-        """ Fit the DAGMM model according to the given data.
+        """Fit the DAGMM model according to the given data.
 
         Parameters
         ----------
@@ -111,11 +121,12 @@ class DAGMM:
 
             # Create Placeholder
             self.input = input = tf.placeholder(
-                dtype=tf.float32, shape=[None, n_features])
+                dtype=tf.float32, shape=[None, n_features]
+            )
             self.drop = drop = tf.placeholder(dtype=tf.float32, shape=[])
 
             # Build graph
-            z, x_dash  = self.comp_net.inference(input)
+            z, x_dash = self.comp_net.inference(input)
             gamma = self.est_net.inference(z, drop)
             self.gmm.fit(z, gamma)
             energy = self.gmm.energy(z)
@@ -123,9 +134,11 @@ class DAGMM:
             self.x_dash = x_dash
 
             # Loss function
-            loss = (self.comp_net.reconstruction_error(input, x_dash) +
-                self.lambda1 * tf.reduce_mean(energy) +
-                self.lambda2 * self.gmm.cov_diag_loss())
+            loss = (
+                self.comp_net.reconstruction_error(input, x_dash)
+                + self.lambda1 * tf.reduce_mean(energy)
+                + self.lambda2 * self.gmm.cov_diag_loss()
+            )
 
             # Minimizer
             minimizer = tf.train.AdamOptimizer(self.learning_rate).minimize(loss)
@@ -149,16 +162,22 @@ class DAGMM:
                     i_end = (batch + 1) * self.minibatch_size
                     x_batch = x[idx[i_start:i_end]]
 
-                    self.sess.run(minimizer, feed_dict={
-                        input:x_batch, drop:self.est_dropout_ratio})
+                    self.sess.run(
+                        minimizer,
+                        feed_dict={input: x_batch, drop: self.est_dropout_ratio},
+                    )
 
                 if (epoch + 1) % 100 == 0:
-                    loss_val = self.sess.run(loss, feed_dict={input:x, drop:0})
-                    print(" epoch {}/{} : loss = {:.3f}".format(epoch + 1, self.epoch_size, loss_val))
+                    loss_val = self.sess.run(loss, feed_dict={input: x, drop: 0})
+                    print(
+                        " epoch {}/{} : loss = {:.3f}".format(
+                            epoch + 1, self.epoch_size, loss_val
+                        )
+                    )
 
             # Fix GMM parameter
             fix = self.gmm.fix_op()
-            self.sess.run(fix, feed_dict={input:x, drop:0})
+            self.sess.run(fix, feed_dict={input: x, drop: 0})
             self.energy = self.gmm.energy(z)
 
             tf.add_to_collection("save", self.input)
@@ -166,8 +185,8 @@ class DAGMM:
 
             self.saver = tf.train.Saver()
 
-    def predict(self, x):
-        """ Calculate anormaly scores (sample energy) on samples in X.
+    def predict_prob(self, x):
+        """Calculate anormaly scores (sample energy) on samples in X.
 
         Parameters
         ----------
@@ -186,11 +205,11 @@ class DAGMM:
         if self.normalize:
             x = self.scaler.transform(x)
 
-        energies = self.sess.run(self.energy, feed_dict={self.input:x})
+        energies = self.sess.run(self.energy, feed_dict={self.input: x})
         return energies
 
     def save(self, fdir):
-        """ Save trained model to designated directory.
+        """Save trained model to designated directory.
         This method have to be called after training.
         (If not, throw an exception)
 
@@ -214,7 +233,7 @@ class DAGMM:
             joblib.dump(self.scaler, scaler_path)
 
     def restore(self, fdir):
-        """ Restore trained model from designated directory.
+        """Restore trained model from designated directory.
 
         Parameters
         ----------

@@ -6,13 +6,13 @@ sys.path.append("./")
 from networks.da_gmm.dagmm import DAGMM
 from common.data_preprocess import generate_windows, preprocessor
 from common.dataloader import load_dataset
-from common.evaluation import evaluator
+from common.evaluation import evaluator, store_output
 from common.utils import pprint
 from IPython import embed
 import tensorflow as tf
 
-dataset = "SMAP"
-subdataset = "A-1"
+dataset = "SMD"
+subdataset = "machine-1-1"
 compression_hiddens = [32, 16, 2]
 compression_activation = tf.nn.tanh
 estimation_hiddens = [80, 40]
@@ -76,3 +76,7 @@ if __name__ == "__main__":
     eval_results = eva.compute_metrics()
 
     pprint(eval_results)
+
+    store_output(
+        "./demo/output", dataset, "dagmm", subdataset, anomaly_score, anomaly_label
+    )

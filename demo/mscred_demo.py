@@ -18,6 +18,9 @@ subdataset = "machine-1-1"
 device = torch.device("cpu")
 in_channels_encoder = 3
 in_channels_decoder = 256
+save_path = "./mscred_data/"
+learning_rate = 0.0002
+epoch = 1
 point_adjustment = True
 iterate_threshold = True
 
@@ -41,20 +44,20 @@ if __name__ == "__main__":
     x_test_labels = data_dict["test_labels"]
 
     # data preprocessing for MSCRED
-    generate_signature_matrix_node(data, subdataset)
-    generate_train_test_data(subdataset, x_train, x_test)
+    # generate_signature_matrix_node(data, subdataset, save_path)
+    # generate_train_test_data(subdataset, x_train, x_test, save_path)
 
-    mscred = MSCRED(in_channels_encoder, in_channels_decoder)
+    mscred = MSCRED(in_channels_encoder, in_channels_decoder, device=device)
 
-    dataLoader = load_data(subdataset)
+    dataLoader = load_data(subdataset, save_path)
 
     # 训练阶段
-    optimizer = torch.optim.Adam(mscred.parameters(), lr=0.0002)
-    train(dataLoader["train"], mscred, optimizer, 1, device)
+    optimizer = torch.optim.Adam(mscred.parameters(), lr=learning_rate)
+    train(dataLoader["train"], mscred, optimizer, epochs=epoch, device=device)
     print("保存 %s 的模型" % subdataset)
 
-    if not os.path.exists("./checkpoints"):
-        os.makedirs("./checkpoints")
+    if not os.path.exists("./mscred_data/checkpoints"):
+        os.makedirs("./mscred_data/checkpoints")
 
     torch.save(
         mscred.state_dict(), "./mscred_data/checkpoints/model-" + subdataset + ".pth"
@@ -65,10 +68,17 @@ if __name__ == "__main__":
         torch.load("./mscred_data/checkpoints/model-" + subdataset + ".pth")
     )
     mscred.to(device)
-    test(dataLoader["test"], mscred, subdataset, x_test, device)
+    test(
+        dataLoader["test"],
+        mscred,
+        subdataset,
+        x_test,
+        save_dir=save_path,
+        device=device,
+    )
     print("测试 %s 完成" % subdataset)
 
-    anomaly_score = evaluate(subdataset)
+    anomaly_score = evaluate(subdataset, save_path)
     anomaly_label = x_test_labels[
         9 - len(x_test) % 10 : 9 - len(x_test) % 10 + len(anomaly_score)
     ]

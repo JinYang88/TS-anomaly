@@ -239,7 +239,7 @@ class Trainer(VarScopeObject):
             max_epoch=self._max_epoch,
             max_step=self._max_step,
         ) as loop:  # type: TrainLoop
-            loop.print_training_summary()
+            # loop.print_training_summary()
 
             train_batch_time = []
             valid_batch_time = []
