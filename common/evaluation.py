@@ -47,15 +47,16 @@ class evaluator:
         self.label = label
         self.pred = None
         self.pred_raw = None
-        self.threshold = None
-        self.__iterate_threshold = True
-        self.__iterate_metric = "f1"
-        self.__point_adjustment = True
+        self.threshold = threshold
+        self.__iterate_threshold = iterate_threshold
+        self.__iterate_metric = iterate_metric
+        self.__point_adjustment = point_adjustment
 
     def compute_pred(self):
         if self.threshold is not None:
             self.pred_raw = self.pred = (self.score >= self.threshold).astype(int)
         if self.__iterate_threshold:
+            print("Iterating threshold.")
             best_metric, best_theta, best_adjust, best_raw = iter_thresholds(
                 self.score,
                 self.label,
@@ -117,7 +118,6 @@ def point_adjustment(pred, label):
     """
     Borrow from https://github.com/NetManAIOps/OmniAnomaly/blob/master/omni_anomaly/eval_methods.py
     """
-
     adjusted_pred = copy.deepcopy(pred)
 
     anomaly_state = False

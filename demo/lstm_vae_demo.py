@@ -26,11 +26,7 @@ iterate_threshold = True
 
 if __name__ == "__main__":
     # load dataset
-    data_dict = load_dataset(
-        dataset,
-        subdataset,
-        0,
-    )
+    data_dict = load_dataset(dataset, subdataset)
 
     # preprocessing
     pp = preprocessor()
