@@ -84,27 +84,17 @@ class myADclass():
         L_mb[start_pos:end_pos, :, :] = L_mmb
         I_mb[start_pos:end_pos, :, :] = I_mmb
 
-        
-
-        results = np.zeros([18, 4])
-        
+                
         anomaly_score = DL_test.reshape([D_test.shape[0],D_test.shape[1]])
         anomaly_score = anomaly_score.mean(axis=-1)
         anomaly_label = L_mb.reshape([L_mb.shape[0],L_mb.shape[1]])
         anomaly_label = anomaly_label[:, -1]
 
-        eva = evaluator(
-        ["auc", "f1", "pc", "rc"],
-        anomaly_score,
-        anomaly_label,
-        iterate_threshold=True,
-        iterate_metric="f1",
-        point_adjustment=True,
-    )
-        eval_results = eva.compute_metrics()
+        return anomaly_score,anomaly_label
+
+        
 
 
-        return results
 
 if __name__ == "__main__":
     print('Main Starting...')

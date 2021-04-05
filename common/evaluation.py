@@ -61,10 +61,6 @@ class evaluator:
                 results[metric] = metric_func[metric](self.label, self.score)
             else:
                 results[metric] = metric_func[metric](self.pred, self.label)
-            print("------------------------------------")
-            print(metric)
-            print(results[metric])
-            print("------------------------------------")
         return results
 
 
