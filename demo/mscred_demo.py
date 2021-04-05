@@ -44,8 +44,8 @@ if __name__ == "__main__":
     x_test_labels = data_dict["test_labels"]
 
     # data preprocessing for MSCRED
-    # generate_signature_matrix_node(data, subdataset, save_path)
-    # generate_train_test_data(subdataset, x_train, x_test, save_path)
+    generate_signature_matrix_node(data, subdataset, save_path)
+    generate_train_test_data(subdataset, x_train, x_test, save_path)
 
     mscred = MSCRED(in_channels_encoder, in_channels_decoder, device=device)
 
