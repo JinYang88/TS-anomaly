@@ -24,7 +24,7 @@
 "learn_scale": false,
 "learning_rate": 0.05,
 "batch_size": 64,
-"num_epochs": 100,
+"num_epochs": 5,
 "D_rounds": 1,
 "G_rounds": 3,
 "E_rounds": 1,

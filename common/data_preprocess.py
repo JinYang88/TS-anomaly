@@ -106,6 +106,71 @@ def get_windows(ts, labels=None, window_size=128, stride=1, dim=None):
     else:
         return np.array(windows, dtype=np.float32), None
 
+def generate_windows_with_index( data_dict,
+    data_hdf5_path=None,
+    window_size=100,
+    nrows=None,
+    clear=False,
+    stride=1,
+    **kwargs):
+
+    results = {}
+
+    if data_hdf5_path:
+        cache_file = os.path.join(
+            data_hdf5_path,
+            "hdf5",
+            "window_dict_ws={}_st={}_nrows={}.hdf5".format(window_size, stride, nrows),
+        )
+        os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+
+        if not clear and os.path.isfile(cache_file):
+            return load_hdf5(cache_file)
+
+    logging.info("Generating sliding windows (size {}).".format(window_size))
+
+    if "train" in data_dict:
+        train = data_dict["train"][0:nrows]
+        train_windows, _ = get_windows(train, window_size=window_size, stride=stride)
+
+    if "test" in data_dict:
+        test = data_dict["test"][0:nrows]
+        test_label = (
+            None
+            if "test_labels" not in data_dict
+            else data_dict["test_labels"][0:nrows]
+        )
+        test_windows, test_labels = get_windows(
+            test, test_label, window_size=window_size, stride=1
+        )
+
+    if len(train_windows) > 0:
+        results["train_windows"] = train_windows
+        logging.info("Train windows #: {}".format(train_windows.shape))
+
+    if len(test_windows) > 0:
+        if test_label is not None:
+            results["test_windows"] = test_windows
+            results["test_labels"] = test_labels
+        else:
+            results["test_windows"] = test_windows
+        logging.info("Test windows #: {}".format(test_windows.shape))
+
+    idx = np.asarray(list(range(0, test.shape[0]+stride*window_size)))
+    i = 0
+    ts_len = 28479
+    windows = []
+    while i + window_size < ts_len:
+        windows.append(idx[i : i + window_size])
+        i += 1
+    
+    index = np.array(windows)
+
+    results["index_windows"] = index
+
+    # save_hdf5(cache_file, results)
+    return results
+
 
 def generate_windows(
     data_dict,
