@@ -111,9 +111,11 @@ class TimeSeriesEncoder(torch.nn.Module):
                 self.optimizer.step()
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
-            print("Epoch: {}, loss: {:.5f}".format(epochs + 1, avg_loss))
-            self.__on_epoch_end(avg_loss, patience=patience)
             epochs += 1
+            print("Epoch: {}, loss: {:.5f}".format(epochs, avg_loss))
+            stop_training = self.__on_epoch_end(avg_loss, patience=patience)
+            if stop_training:
+                break
         train_end = time.time()
 
         self.time_tracker["train"] = train_end - train_start
