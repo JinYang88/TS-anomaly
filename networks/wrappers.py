@@ -54,7 +54,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.batch_size = batch_size
         self.nb_epoch = nb_epoch
         self.lr = lr
-        self.best_metric = -float("inf")
+        self.best_metric = float("inf")
         self.time_tracker = {}
         self.model_save_file = os.path.join(save_path, f"{architecture}_model.ckpt")
 
