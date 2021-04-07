@@ -36,7 +36,7 @@ batch_size = 1024
 device = "cuda:0"
 window_size = 32
 stride = 5
-nb_epoch = 500
+nb_epoch = 1000
 patience = 5
 
 lr = 0.001

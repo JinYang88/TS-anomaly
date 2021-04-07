@@ -47,7 +47,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         lr,
         device="cpu",
         architecture="base",
-        **kwargs
+        **kwargs,
     ):
         super().__init__()
         self.device = device
@@ -90,7 +90,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         save_memory=False,
         monitor="AUC",
         patience=10,
-        **kwargs
+        **kwargs,
     ):
         # Check if the given time series have unequal lengths
         i = 0  # Number of performed optimization steps
@@ -120,7 +120,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         return self
 
     def __on_epoch_end(self, monitor_value, patience):
-        if monitor_value > self.best_metric:
+        if monitor_value < self.best_metric:
             self.best_metric = monitor_value
             print("Saving model for performance: {:.3f}".format(monitor_value))
             self.save_encoder()
