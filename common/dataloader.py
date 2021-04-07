@@ -26,7 +26,7 @@ def get_data_dim(dataset):
         raise ValueError("unknown dataset " + str(dataset))
 
 
-def load_dataset(dataset, subdataset, use_dim="all"):
+def load_dataset(dataset, subdataset, use_dim="all", root_dir="../"):
     """
     use_dim: dimension used in multivariate timeseries
     """
@@ -35,9 +35,9 @@ def load_dataset(dataset, subdataset, use_dim="all"):
     path = data_path_dict[dataset]
 
     prefix = subdataset
-    train_files = glob(os.path.join(path, prefix + "_train.pkl"))
-    test_files = glob(os.path.join(path, prefix + "_test.pkl"))
-    label_files = glob(os.path.join(path, prefix + "_test_label.pkl"))
+    train_files = glob(os.path.join(root_dir, path, prefix + "_train.pkl"))
+    test_files = glob(os.path.join(root_dir, path, prefix + "_test.pkl"))
+    label_files = glob(os.path.join(root_dir, path, prefix + "_test_label.pkl"))
 
     logging.info("{} files found.".format(len(train_files)))
 

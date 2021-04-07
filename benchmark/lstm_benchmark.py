@@ -9,8 +9,9 @@ import torch
 import pandas as pd
 from IPython import embed
 
-os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
-sys.path.append("./")
+sys.path.append("../")
+# os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
+# sys.path.append("./")
 
 from common import data_preprocess
 from common.config import (
@@ -30,7 +31,7 @@ seed_everything(2020)
 
 dataset = "SMD"
 normalize = "minmax"
-save_path = "./benchmark/savd_dir"
+save_path = "./savd_dir"
 batch_size = 64
 device = "cpu"
 window_size = 32
@@ -49,11 +50,7 @@ point_adjustment = False
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
         print(f"Running on {subdataset} of {dataset}")
-        data_dict = load_dataset(
-            dataset,
-            subdataset,
-            "all",
-        )
+        data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
         pp = data_preprocess.preprocessor()
         data_dict = pp.normalize(data_dict, method=normalize)
@@ -115,7 +112,7 @@ if __name__ == "__main__":
 
         # pprint(eval_results)
         store_output(
-            "./benchmark/output",
+            "./output",
             dataset,
             "lstm",
             subdataset,
