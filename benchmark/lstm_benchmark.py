@@ -32,7 +32,7 @@ seed_everything(2020)
 dataset = "SMD"
 normalize = "minmax"
 save_path = "./savd_dir"
-batch_size = 64
+batch_size = 1024
 device = "cuda:0"
 window_size = 32
 stride = 5
