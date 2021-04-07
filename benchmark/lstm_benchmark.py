@@ -36,7 +36,8 @@ batch_size = 1024
 device = "cuda:0"
 window_size = 32
 stride = 5
-nb_epoch = 30
+nb_epoch = 500
+patience = 5
 
 lr = 0.001
 hidden_size = 64
@@ -80,6 +81,7 @@ if __name__ == "__main__":
             window_size=window_size,
             prediction_length=prediction_length,
             prediction_dims=prediction_dims,
+            patience=patience,
             save_path=save_path,
             batch_size=batch_size,
             nb_epoch=nb_epoch,
