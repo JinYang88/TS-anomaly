@@ -19,8 +19,8 @@ from networks.omni_anomaly.detector import OmniDetector
 from IPython import embed
 from common.evaluation import evaluator
 from tfsnippet.utils import Config
-from tensorflow.python.keras.utils import Sequence
 from common.utils import pprint
+from omni_anomaly.utils import DataGenerator
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -30,39 +30,6 @@ dataset = "SMD"
 subdataset = "machine-1-1"
 point_adjustment = True
 iterate_threshold = True
-
-
-class DataGenerator(Sequence):
-    def __init__(
-        self,
-        data_array,
-        batch_size=32,
-        shuffle=False,
-    ):
-        self.darray = data_array
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.index_pool = list(range(self.darray.shape[0]))
-        self.length = int(np.ceil(len(self.index_pool) * 1.0 / self.batch_size))
-        self.on_epoch_end()
-
-    def __len__(self):
-        return self.length
-
-    def __getitem__(self, index):
-        indexes = self.index_pool[
-            index * self.batch_size : (index + 1) * self.batch_size
-        ]
-        X = self.darray[indexes]
-
-        # in case on_epoch_end not be called automatically :)
-        if index == self.length - 1:
-            self.on_epoch_end()
-        return X
-
-    def on_epoch_end(self):
-        if self.shuffle:
-            np.random.shuffle(self.index_pool)
 
 
 class ExpConfig(Config):

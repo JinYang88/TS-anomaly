@@ -3,7 +3,6 @@ import time
 import argparse
 import logging
 import torch
-import nni
 import glob
 import yaml
 

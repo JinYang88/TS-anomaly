@@ -29,7 +29,7 @@ from common.evaluation import evaluator, store_output
 seed_everything(2020)
 
 dataset = "SMD"
-subdataset = "machine-1-1"
+subdataset = "machine-1-2"
 normalize = "minmax"
 save_path = "./savd_dir"
 batch_size = 64
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         save_path=save_path,
         trial_id="demo",
         batch_size=batch_size,
-        nb_steps=nb_epoch,
+        nb_epoch=nb_epoch,
         lr=lr,
         dataset=dataset,
         subdataset=subdataset,

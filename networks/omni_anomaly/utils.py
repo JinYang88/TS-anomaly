@@ -8,14 +8,42 @@ from sklearn.preprocessing import MinMaxScaler
 from glob import glob
 from collections import defaultdict
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+from tensorflow.python.keras.utils import Sequence
 
 prefix = "processed"
 
-data_path_dict = {
-    "SMD": "./oversampled",
-    "SMAP": "./datasets/anomaly/SMAP-MSL/processed_SMAP",
-    "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
-}
+
+class DataGenerator(Sequence):
+    def __init__(
+        self,
+        data_array,
+        batch_size=32,
+        shuffle=False,
+    ):
+        self.darray = data_array
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.index_pool = list(range(self.darray.shape[0]))
+        self.length = int(np.ceil(len(self.index_pool) * 1.0 / self.batch_size))
+        self.on_epoch_end()
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, index):
+        indexes = self.index_pool[
+            index * self.batch_size : (index + 1) * self.batch_size
+        ]
+        X = self.darray[indexes]
+
+        # in case on_epoch_end not be called automatically :)
+        if index == self.length - 1:
+            self.on_epoch_end()
+        return X
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.index_pool)
 
 
 def get_data_dim(dataset):
@@ -27,61 +55,6 @@ def get_data_dim(dataset):
         return 38
     else:
         raise ValueError("unknown dataset " + str(dataset))
-
-
-def load_dataset(dataset, subdataset, use_dim="all", nrows=None):
-    print("Loading {} of {} dataset".format(subdataset, dataset))
-    x_dim = get_data_dim(dataset)
-    path = data_path_dict[dataset]
-
-    prefix = subdataset
-    train_files = glob(os.path.join(path, prefix + "_train.pkl"))
-    test_files = glob(os.path.join(path, prefix + "_test.pkl"))
-    label_files = glob(os.path.join(path, prefix + "_test_label.pkl"))
-
-    print("{} files found.".format(len(train_files)))
-
-    data_dict = defaultdict(dict)
-    data_dict["dim"] = x_dim if use_dim == "all" else 1
-
-    train_data_list = []
-    for idx, f_name in enumerate(train_files):
-        machine_name = os.path.basename(f_name).split("_")[0]
-        f = open(f_name, "rb")
-        train_data = pickle.load(f).reshape((-1, x_dim))
-        f.close()
-        if use_dim != "all":
-            train_data = train_data[:nrows, use_dim].reshape(-1, 1)
-        if len(train_data) > 0:
-            train_data_list.append(train_data[:nrows])
-    data_dict["train"] = np.concatenate(train_data_list, axis=0)
-
-    test_data_list = []
-    for idx, f_name in enumerate(test_files):
-        machine_name = os.path.basename(f_name).split("_")[0]
-        f = open(f_name, "rb")
-        test_data = pickle.load(f).reshape((-1, x_dim))
-        f.close()
-        if use_dim != "all":
-            test_data = test_data[:nrows, use_dim].reshape(-1, 1)
-        if len(test_data) > 0:
-            test_data_list.append(test_data[:nrows])
-    data_dict["test"] = np.concatenate(test_data_list, axis=0)
-
-    label_data_list = []
-    for idx, f_name in enumerate(label_files):
-        machine_name = os.path.basename(f_name).split("_")[0]
-        f = open(f_name, "rb")
-        label_data = pickle.load(f)[:nrows]
-        f.close()
-        if len(label_data) > 0:
-            label_data_list.append(label_data)
-    data_dict["test_labels"] = np.concatenate(label_data_list, axis=0)
-
-    train_data = preprocess(data_dict["train"])
-    test_data = preprocess(data_dict["test"])
-    # return data_dict
-    return (train_data, None), (test_data, data_dict["test_labels"])
 
 
 def save_z(z, filename="z"):
@@ -111,56 +84,6 @@ def save_z(z, filename="z"):
 #         return 38
 #     else:
 #         raise ValueError("unknown dataset " + str(dataset))
-
-
-def get_data(
-    dataset,
-    max_train_size=None,
-    max_test_size=None,
-    print_log=True,
-    do_preprocess=True,
-    train_start=0,
-    test_start=0,
-):
-    """
-    get data from pkl files
-
-    return shape: (([train_size, x_dim], [train_size] or None), ([test_size, x_dim], [test_size]))
-    """
-    if max_train_size is None:
-        train_end = None
-    else:
-        train_end = train_start + max_train_size
-    if max_test_size is None:
-        test_end = None
-    else:
-        test_end = test_start + max_test_size
-    print("load data of:", dataset)
-    print("train: ", train_start, train_end)
-    print("test: ", test_start, test_end)
-    x_dim = get_data_dim(dataset)
-    f = open(os.path.join(prefix, dataset + "_train.pkl"), "rb")
-    train_data = pickle.load(f).reshape((-1, x_dim))[train_start:train_end, :]
-    f.close()
-    try:
-        f = open(os.path.join(prefix, dataset + "_test.pkl"), "rb")
-        test_data = pickle.load(f).reshape((-1, x_dim))[test_start:test_end, :]
-        f.close()
-    except (KeyError, FileNotFoundError):
-        test_data = None
-    try:
-        f = open(os.path.join(prefix, dataset + "_test_label.pkl"), "rb")
-        test_label = pickle.load(f).reshape((-1))[test_start:test_end]
-        f.close()
-    except (KeyError, FileNotFoundError):
-        test_label = None
-    if do_preprocess:
-        train_data = preprocess(train_data)
-        test_data = preprocess(test_data)
-    print("train set shape: ", train_data.shape)
-    print("test set shape: ", test_data.shape)
-    print("test set label shape: ", test_label.shape)
-    return (train_data, None), (test_data, test_label)
 
 
 def preprocess(df):

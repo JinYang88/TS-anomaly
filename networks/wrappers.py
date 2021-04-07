@@ -23,7 +23,6 @@ from collections import defaultdict
 from glob import glob
 
 import joblib
-import nni
 import numpy
 import time
 import numpy as np
@@ -43,33 +42,21 @@ class TimeSeriesEncoder(torch.nn.Module):
     def __init__(
         self,
         save_path,
-        trial_id,
         batch_size,
-        nb_steps,
+        nb_epoch,
         lr,
-        architecture="BaseEncoder",
         device="cpu",
+        architecture="base",
         **kwargs
     ):
         super().__init__()
-        self.architecture = architecture
-        self.save_path = save_path
-        self.trial_id = trial_id
-        self.model_save_file = os.path.join(
-            self.save_path,
-            "{}_{}_{}.pth".format(
-                self.architecture,
-                kwargs.get("subdataset", kwargs["dataset"]),
-                self.trial_id,
-            ),
-        )
-
         self.device = device
         self.batch_size = batch_size
-        self.nb_steps = nb_steps
+        self.nb_epoch = nb_epoch
         self.lr = lr
         self.best_metric = -float("inf")
         self.time_tracker = {}
+        self.model_save_file = os.path.join(save_path, f"{architecture}_model.ckpt")
 
     def compile(self):
         print("Compiling finished.")
@@ -90,12 +77,8 @@ class TimeSeriesEncoder(torch.nn.Module):
             torch.save(self.state_dict(), self.model_save_file)
 
     def load_encoder(self, model_save_path=""):
-        if model_save_path:
-            model_save_file = glob(os.path.join(model_save_path, "*.pth"))[0]
-        else:
-            model_save_file = self.model_save_file
-        print("Loading model from {}".format(model_save_file))
-        self.load_state_dict(torch.load(model_save_file, map_location=self.device))
+        print("Loading model from {}".format(self.model_save_file))
+        self.load_state_dict(torch.load(self.model_save_file, map_location=self.device))
 
     def fit(
         self,
@@ -103,7 +86,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         test_iterator=None,
         test_labels=None,
         percent=88,
-        nb_steps_per_verbose=300,
+        nb_epoch_per_verbose=300,
         save_memory=False,
         monitor="AUC",
         patience=10,
@@ -116,7 +99,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         print("Start training for {} batches.".format(num_batches))
         train_start = time.time()
         # Encoder training
-        while epochs < self.nb_steps:
+        while epochs < self.nb_epoch:
             running_loss = 0
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim

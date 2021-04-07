@@ -106,13 +106,16 @@ def get_windows(ts, labels=None, window_size=128, stride=1, dim=None):
     else:
         return np.array(windows, dtype=np.float32), None
 
-def generate_windows_with_index( data_dict,
+
+def generate_windows_with_index(
+    data_dict,
     data_hdf5_path=None,
     window_size=100,
     nrows=None,
     clear=False,
     stride=1,
-    **kwargs):
+    **kwargs
+):
 
     results = {}
 
@@ -156,14 +159,14 @@ def generate_windows_with_index( data_dict,
             results["test_windows"] = test_windows
         logging.info("Test windows #: {}".format(test_windows.shape))
 
-    idx = np.asarray(list(range(0, test.shape[0]+stride*window_size)))
+    idx = np.asarray(list(range(0, test.shape[0] + stride * window_size)))
     i = 0
     ts_len = 28479
     windows = []
     while i + window_size < ts_len:
         windows.append(idx[i : i + window_size])
         i += 1
-    
+
     index = np.array(windows)
 
     results["index_windows"] = index

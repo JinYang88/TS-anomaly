@@ -59,15 +59,7 @@ def run(params):
     logging.info(print_to_json(params))
 
     # training
-<<<<<<< HEAD
-<<<<<<< HEAD
     encoder = CMAnomaly(**params)
-=======
-    encoder = MultiLSTMEncoder(**params)
->>>>>>> ycdev
-=======
-    encoder = MultiLSTMEncoder(**params)
->>>>>>> wwdev-refined
 
     if params["load"]:
         encoder.load_encoder()
