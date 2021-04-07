@@ -33,7 +33,7 @@ dataset = "SMD"
 normalize = "minmax"
 save_path = "./savd_dir"
 batch_size = 64
-device = "cpu"
+device = "cuda:0"
 window_size = 32
 stride = 5
 nb_epoch = 1
@@ -84,6 +84,7 @@ if __name__ == "__main__":
             batch_size=batch_size,
             nb_epoch=nb_epoch,
             lr=lr,
+            device=device,
         )
 
         encoder.fit(
