@@ -36,7 +36,7 @@ batch_size = 64
 device = "cuda:0"
 window_size = 32
 stride = 5
-nb_epoch = 1
+nb_epoch = 30
 
 lr = 0.001
 hidden_size = 64
