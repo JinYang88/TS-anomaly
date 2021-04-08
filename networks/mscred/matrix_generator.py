@@ -1,12 +1,9 @@
 import os
 import numpy as np
 
-step_max = 5
-gap_time = 10
-win_size = [10, 30, 60]
 
-
-def generate_signature_matrix_node(data, subdataset, save_dir):
+def generate_signature_matrix_node(data_dict, subdataset, save_dir, gap_time, win_size):
+    data = np.concatenate((data_dict["train"], data_dict["test"]), axis=0)
     data = data.transpose()
     sensor_n = data.shape[0]
     length = data.shape[1]
@@ -23,7 +20,7 @@ def generate_signature_matrix_node(data, subdataset, save_dir):
         for t in range(0, length, gap_time):
             # print t
             matrix_t = np.zeros((sensor_n, sensor_n))
-            if t >= 60:
+            if t >= max(win_size):
                 for l in range(sensor_n):
                     for m in range(l, sensor_n):
                         # if np.var(data[i, t - win:t]) and np.var(data[j, t - win:t]):
@@ -41,7 +38,7 @@ def generate_signature_matrix_node(data, subdataset, save_dir):
     print('Generation for ' + subdataset + ' complete')
 
 
-def generate_train_test_data(subdataset, x_train, x_test, save_dir):
+def generate_train_test_data(subdataset, x_train, x_test, save_dir, step_max, gap_time, win_size):
     # data sample generation
     print("generating train/test data samples of " + subdataset)
     matrix_data_path = save_dir + "matrix_data_" + subdataset + '/'

@@ -2,8 +2,8 @@ import os
 import sys
 import logging
 
-os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
-sys.path.append("./")
+sys.path.append("../")
+
 from networks.mscred.matrix_generator import *
 from networks.mscred.mscred import MSCRED
 from networks.mscred.utils import *
@@ -15,12 +15,16 @@ from IPython import embed
 
 dataset = "SMD"
 subdataset = "machine-1-1"
-device = torch.device("cpu")
+device = "cpu"  # cuda:0, a string
+step_max = 5
+gap_time = 10
+win_size = [10, 30, 60]  # sliding window size
 in_channels_encoder = 3
 in_channels_decoder = 256
 save_path = "./mscred_data/"
 learning_rate = 0.0002
 epoch = 1
+thred_b = 0.005
 point_adjustment = True
 iterate_threshold = True
 
@@ -37,51 +41,34 @@ if __name__ == "__main__":
         "all",
     )
 
-    data = np.concatenate((data_dict["train"], data_dict["test"]), axis=0)
-
     x_train = data_dict["train"]
     x_test = data_dict["test"]
     x_test_labels = data_dict["test_labels"]
 
     # data preprocessing for MSCRED
-    generate_signature_matrix_node(data, subdataset, save_path)
-    generate_train_test_data(subdataset, x_train, x_test, save_path)
 
-    mscred = MSCRED(in_channels_encoder, in_channels_decoder, device=device)
-
-    dataLoader = load_data(subdataset, save_path)
-
-    # 训练阶段
-    optimizer = torch.optim.Adam(mscred.parameters(), lr=learning_rate)
-    train(dataLoader["train"], mscred, optimizer, epochs=epoch, device=device)
-    print("保存 %s 的模型" % subdataset)
-
-    if not os.path.exists("./mscred_data/checkpoints"):
-        os.makedirs("./mscred_data/checkpoints")
-
-    torch.save(
-        mscred.state_dict(), "./mscred_data/checkpoints/model-" + subdataset + ".pth"
-    )
-
-    # 测试阶段
-    mscred.load_state_dict(
-        torch.load("./mscred_data/checkpoints/model-" + subdataset + ".pth")
-    )
-    mscred.to(device)
-    test(
-        dataLoader["test"],
-        mscred,
+    mscred = MSCRED(
+        in_channels_encoder,
+        in_channels_decoder,
+        data_dict,
         subdataset,
+        x_train,
         x_test,
-        save_dir=save_path,
-        device=device,
+        x_test_labels,
+        save_path,
+        step_max,
+        gap_time,
+        win_size,
+        learning_rate,
+        epoch,
+        thred_b,
     )
-    print("测试 %s 完成" % subdataset)
 
-    anomaly_score = evaluate(subdataset, save_path)
-    anomaly_label = x_test_labels[
-        9 - len(x_test) % 10 : 9 - len(x_test) % 10 + len(anomaly_score)
-    ]
+    mscred.data_preprocessing()
+
+    mscred.fit()
+
+    anomaly_score, anomaly_label = mscred.predict()
 
     # Make evaluation
     eva = evaluator(

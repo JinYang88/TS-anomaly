@@ -28,7 +28,6 @@ air_force_blue = "#5D8AA8"
 class SPOT:
     """
     This class allows to run SPOT algorithm on univariate dataset (upper-bound)
-
     Attributes
     ----------
     proba : float
@@ -489,7 +488,6 @@ class SPOT:
     def plot(self, run_results, with_alarm=True):
         """
         Plot the results of given by the run
-
         Parameters
         ----------
         run_results : dict
@@ -502,7 +500,6 @@ class SPOT:
         ----------
         list
             list of the plots
-
         """
         x = range(self.data.size)
         K = run_results.keys()
@@ -533,7 +530,6 @@ class SPOT:
 class biSPOT:
     """
     This class allows to run biSPOT algorithm on univariate dataset (upper and lower bounds)
-
     Attributes
     ----------
     proba : float
@@ -920,7 +916,6 @@ class biSPOT:
     def _quantile(self, side, gamma, sigma):
         """
         Compute the quantile at level 1-q for a given side
-
         Parameters
         ----------
         side : str
@@ -1058,7 +1053,6 @@ class biSPOT:
     def plot(self, run_results, with_alarm=True):
         """
         Plot the results of given by the run
-
         Parameters
         ----------
         run_results : dict
@@ -1071,7 +1065,6 @@ class biSPOT:
         ----------
         list
             list of the plots
-
         """
         x = range(self.data.size)
         K = run_results.keys()
@@ -1117,7 +1110,6 @@ def backMean(X, d):
 class dSPOT:
     """
     This class allows to run DSPOT algorithm on univariate dataset (upper-bound)
-
     Attributes
     ----------
     proba : float
@@ -1563,7 +1555,6 @@ class dSPOT:
     def plot(self, run_results, with_alarm=True):
         """
         Plot the results given by the run
-
         Parameters
         ----------
         run_results : dict
@@ -1576,7 +1567,6 @@ class dSPOT:
         ----------
         list
             list of the plots
-
         """
         x = range(self.data.size)
         K = run_results.keys()
@@ -1617,7 +1607,6 @@ class dSPOT:
 class bidSPOT:
     """
     This class allows to run DSPOT algorithm on univariate dataset (upper and lower bounds)
-
     Attributes
     ----------
     proba : float
@@ -1996,7 +1985,6 @@ class bidSPOT:
     def _quantile(self, side, gamma, sigma):
         """
         Compute the quantile at level 1-q for a given side
-
         Parameters
         ----------
         side : str
@@ -2141,7 +2129,6 @@ class bidSPOT:
     def plot(self, run_results, with_alarm=True):
         """
         Plot the results given by the run
-
         Parameters
         ----------
         run_results : dict
@@ -2154,7 +2141,6 @@ class bidSPOT:
         ----------
         list
             list of the plots
-
         """
         x = range(self.data.size)
         K = run_results.keys()

@@ -11,7 +11,6 @@ import model
 from scipy.spatial.distance import pdist, squareform
 from scipy.stats import multivariate_normal, invgamma, mode
 from scipy.special import gamma
-
 from functools import partial
 from math import ceil
 
@@ -45,7 +44,6 @@ def swat(seq_length, seq_step, num_signals, randomize=False):
     ############################
     # -- apply PCA dimension reduction for multi-variate GAN-AD -- #
     from sklearn.decomposition import PCA
-
     # ALL SENSORS IDX
     # XS = [0, 1, 5, 6, 7, 8, 16, 17, 18, 25, 26, 27, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47]
     # X_n = samples[:, XS]
@@ -89,7 +87,6 @@ def swat(seq_length, seq_step, num_signals, randomize=False):
     labels = bb
 
     return samples, labels
-
 
 def swat_birgan(seq_length, seq_step, num_signals, randomize=False):
     """ Load and serialise """
@@ -136,7 +133,6 @@ def swat_birgan(seq_length, seq_step, num_signals, randomize=False):
 
     return samples, labels
 
-
 def swat_test(seq_length, seq_step, num_signals, randomize=False):
     """ Load and serialise """
     # test = np.load('./data/swat_a.npy')
@@ -165,7 +161,6 @@ def swat_test(seq_length, seq_step, num_signals, randomize=False):
     # -- apply PCA dimension reduction for multi-variate GAN-AD -- #
     from sklearn.decomposition import PCA
     import DR_discriminator as dr
-
     # ALL SENSORS IDX
     # XS = [0, 1, 5, 6, 7, 8, 16, 17, 18, 25, 26, 27, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47]
     # X_n = samples[:, XS]
@@ -337,7 +332,6 @@ def wadi_test(seq_length, seq_step, num_signals, randomize=False):
     # -- apply PCA dimension reduction for multi-variate GAN-AD -- #
     from sklearn.decomposition import PCA
     import DR_discriminator as dr
-
     X_a = samples
     ####################################
     ###################################
@@ -398,7 +392,6 @@ def kdd99(seq_length, seq_step, num_signals):
     ############################
     # -- apply PCA dimension reduction for multi-variate GAN-AD -- #
     from sklearn.decomposition import PCA
-
     X_n = samples
     ####################################
     ###################################
@@ -454,7 +447,6 @@ def smd_train_machine_1_1(seq_length, seq_step, num_signals):
     ############################
     # -- apply PCA dimension reduction for multi-variate GAN-AD -- #
     from sklearn.decomposition import PCA
-
     X_n = samples
     ####################################
     ###################################
@@ -512,7 +504,6 @@ def kdd99_test(seq_length, seq_step, num_signals):
     # -- apply PCA dimension reduction for multi-variate GAN-AD -- #
     from sklearn.decomposition import PCA
     import DR_discriminator as dr
-
     X_a = samples
     ####################################
     ###################################
@@ -606,7 +597,6 @@ def smd_train_machine_1_1_test(seq_length, seq_step, num_signals):
     labels = bb
     index = bbb
     return samples, labels, index
-
 
 # ############################ data pre-processing #################################
 # --- to do with loading --- #

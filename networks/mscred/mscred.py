@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
-import numpy as np
+import os
 from .convolution_lstm import ConvLSTM
+from .matrix_generator import generate_signature_matrix_node, generate_train_test_data
+from .utils import train, test, load_data, evaluate
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def attention(ConvLstm_out):
@@ -9,7 +13,7 @@ def attention(ConvLstm_out):
     for k in range(5):
         attention_w.append(torch.sum(torch.mul(ConvLstm_out[k], ConvLstm_out[-1])) / 5)
     m = nn.Softmax(dim=0)
-    attention_w = torch.reshape(m(torch.stack(attention_w)), (-1, 5))  # 找维数
+    attention_w = torch.reshape(m(torch.stack(attention_w)), (-1, 5))
     cl_out_shape = ConvLstm_out.shape
     ConvLstm_out = torch.reshape(ConvLstm_out, (5, -1))
     convLstmOut = torch.matmul(attention_w, ConvLstm_out)
@@ -38,7 +42,7 @@ class CnnEncoder(nn.Module):
 
 
 class Conv_LSTM(nn.Module):
-    def __init__(self, device):
+    def __init__(self):
         super(Conv_LSTM, self).__init__()
         self.conv1_lstm = ConvLSTM(
             input_channels=32,
@@ -46,7 +50,6 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device,
         )
         self.conv2_lstm = ConvLSTM(
             input_channels=64,
@@ -54,7 +57,6 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device,
         )
         self.conv3_lstm = ConvLSTM(
             input_channels=128,
@@ -62,7 +64,6 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device,
         )
         self.conv4_lstm = ConvLSTM(
             input_channels=256,
@@ -70,7 +71,6 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device,
         )
 
     def forward(self, conv1_out, conv2_out, conv3_out, conv4_out):
@@ -112,11 +112,40 @@ class CnnDecoder(nn.Module):
 
 
 class MSCRED(nn.Module):
-    def __init__(self, in_channels_encoder, in_channels_decoder, device):
+    def __init__(
+        self,
+        in_channels_encoder,
+        in_channels_decoder,
+        data_dict,
+        subdataset,
+        x_train,
+        x_test,
+        x_test_labels,
+        save_path,
+        step_max,
+        gap_time,
+        win_size,
+        learning_rate,
+        epoch,
+        thred_b,
+    ):
         super(MSCRED, self).__init__()
         self.cnn_encoder = CnnEncoder(in_channels_encoder)
-        self.conv_lstm = Conv_LSTM(device)
+        self.conv_lstm = Conv_LSTM()
         self.cnn_decoder = CnnDecoder(in_channels_decoder)
+        self.data_dict = data_dict
+        self.subdataset = subdataset
+        self.x_train = x_train
+        self.x_test = x_test
+        self.x_test_labels = x_test_labels
+        self.save_path = save_path
+        self.step_max = step_max
+        self.gap_time = gap_time
+        self.win_size = win_size
+        self.learning_rate = learning_rate
+        self.epoch = epoch
+        self.device = device
+        self.thred_b = thred_b
 
     def forward(self, x):
         conv1_out, conv2_out, conv3_out, conv4_out = self.cnn_encoder(x)
@@ -128,3 +157,65 @@ class MSCRED(nn.Module):
             conv1_lstm_out, conv2_lstm_out, conv3_lstm_out, conv4_lstm_out
         )
         return gen_x
+
+    def data_preprocessing(self):
+        generate_signature_matrix_node(
+            self.data_dict,
+            self.subdataset,
+            self.save_path,
+            self.gap_time,
+            self.win_size,
+        )
+        generate_train_test_data(
+            self.subdataset,
+            self.x_train,
+            self.x_test,
+            self.save_path,
+            self.step_max,
+            self.gap_time,
+            self.win_size,
+        )
+
+    def fit(self):
+        dataLoader = load_data(self.subdataset, self.save_path)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        train(dataLoader["train"], self, optimizer, epochs=self.epoch, Device=device)
+        print("save %s's model" % self.subdataset)
+
+        if not os.path.exists("./mscred_data/checkpoints"):
+            os.makedirs("./mscred_data/checkpoints")
+
+        torch.save(
+            self.state_dict(),
+            "./mscred_data/checkpoints/model-" + self.subdataset + ".pth",
+        )
+
+    def predict(self):
+        dataLoader = load_data(self.subdataset, self.save_path)
+        self.load_state_dict(
+            torch.load("./mscred_data/checkpoints/model-" + self.subdataset + ".pth")
+        )
+        self.to(device)
+        test(
+            dataLoader["test"],
+            self,
+            self.subdataset,
+            self.x_test,
+            save_dir=self.save_path,
+            gap_time=self.gap_time,
+        )
+        print("test of %s finished" % self.subdataset)
+
+        anomaly_score = evaluate(
+            self.subdataset, self.save_path, self.thred_b, self.gap_time
+        )
+        anomaly_label = self.x_test_labels[
+            self.gap_time
+            - 1
+            - len(self.x_test) % self.gap_time : self.gap_time
+            - 1
+            - len(self.x_test) % self.gap_time
+            + len(anomaly_score)
+        ]
+
+        return anomaly_score, anomaly_label
