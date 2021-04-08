@@ -7,11 +7,9 @@ sys.path.append("../")
 from networks.mscred.matrix_generator import *
 from networks.mscred.mscred import MSCRED
 from networks.mscred.utils import *
-from common.data_preprocess import generate_windows, preprocessor
 from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint
-from IPython import embed
 
 dataset = "SMD"
 subdataset = "machine-1-1"
