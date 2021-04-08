@@ -19,10 +19,10 @@ from common.evaluation import evaluator, store_output
 seed_everything(2020)
 
 dataset = "SMD"
+device = "cuda:0"
 normalize = "minmax"
 save_path = "./savd_dir"
 batch_size = 1024
-device = "cuda:0"
 window_size = 32
 stride = 5
 nb_epoch = 1000
@@ -34,8 +34,6 @@ num_layers = 1
 dropout = 0
 prediction_length = 1
 prediction_dims = []
-iterate_threshold = False
-point_adjustment = False
 
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
@@ -90,24 +88,11 @@ if __name__ == "__main__":
         anomaly_score = records["score"]
         anomaly_label = records["anomaly_label"]
 
-        print(anomaly_score.shape, anomaly_label.shape)
-
-        # eva = evaluator(
-        #     ["auc", "f1", "pc", "rc"],
-        #     anomaly_score,
-        #     anomaly_label,
-        #     iterate_threshold=iterate_threshold,
-        #     iterate_metric="f1",
-        #     point_adjustment=point_adjustment,
-        # )
-        # eval_results = eva.compute_metrics()
-
-        # pprint(eval_results)
         store_output(
             "./output",
             dataset,
-            "lstm",
             subdataset,
+            "lstm",
             anomaly_score,
             anomaly_label,
         )

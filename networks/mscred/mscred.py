@@ -176,6 +176,7 @@ class MSCRED(nn.Module):
         )
 
     def fit(self):
+        self.data_preprocessing(data_dict)
         dataLoader = load_data(self.matrix_path, self.save_path)
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         train(dataLoader["train"], self, optimizer, epochs=self.epoch, Device=torch.device(self.device))

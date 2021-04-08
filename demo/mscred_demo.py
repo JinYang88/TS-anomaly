@@ -17,7 +17,7 @@ win_size = [10, 30, 60]  # sliding window size
 in_channels_encoder = 3
 in_channels_decoder = 256
 save_path = "./mscred_data/"
-matrix_path = "machine1-1"    # defined by user
+matrix_path = "machine1-1"  # defined by user
 learning_rate = 0.0002
 epoch = 1
 thred_b = 0.005
@@ -57,9 +57,7 @@ if __name__ == "__main__":
         thred_b,
     )
 
-    mscred.data_preprocessing(data_dict)
-
-    mscred.fit()
+    mscred.fit(data_dict)
 
     anomaly_score, anomaly_label = mscred.predict_prob(x_test, x_test_labels)
 
