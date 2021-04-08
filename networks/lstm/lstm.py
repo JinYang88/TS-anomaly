@@ -76,9 +76,3 @@ class LSTM(TimeSeriesEncoder):
         }
 
         return return_dict
-
-
-if __name__ == "__main__":
-    inp = torch.randn((32, 1, 46))
-    model = MultiLSTM(in_channels=25, num_layers=1, window_size=45)
-    out = model.forward(inp)

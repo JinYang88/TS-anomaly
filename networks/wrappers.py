@@ -50,7 +50,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         **kwargs,
     ):
         super().__init__()
-        self.device = device
+        self.device = "cpu" if not torch.cuda.is_available() else device
         self.batch_size = batch_size
         self.nb_epoch = nb_epoch
         self.lr = lr
@@ -92,14 +92,11 @@ class TimeSeriesEncoder(torch.nn.Module):
         patience=10,
         **kwargs,
     ):
-        # Check if the given time series have unequal lengths
-        i = 0  # Number of performed optimization steps
-        epochs = 0  # Number of performed epochs
         num_batches = len(train_iterator.loader)
         print("Start training for {} batches.".format(num_batches))
         train_start = time.time()
         # Encoder training
-        while epochs < self.nb_epoch:
+        for epoch in range(self.nb_epoch):
             running_loss = 0
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
@@ -111,10 +108,10 @@ class TimeSeriesEncoder(torch.nn.Module):
                 self.optimizer.step()
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
-            epochs += 1
-            print("Epoch: {}, loss: {:.5f}".format(epochs, avg_loss))
+            print("Epoch: {}, loss: {:.5f}".format(epoch, avg_loss))
             stop_training = self.__on_epoch_end(avg_loss, patience=patience)
             if stop_training:
+                print("Early stop at epoch {}.".format(epoch))
                 break
         train_end = time.time()
 
