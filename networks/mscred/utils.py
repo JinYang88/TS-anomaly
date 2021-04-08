@@ -9,12 +9,12 @@ import pandas as pd
 device = torch.device("cuda:0")
 
 
-def load_data(subdataset, save_dir):
+def load_data(matrix_path, save_dir):
     dataset = {}
     splits = ["train", "test"]
     shuffle = {'train': True, 'test': False}
-    train_data_path = save_dir + "matrix_data_" + subdataset + '/train_data/'
-    test_data_path = save_dir + "matrix_data_" + subdataset + '/test_data/'
+    train_data_path = save_dir + "matrix_data_" + matrix_path + '/train_data/'
+    test_data_path = save_dir + "matrix_data_" + matrix_path + '/test_data/'
     train_file_list = os.listdir(train_data_path)
     test_file_list = os.listdir(test_data_path)
     train_file_list.sort(key=lambda x: int(x[11:-4]))
@@ -59,13 +59,13 @@ def train(DataLoader, model, Optimizer, epochs, Device):
         print("[Epoch %d/%d] [loss: %f]" % (epoch + 1, epochs, train_l_sum / n))
 
 
-def test(DataLoader, model, subdataset, x_test, save_dir, gap_time):
+def test(DataLoader, model, matrix_path, x_test, save_dir, gap_time):
     print("------Testing-------")
     data_get_len = x_test.shape[0]
     index = math.ceil(data_get_len / gap_time)
-    if not os.path.exists(save_dir + "matrix_data_" + subdataset + '/reconstructed_data'):
-        os.makedirs(save_dir + "matrix_data_" + subdataset + '/reconstructed_data')
-    reconstructed_data_path = save_dir + "matrix_data_" + subdataset + '/reconstructed_data'
+    if not os.path.exists(save_dir + "matrix_data_" + matrix_path + '/reconstructed_data'):
+        os.makedirs(save_dir + "matrix_data_" + matrix_path + '/reconstructed_data')
+    reconstructed_data_path = save_dir + "matrix_data_" + matrix_path + '/reconstructed_data'
     with torch.no_grad():
         for x in DataLoader:
             x = x.to(device)
@@ -76,8 +76,8 @@ def test(DataLoader, model, subdataset, x_test, save_dir, gap_time):
             index += 1
 
 
-def evaluate(subdataset, save_dir, thred_b, gap_time):
-    test_data_path = save_dir + "matrix_data_" + subdataset + '/test_data'
+def evaluate(matrix_path, save_dir, thred_b, gap_time):
+    test_data_path = save_dir + "matrix_data_" + matrix_path + '/test_data'
     test_file_list = os.listdir(test_data_path)
     test_file_list.sort(key=lambda x: int(x[10:-4]))
     test_start = int(test_file_list[0][10:-4])
@@ -85,7 +85,7 @@ def evaluate(subdataset, save_dir, thred_b, gap_time):
 
     test_anomaly_score = np.zeros((test_end - test_start + 1, 1))
 
-    matrix_data_path = save_dir + "matrix_data_" + subdataset + '/'
+    matrix_data_path = save_dir + "matrix_data_" + matrix_path + '/'
     test_data_path = matrix_data_path + "test_data/"
     reconstructed_data_path = matrix_data_path + "reconstructed_data/"
 

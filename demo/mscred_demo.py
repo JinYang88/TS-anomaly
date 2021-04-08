@@ -1,12 +1,9 @@
-import os
 import sys
 import logging
 
 sys.path.append("../")
 
-from networks.mscred.matrix_generator import *
 from networks.mscred.mscred import MSCRED
-from networks.mscred.utils import *
 from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint
@@ -20,6 +17,7 @@ win_size = [10, 30, 60]  # sliding window size
 in_channels_encoder = 3
 in_channels_decoder = 256
 save_path = "./mscred_data/"
+matrix_path = "machine1-1"    # defined by user
 learning_rate = 0.0002
 epoch = 1
 thred_b = 0.005
@@ -48,12 +46,9 @@ if __name__ == "__main__":
     mscred = MSCRED(
         in_channels_encoder,
         in_channels_decoder,
-        data_dict,
-        subdataset,
-        x_train,
-        x_test,
-        x_test_labels,
+        matrix_path,
         save_path,
+        device,
         step_max,
         gap_time,
         win_size,
@@ -62,11 +57,11 @@ if __name__ == "__main__":
         thred_b,
     )
 
-    mscred.data_preprocessing()
+    mscred.data_preprocessing(data_dict)
 
     mscred.fit()
 
-    anomaly_score, anomaly_label = mscred.predict()
+    anomaly_score, anomaly_label = mscred.predict_prob(x_test, x_test_labels)
 
     # Make evaluation
     eva = evaluator(

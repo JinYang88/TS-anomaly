@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 
-def generate_signature_matrix_node(data_dict, subdataset, save_dir, gap_time, win_size):
+def generate_signature_matrix_node(data_dict, matrix_path, save_dir, gap_time, win_size):
     data = np.concatenate((data_dict["train"], data_dict["test"]), axis=0)
     data = data.transpose()
     sensor_n = data.shape[0]
@@ -28,20 +28,20 @@ def generate_signature_matrix_node(data_dict, subdataset, save_dir, gap_time, wi
                         matrix_t[m][l] = matrix_t[l][m]
             matrix_all.append(matrix_t)
 
-        matrix_data_path = save_dir + "matrix_data_" + subdataset + '/'
+        matrix_data_path = save_dir + "matrix_data_" + matrix_path + '/'
 
         if not os.path.exists(matrix_data_path):
             os.makedirs(matrix_data_path)
         path_temp = matrix_data_path + "matrix_win_" + str(win)
         np.save(path_temp, matrix_all)
         del matrix_all[:]
-    print('Generation for ' + subdataset + ' complete')
+    print('Generation for ' + matrix_path + ' complete')
 
 
-def generate_train_test_data(subdataset, x_train, x_test, save_dir, step_max, gap_time, win_size):
+def generate_train_test_data(matrix_path, x_train, x_test, save_dir, step_max, gap_time, win_size):
     # data sample generation
-    print("generating train/test data samples of " + subdataset)
-    matrix_data_path = save_dir + "matrix_data_" + subdataset + '/'
+    print("generating train/test data samples of " + matrix_path)
+    matrix_data_path = save_dir + "matrix_data_" + matrix_path + '/'
 
     train_start = 0
     train_end = x_train.shape[0]
