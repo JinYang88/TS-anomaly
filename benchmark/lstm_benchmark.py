@@ -1,8 +1,11 @@
-import os
 import sys
-import hashlib
 
 sys.path.append("../")
+
+import os
+import hashlib
+import argparse
+import traceback
 from common import data_preprocess
 from common.config import (
     initialize_config,
@@ -20,7 +23,6 @@ from common.evaluation import (
     store_benchmarking_results,
     evaluate_benchmarking_folder,
 )
-import argparse
 from collections import OrderedDict
 
 seed_everything(2020)
@@ -64,69 +66,71 @@ prediction_dims = []
 
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:2]:
-        print(f"Running on {subdataset} of {dataset}")
-        data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
+    for subdataset in subdatasets[dataset]:
+        try:
+            print(f"Running on {subdataset} of {dataset}")
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
-        pp = data_preprocess.preprocessor()
-        data_dict = pp.normalize(data_dict, method=normalize)
-        os.makedirs(save_path, exist_ok=True)
-        pp.save(save_path)
+            pp = data_preprocess.preprocessor()
+            data_dict = pp.normalize(data_dict, method=normalize)
+            os.makedirs(save_path, exist_ok=True)
+            pp.save(save_path)
 
-        window_dict = data_preprocess.generate_windows(
-            data_dict,
-            window_size=window_size,
-            stride=stride,
-        )
+            window_dict = data_preprocess.generate_windows(
+                data_dict,
+                window_size=window_size,
+                stride=stride,
+            )
 
-        train_iterator = WindowIterator(
-            window_dict["train_windows"], batch_size=batch_size, shuffle=True
-        )
-        test_iterator = WindowIterator(
-            window_dict["test_windows"], batch_size=4096, shuffle=False
-        )
+            train_iterator = WindowIterator(
+                window_dict["train_windows"], batch_size=batch_size, shuffle=True
+            )
+            test_iterator = WindowIterator(
+                window_dict["test_windows"], batch_size=4096, shuffle=False
+            )
 
-        encoder = LSTM(
-            in_channels=data_dict["dim"],
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-            dropout=dropout,
-            window_size=window_size,
-            prediction_length=prediction_length,
-            prediction_dims=prediction_dims,
-            patience=patience,
-            save_path=save_path,
-            batch_size=batch_size,
-            nb_epoch=nb_epoch,
-            lr=lr,
-            device=device,
-        )
+            encoder = LSTM(
+                in_channels=data_dict["dim"],
+                hidden_size=hidden_size,
+                num_layers=num_layers,
+                dropout=dropout,
+                window_size=window_size,
+                prediction_length=prediction_length,
+                prediction_dims=prediction_dims,
+                patience=patience,
+                save_path=save_path,
+                batch_size=batch_size,
+                nb_epoch=nb_epoch,
+                lr=lr,
+                device=device,
+            )
 
-        encoder.fit(
-            train_iterator,
-            test_iterator=test_iterator.loader,
-            test_labels=window_dict["test_labels"],
-        )
+            encoder.fit(
+                train_iterator,
+                test_iterator=test_iterator.loader,
+                test_labels=window_dict["test_labels"],
+            )
 
-        encoder.load_encoder()
-        records = encoder.score(test_iterator.loader, window_dict["test_labels"])
+            encoder.load_encoder()
+            records = encoder.score(test_iterator.loader, window_dict["test_labels"])
 
-        anomaly_score = records["score"]
-        anomaly_label = records["anomaly_label"]
+            anomaly_score = records["score"]
+            anomaly_label = records["anomaly_label"]
 
-        eval_folder = store_benchmarking_results(
-            hash_id,
-            benchmarking_dir,
-            dataset,
-            subdataset,
-            args,
-            model_name,
-            anomaly_score,
-            anomaly_label,
-        )
+            eval_folder = store_benchmarking_results(
+                hash_id,
+                benchmarking_dir,
+                dataset,
+                subdataset,
+                args,
+                model_name,
+                anomaly_score,
+                anomaly_label,
+            )
+        except Exception as e:
+            print(f"Running on {subdataset} failed.")
+            print(traceback.format_exc())
 
-    # filename: {dataset}_{model_name}.csv
-    # hash id, cmd, metric
     average_monitor_metric = evaluate_benchmarking_folder(
         eval_folder, benchmarking_dir, hash_id, dataset, model_name
     )
