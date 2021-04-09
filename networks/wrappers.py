@@ -32,6 +32,7 @@ import sklearn.model_selection
 import sklearn.svm
 import torch
 from common.evaluation import iter_thresholds
+from common.utils import set_device
 from IPython import embed
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
@@ -50,7 +51,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         **kwargs,
     ):
         super().__init__()
-        self.device = "cpu" if not torch.cuda.is_available() else device
+        self.device = set_device(device)
         self.batch_size = batch_size
         self.nb_epoch = nb_epoch
         self.lr = lr

@@ -1,6 +1,9 @@
 import os
+import sys
 import copy
+import json
 import numpy as np
+import hashlib
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.cluster import AgglomerativeClustering
 
@@ -12,16 +15,44 @@ metric_func = {
     "auc": roc_auc_score,
 }
 
+def evaluate_benchmarking_folder(folder)
 
-def store_output(
-    root_dir, dataset, subdataset, model_name, anomaly_score, anomaly_label
+
+def store_benchmarking_results(
+    benchmark_dir,
+    dataset,
+    subdataset,
+    args,
+    model_name,
+    anomaly_score,
+    anomaly_label,
 ):
-    store_dir = os.path.join(root_dir, dataset, subdataset, model_name)
-    os.makedirs(store_dir, exist_ok=True)
+    hash_id = hashlib.md5(
+        str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
+    ).hexdigest()[0:8]
 
-    np.savez(os.path.join(store_dir, "anomaly_score"), anomaly_score)
-    np.savez(os.path.join(store_dir, "label"), anomaly_label)
-    print("Store output of {} to {} done.".format(model_name, store_dir))
+    value_store_dir = os.path.join(
+        benchmark_dir, model_name, hash_id, dataset, subdataset
+    )
+    os.makedirs(value_store_dir, exist_ok=True)
+    np.savez(os.path.join(value_store_dir, "anomaly_score"), anomaly_score)
+    np.savez(os.path.join(value_store_dir, "label"), anomaly_label)
+
+    param_store_dir = os.path.join(benchmark_dir, model_name, hash_id)
+
+    param_store = {"cmd": "python {}".format(" ".join(sys.argv))}
+    param_store.update(args)
+    with open(os.path.join(param_store_dir, "params.json"), "w") as fw:
+        json.dump(
+            args,
+            fw,
+            sort_keys=True,
+            indent=4,
+            separators=(",", ": "),
+            ensure_ascii=False,
+        )
+    print("Store output of {} to {} done.".format(model_name, param_store_dir))
+    return os.path.join(benchmark_dir, model_name, hash_id, dataset)
 
 
 class evaluator:
