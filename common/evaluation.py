@@ -2,8 +2,9 @@ import os
 import sys
 import copy
 import json
-import numpy as np
+import glob
 import hashlib
+import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.cluster import AgglomerativeClustering
 
@@ -15,10 +16,21 @@ metric_func = {
     "auc": roc_auc_score,
 }
 
-def evaluate_benchmarking_folder(folder)
+
+def json_pretty_dump(obj, filename):
+    with open(filename, "w") as fw:
+        json.dump(
+            obj,
+            fw,
+            sort_keys=True,
+            indent=4,
+            separators=(",", ": "),
+            ensure_ascii=False,
+        )
 
 
 def store_benchmarking_results(
+    hash_id,
     benchmark_dir,
     dataset,
     subdataset,
@@ -27,30 +39,19 @@ def store_benchmarking_results(
     anomaly_score,
     anomaly_label,
 ):
-    hash_id = hashlib.md5(
-        str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
-    ).hexdigest()[0:8]
-
     value_store_dir = os.path.join(
         benchmark_dir, model_name, hash_id, dataset, subdataset
     )
     os.makedirs(value_store_dir, exist_ok=True)
     np.savez(os.path.join(value_store_dir, "anomaly_score"), anomaly_score)
-    np.savez(os.path.join(value_store_dir, "label"), anomaly_label)
+    np.savez(os.path.join(value_store_dir, "anomaly_label"), anomaly_label)
 
     param_store_dir = os.path.join(benchmark_dir, model_name, hash_id)
 
     param_store = {"cmd": "python {}".format(" ".join(sys.argv))}
     param_store.update(args)
-    with open(os.path.join(param_store_dir, "params.json"), "w") as fw:
-        json.dump(
-            args,
-            fw,
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "),
-            ensure_ascii=False,
-        )
+
+    json_pretty_dump(param_store, os.path.join(param_store_dir, "params.json"))
     print("Store output of {} to {} done.".format(model_name, param_store_dir))
     return os.path.join(benchmark_dir, model_name, hash_id, dataset)
 
@@ -273,3 +274,94 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
         if fig_saving_path:
             ax.figure.savefig(fig_saving_path)
     return salience
+
+
+def evaluate_benchmarking_folder(
+    folder, benchmarking_dir, hash_id, dataset, model_name
+):
+    # compute auc, raw f1, etc.
+
+    total_adj_f1 = []
+    for folder in glob.glob(os.path.join(folder, "*")):
+        folder_name = os.path.dirname(folder)
+        anomaly_score = np.load(os.path.join(folder, "anomaly_score.npz"))["arr_0"]
+        anomaly_label = np.load(os.path.join(folder, "anomaly_label.npz"))[
+            "arr_0"
+        ].astype(int)
+
+        best_f1, best_theta, best_adjust_pred, best_raw_pred = iter_thresholds(
+            anomaly_score, anomaly_label, metric="f1", adjustment=True
+        )
+
+        auc = roc_auc_score(anomaly_label, anomaly_score)
+
+        adj_f1 = f1_score(anomaly_label, best_adjust_pred)
+        adj_precision = precision_score(anomaly_label, best_adjust_pred)
+        adj_recall = recall_score(anomaly_label, best_adjust_pred)
+
+        raw_f1 = f1_score(anomaly_label, best_raw_pred)
+        raw_precision = precision_score(anomaly_label, best_raw_pred)
+        raw_recall = recall_score(anomaly_label, best_raw_pred)
+
+        avg_delay = compute_delay(anomaly_label, best_raw_pred)
+
+        total_adj_f1.append(adj_f1)
+
+        metric = {
+            "auc": auc,
+            "raw_f1": raw_f1,
+            "raw_precision": raw_precision,
+            "raw_recall": raw_recall,
+            "adj_f1": adj_f1,
+            "adj_precision": adj_precision,
+            "adj_recall": adj_recall,
+            "delay": avg_delay,
+        }
+        json_pretty_dump(metric, os.path.join(folder, "metrics.json"))
+
+    total_adj_f1 = np.array(total_adj_f1)
+    adj_f1_mean = total_adj_f1.mean()
+    adj_f1_std = total_adj_f1.std()
+
+    with open(
+        os.path.join(benchmarking_dir, f"{dataset}_{model_name}.txt"), "a+"
+    ) as fw:
+        params = " ".join(sys.argv)
+        info = f"{hash_id}\t{params}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
+        fw.write(info)
+    print(info)
+
+
+def compute_delay(label, pred):
+    def onehot2interval(arr):
+        result = []
+        record = False
+        for idx, item in enumerate(arr):
+            if item == 1 and not record:
+                start = idx
+                record = True
+            if item == 0 and record:
+                end = idx  # not include the end point, like [a,b)
+                record = False
+                result.append((start, end))
+        return result
+
+    count = 0
+    total_delay = 0
+    pred = np.array(pred)
+    label = np.array(label)
+    for start, end in onehot2interval(label):
+        pred_interval = pred[start:end]
+        if pred_interval.sum() > 0:
+            total_delay += np.where(pred_interval == 1)[0][0]
+            count += 1
+    return total_delay / count
+
+
+if __name__ == "__main__":
+    eval_folder = "../benchmark/benchmarking_results/lstm/8a2c860e/SMD"
+    print(evaluate_benchmarking_folder(eval_folder))
+
+    # pred = [0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1]
+    # label = [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1]
+    # compute_delay(pred, label)

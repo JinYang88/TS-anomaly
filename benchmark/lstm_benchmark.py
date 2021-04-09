@@ -1,5 +1,6 @@
 import os
 import sys
+import hashlib
 
 sys.path.append("../")
 from common import data_preprocess
@@ -38,6 +39,9 @@ parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cp
 
 args = vars(parser.parse_args())
 
+hash_id = hashlib.md5(
+    str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
+).hexdigest()[0:8]
 
 dataset = args["dataset"]
 device = args["gpu"]
@@ -57,6 +61,7 @@ dropout = 0
 batch_size = 1024
 prediction_length = 1
 prediction_dims = []
+
 
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset][0:2]:
@@ -80,8 +85,6 @@ if __name__ == "__main__":
         test_iterator = WindowIterator(
             window_dict["test_windows"], batch_size=4096, shuffle=False
         )
-
-        print("Proceeding using {}...".format(device))
 
         encoder = LSTM(
             in_channels=data_dict["dim"],
@@ -112,6 +115,7 @@ if __name__ == "__main__":
         anomaly_label = records["anomaly_label"]
 
         eval_folder = store_benchmarking_results(
+            hash_id,
             benchmarking_dir,
             dataset,
             subdataset,
@@ -121,4 +125,8 @@ if __name__ == "__main__":
             anomaly_label,
         )
 
-    evaluate_benchmarking_folder(eval_folder)
+    # filename: {dataset}_{model_name}.csv
+    # hash id, cmd, metric
+    average_monitor_metric = evaluate_benchmarking_folder(
+        eval_folder, benchmarking_dir, hash_id, dataset, model_name
+    )
