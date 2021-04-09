@@ -1,3 +1,0 @@
-8a2c860e-lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1 adj f1: [0.9412(0.0113)]
-8a2c860e-lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1 adj f1: [0.9412(0.0113)]
-8a2c860e	lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1	adj f1: [0.9412(0.0113)]
