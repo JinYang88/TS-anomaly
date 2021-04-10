@@ -30,8 +30,11 @@ if __name__ == "__main__":
     x_test = data_dict["test"]
     x_test_labels = data_dict["test_labels"]
 
+<<<<<<< HEAD
     # data preprocessing for MSCRED
 
+=======
+>>>>>>> 9e393b9592b2467b8bddc4b731edb552103fb2de
     od = IForest()
 
     od.fit(x_train)
