@@ -112,7 +112,7 @@ class ExpConfig(Config):
 
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:2]:
+    for subdataset in subdatasets[dataset]:
         try:
             print(f"Running on {subdataset} of {dataset}")
             config = ExpConfig()
