@@ -156,7 +156,7 @@ class TimeSeriesEncoder(torch.nn.Module):
     def predict(self, X):
         raise NotImplementedError("TBD")
 
-    def score(self, iterator, anomaly_label, percent=88):
+    def predict_prob(self, iterator, anomaly_label, percent=88):
         print("Evaluating")
         self = self.eval()
         test_start = time.time()

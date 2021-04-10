@@ -113,7 +113,9 @@ if __name__ == "__main__":
             )
 
             encoder.load_encoder()
-            records = encoder.score(test_iterator.loader, window_dict["test_labels"])
+            records = encoder.predict_prob(
+                test_iterator.loader, window_dict["test_labels"]
+            )
 
             anomaly_score = records["score"]
             anomaly_label = records["anomaly_label"]
@@ -127,6 +129,7 @@ if __name__ == "__main__":
                 model_name,
                 anomaly_score,
                 anomaly_label,
+                encoder.time_tracker,
             )
         except Exception as e:
             print(f"Running on {subdataset} failed.")

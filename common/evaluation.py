@@ -38,6 +38,7 @@ def store_benchmarking_results(
     model_name,
     anomaly_score,
     anomaly_label,
+    time_tracker,
 ):
     value_store_dir = os.path.join(
         benchmark_dir, model_name, hash_id, dataset, subdataset
@@ -45,6 +46,8 @@ def store_benchmarking_results(
     os.makedirs(value_store_dir, exist_ok=True)
     np.savez(os.path.join(value_store_dir, "anomaly_score"), anomaly_score)
     np.savez(os.path.join(value_store_dir, "anomaly_label"), anomaly_label)
+
+    json_pretty_dump(time_tracker, os.path.join(value_store_dir, "time.json"))
 
     param_store_dir = os.path.join(benchmark_dir, model_name, hash_id)
 
@@ -282,6 +285,8 @@ def evaluate_benchmarking_folder(
     # compute auc, raw f1, etc.
 
     total_adj_f1 = []
+    total_train_time = []
+    total_test_time = []
     for folder in glob.glob(os.path.join(folder, "*")):
         folder_name = os.path.dirname(folder)
         print("Evaluating {}".format(folder_name))
@@ -289,6 +294,8 @@ def evaluate_benchmarking_folder(
         anomaly_label = np.load(os.path.join(folder, "anomaly_label.npz"))[
             "arr_0"
         ].astype(int)
+        with open(os.path.join(folder, "time.json")) as fr:
+            time = json.load(fr)
 
         best_f1, best_theta, best_adjust_pred, best_raw_pred = iter_thresholds(
             anomaly_score, anomaly_label, metric="f1", adjustment=True
@@ -307,6 +314,8 @@ def evaluate_benchmarking_folder(
         avg_delay = compute_delay(anomaly_label, best_raw_pred)
 
         total_adj_f1.append(adj_f1)
+        total_train_time.append(time["train"])
+        total_test_time.append(time["test"])
 
         metric = {
             "auc": auc,
@@ -317,6 +326,8 @@ def evaluate_benchmarking_folder(
             "adj_precision": adj_precision,
             "adj_recall": adj_recall,
             "delay": avg_delay,
+            "train": time["train"],
+            "test": time["test"],
         }
         json_pretty_dump(metric, os.path.join(folder, "metrics.json"))
 
@@ -324,11 +335,14 @@ def evaluate_benchmarking_folder(
     adj_f1_mean = total_adj_f1.mean()
     adj_f1_std = total_adj_f1.std()
 
+    train_time_sum = sum(total_train_time)
+    test_time_sum = sum(total_test_time)
+
     with open(
         os.path.join(benchmarking_dir, f"{dataset}_{model_name}.txt"), "a+"
     ) as fw:
         params = " ".join(sys.argv)
-        info = f"{hash_id}\t{params}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
+        info = f"{hash_id}\t{params}\ttrain:{train_time_sum:.4f} test:{test_time_sum:.4f}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
         fw.write(info)
     print(info)
 
