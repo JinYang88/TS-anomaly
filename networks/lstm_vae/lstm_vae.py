@@ -277,8 +277,12 @@ class LSTM_Var_Autoencoder(object):
                     self.sess.run(
                         [self.reset_state_op_], feed_dict={self.batch_: batch_size}
                     )
-            if epoch % 10 == 0 & verbose:
-                print("Epoch {:^6} Loss {:0.5f}".format(epoch + 1, mean_loss))
+            if verbose:
+                print(
+                    "Epoch {}/{} Loss {:0.5f}".format(
+                        epoch + 1, num_epochs, mean_loss
+                    )
+                )
         end = time.time()
         self.time_tracker["train"] = end - start
 
