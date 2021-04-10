@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     od.fit(x_train)
 
-    anomaly_score = od.predict(x_test)
+    anomaly_score = od.score(x_test)
 
     anomaly_label = x_test_labels
 
