@@ -26,7 +26,7 @@ def get_data_dim(dataset):
         raise ValueError("unknown dataset " + str(dataset))
 
 
-def load_dataset(dataset, subdataset, use_dim="all", root_dir="../"):
+def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None):
     """
     use_dim: dimension used in multivariate timeseries
     """
@@ -54,7 +54,7 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../"):
             train_data = train_data[:, use_dim].reshape(-1, 1)
         if len(train_data) > 0:
             train_data_list.append(train_data)
-    data_dict["train"] = np.concatenate(train_data_list, axis=0)
+    data_dict["train"] = np.concatenate(train_data_list, axis=0)[: nrows]
 
     test_data_list = []
     for idx, f_name in enumerate(test_files):
@@ -66,7 +66,7 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../"):
             test_data = test_data[:, use_dim].reshape(-1, 1)
         if len(test_data) > 0:
             test_data_list.append(test_data)
-    data_dict["test"] = np.concatenate(test_data_list, axis=0)
+    data_dict["test"] = np.concatenate(test_data_list, axis=0)[: nrows]
 
     label_data_list = []
     for idx, f_name in enumerate(label_files):
@@ -76,6 +76,6 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../"):
         f.close()
         if len(label_data) > 0:
             label_data_list.append(label_data)
-    data_dict["test_labels"] = np.concatenate(label_data_list, axis=0)
+    data_dict["test_labels"] = np.concatenate(label_data_list, axis=0)[: nrows]
 
     return data_dict

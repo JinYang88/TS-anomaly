@@ -19,7 +19,6 @@ from common.batching import WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything, pprint
 from networks.lstm import LSTM
 from common.evaluation import (
-    evaluator,
     store_benchmarking_results,
     evaluate_benchmarking_folder,
 )
@@ -45,6 +44,8 @@ parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cp
 
 args = vars(parser.parse_args())
 
+model_name = "lstm"  # change this name for different models
+benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
 ).hexdigest()[0:8]
@@ -57,8 +58,7 @@ lr = args["lr"]
 hidden_size = args["hidden_size"]
 num_layers = args["num_layers"]
 
-model_name = "lstm"  # change this name for different models
-benchmarking_dir = "./benchmarking_results"
+
 save_path = "./savd_dir"
 normalize = "minmax"
 nb_epoch = 1000

@@ -2,7 +2,6 @@ import os
 import time
 import argparse
 import logging
-import torch
 import glob
 import yaml
 
@@ -112,6 +111,8 @@ def parse_multi_setting(setting):
 
 
 def parse_arguments():
+    import torch
+
     parser = argparse.ArgumentParser(
         description="Anomaly detection repository for TS datasets"
     )
