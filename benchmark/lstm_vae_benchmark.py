@@ -1,5 +1,8 @@
 import os
 import sys
+import hashlib
+import argparse
+import traceback
 import tensorflow as tf
 
 sys.path.append("../")
@@ -7,14 +10,14 @@ from networks.lstm_vae import LSTM_Var_Autoencoder
 from common.data_preprocess import generate_windows, preprocessor
 from common.dataloader import load_dataset
 from common.evaluation import evaluator
-from common.utils import pprint
+from common.config import subdatasets
 from IPython import embed
 from common.evaluation import (
     store_benchmarking_results,
     evaluate_benchmarking_folder,
 )
 
-#  python lstm_vae_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 10
+#  python lstm_vae_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -82,7 +85,6 @@ if __name__ == "__main__":
                 learning_rate=learning_rate,
                 batch_size=batch_size,
                 num_epochs=num_epochs,
-                opt=tf.train.AdamOptimizer,
                 REG_LAMBDA=0.01,
                 grad_clip_norm=2,
                 optimizer_params=None,
