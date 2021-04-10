@@ -1,6 +1,6 @@
 import sys
 import logging
-from alibi_detect.od import IForest
+from pyod.models.pca import PCA
 
 sys.path.append("../")
 
@@ -10,7 +10,6 @@ from common.utils import pprint
 
 dataset = "SMD"
 subdataset = "machine-1-1"
-n_estimators = 100
 point_adjustment = True
 iterate_threshold = True
 
@@ -31,11 +30,12 @@ if __name__ == "__main__":
     x_test = data_dict["test"]
     x_test_labels = data_dict["test_labels"]
 
-    od = IForest(n_estimators=n_estimators)
-
+    # data preprocessing for MSCRED
+    od = PCA()
     od.fit(x_train)
 
-    anomaly_score = od.score(x_test)
+    # get outlier scores
+    anomaly_score = od.decision_function(x_test)
 
     anomaly_label = x_test_labels
 

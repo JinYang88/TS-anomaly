@@ -1,6 +1,6 @@
 import sys
 import logging
-from alibi_detect.od import IForest
+from pyod.models.knn import KNN
 
 sys.path.append("../")
 
@@ -10,7 +10,9 @@ from common.utils import pprint
 
 dataset = "SMD"
 subdataset = "machine-1-1"
-n_estimators = 100
+n_neighbors = 5
+radius = 1.0
+leaf_size = 30
 point_adjustment = True
 iterate_threshold = True
 
@@ -31,11 +33,12 @@ if __name__ == "__main__":
     x_test = data_dict["test"]
     x_test_labels = data_dict["test_labels"]
 
-    od = IForest(n_estimators=n_estimators)
-
+    # data preprocessing for MSCRED
+    od = KNN(n_neighbors=n_neighbors, radius=radius, leaf_size=leaf_size)
     od.fit(x_train)
 
-    anomaly_score = od.score(x_test)
+    # get outlier scores
+    anomaly_score = od.decision_function(x_test)
 
     anomaly_label = x_test_labels
 

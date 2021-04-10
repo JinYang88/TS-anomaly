@@ -10,6 +10,9 @@ from common.utils import pprint
 
 dataset = "SMD"
 subdataset = "machine-1-1"
+n_neighbors = 20
+leaf_size = 30
+p = 2   # Parameter for the Minkowski
 point_adjustment = True
 iterate_threshold = True
 
@@ -31,7 +34,7 @@ if __name__ == "__main__":
     x_test_labels = data_dict["test_labels"]
 
     # data preprocessing for MSCRED
-    od = LOF()
+    od = LOF(n_neighbors=n_neighbors, leaf_size=leaf_size, p=p)
     od.fit(x_train)
 
     # get outlier scores
