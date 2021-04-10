@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import six
+import time
 from timeit import default_timer as timer
 
 
@@ -49,6 +50,7 @@ class LSTM_Var_Autoencoder(object):
         self.ite = dataset.make_initializable_iterator()
         self.x = self.ite.get_next()
         self.repeat = tf.placeholder(tf.int32)
+        self.time_tracker = {}
 
         def gauss_sampling(mean, sigma):
             with tf.name_scope("sample_gaussian"):
@@ -246,7 +248,7 @@ class LSTM_Var_Autoencoder(object):
         print("\n")
         print("Training...")
         print("\n")
-        start = timer()
+        start = time.time()
 
         for epoch in range(num_epochs):
             train_error = 0
@@ -277,11 +279,11 @@ class LSTM_Var_Autoencoder(object):
                     )
             if epoch % 10 == 0 & verbose:
                 print("Epoch {:^6} Loss {:0.5f}".format(epoch + 1, mean_loss))
-        end = timer()
-        print("\n")
-        print("Training time {:0.2f} minutes".format((end - start) / (60)))
+        end = time.time()
+        self.time_tracker["train"] = end - start
 
     def predict_prob(self, X):
+        start = time.time()
         self.sess.run(
             self.ite.initializer,
             feed_dict={self.input: X, self.batch_size: np.shape(X)[0]},
@@ -300,6 +302,8 @@ class LSTM_Var_Autoencoder(object):
                 self.x_reconstr_mean, feed_dict={self.repeat: np.shape(X)[1]}
             )
         squared_error = (x_rec - X) ** 2
+        end = time.time()
+        self.time_tracker["test"] = end - start
         return squared_error
 
     def reconstruct(self, X, get_error=False):
