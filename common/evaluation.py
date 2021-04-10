@@ -288,7 +288,7 @@ def evaluate_benchmarking_folder(
     total_train_time = []
     total_test_time = []
     for folder in glob.glob(os.path.join(folder, "*")):
-        folder_name = os.path.dirname(folder)
+        folder_name = os.path.basename(folder)
         print("Evaluating {}".format(folder_name))
         anomaly_score = np.load(os.path.join(folder, "anomaly_score.npz"))["arr_0"]
         anomaly_label = np.load(os.path.join(folder, "anomaly_label.npz"))[
