@@ -1,5 +1,7 @@
 import os
 import sys
+
+sys.path.append("../")
 import json
 import logging
 import math
@@ -7,11 +9,6 @@ import numpy
 import pandas
 import torch
 import pandas as pd
-from IPython import embed
-
-os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
-sys.path.append("./")
-
 from common import data_preprocess
 from common.config import (
     initialize_config,
@@ -24,7 +21,7 @@ from common.dataloader import load_dataset
 from common.batching import WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything, pprint
 from networks.lstm import LSTM
-from common.evaluation import evaluator, store_output
+from common.evaluation import evaluator
 
 seed_everything(2020)
 
@@ -33,10 +30,11 @@ subdataset = "machine-1-2"
 normalize = "minmax"
 save_path = "./savd_dir"
 batch_size = 64
-device = "cpu"
+device = -1
 window_size = 32
 stride = 5
 nb_epoch = 10
+patience = 5
 
 lr = 0.001
 hidden_size = 64
@@ -82,13 +80,12 @@ if __name__ == "__main__":
         window_size=window_size,
         prediction_length=prediction_length,
         prediction_dims=prediction_dims,
+        patience=patience,
         save_path=save_path,
-        trial_id="demo",
         batch_size=batch_size,
         nb_epoch=nb_epoch,
         lr=lr,
-        dataset=dataset,
-        subdataset=subdataset,
+        device=device,
     )
 
     encoder.fit(
@@ -116,6 +113,3 @@ if __name__ == "__main__":
     eval_results = eva.compute_metrics()
 
     pprint(eval_results)
-    store_output(
-        "./demo/output", dataset, "lstm", subdataset, anomaly_score, anomaly_label
-    )
