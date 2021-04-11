@@ -43,7 +43,7 @@ dropout = 0
 prediction_length = 1
 prediction_dims = []
 iterate_threshold = True
-point_adjustment = False
+point_adjustment = True
 
 if __name__ == "__main__":
     data_dict = load_dataset(
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     )
 
     encoder.load_encoder()
-    records = encoder.score(test_iterator.loader, window_dict["test_labels"])
+    records = encoder.predict_prob(test_iterator.loader, window_dict["test_labels"])
 
     anomaly_score = records["score"]
     anomaly_label = records["anomaly_label"]
