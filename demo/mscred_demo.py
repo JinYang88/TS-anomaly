@@ -1,5 +1,4 @@
 import sys
-import logging
 
 sys.path.append("../")
 
@@ -24,11 +23,6 @@ point_adjustment = True
 iterate_threshold = True
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s P%(process)d %(levelname)s %(message)s",
-    )
-
     # load dataset
     data_dict = load_dataset(dataset, subdataset, "all", nrows=500)
 
