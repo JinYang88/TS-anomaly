@@ -18,7 +18,7 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-# python dagmm_benchmark.py --dataset SMD --lr 0.0001 --dropout 0.25 --num_epochs 1 -ch 32 16 2 -eh 80 40
+# python dagmm_benchmark.py --dataset SMD --lr 0.0001 --dropout 0.25 --num_epochs 100 -ch 32 16 2 -eh 80 40
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -53,10 +53,10 @@ normalize = True
 random_seed = 123
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:2]:
+    for subdataset in subdatasets[dataset]:
         try:
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset, nrows=500)
+            data_dict = load_dataset(dataset, subdataset)
             # preprocessing
             pp = preprocessor()
             data_dict = pp.normalize(data_dict)
