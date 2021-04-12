@@ -1,2 +1,0 @@
-271a3f00	iforest_benchmark.py --dataset SMD --n_estimators 100	train:0.2460 test:0.0798	adj f1: [0.0000(0.0000)]
-271a3f00	iforest_benchmark.py --dataset SMD --n_estimators 100	train:0.4370 test:0.1372	adj f1: [0.0000(0.0000)]
