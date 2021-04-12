@@ -301,7 +301,11 @@ def evaluate_benchmarking_folder(
             anomaly_score, anomaly_label, metric="f1", adjustment=True
         )
 
-        auc = roc_auc_score(anomaly_label, anomaly_score)
+        try:
+            auc = roc_auc_score(anomaly_label, anomaly_score)
+        except ValueError as e:
+            auc = 0
+            print("All zero in anomaly label, set auc=0")
 
         adj_f1 = f1_score(anomaly_label, best_adjust_pred)
         adj_precision = precision_score(anomaly_label, best_adjust_pred)
@@ -370,7 +374,7 @@ def compute_delay(label, pred):
         if pred_interval.sum() > 0:
             total_delay += np.where(pred_interval == 1)[0][0]
             count += 1
-    return total_delay / count
+    return total_delay / (count + 1e-6)
 
 
 if __name__ == "__main__":

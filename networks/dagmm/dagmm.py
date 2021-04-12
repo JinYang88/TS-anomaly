@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import time
 from sklearn.preprocessing import StandardScaler
 import joblib
 
@@ -96,6 +97,8 @@ class DAGMM:
         self.graph = None
         self.sess = None
 
+        self.time_tracker = {}
+
     def __del__(self):
         if self.sess is not None:
             self.sess.close()
@@ -156,6 +159,7 @@ class DAGMM:
             idx = np.arange(x.shape[0])
             np.random.shuffle(idx)
 
+            start = time.time()
             for epoch in range(self.epoch_size):
                 for batch in range(n_batch):
                     i_start = batch * self.minibatch_size
@@ -174,6 +178,8 @@ class DAGMM:
                             epoch + 1, self.epoch_size, loss_val
                         )
                     )
+            end = time.time()
+            self.time_tracker["train"] = end - start
 
             # Fix GMM parameter
             fix = self.gmm.fix_op()
@@ -205,7 +211,10 @@ class DAGMM:
         if self.normalize:
             x = self.scaler.transform(x)
 
+        start = time.time()
         energies = self.sess.run(self.energy, feed_dict={self.input: x})
+        end = time.time()
+        self.time_tracker["test"] = end - start
         return energies
 
     def save(self, fdir):
