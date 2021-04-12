@@ -28,8 +28,6 @@ parser.add_argument("--intermediate_dim", type=int, help="intermediate_dim")
 parser.add_argument("--z_dim", type=int, help="z_dim")
 parser.add_argument("--hidden_size", type=int, help="hidden_size")
 parser.add_argument("--num_epochs", type=int, help="num_epochs")
-
-
 args = vars(parser.parse_args())
 
 model_name = "lstm_vae"  # change this name for different models

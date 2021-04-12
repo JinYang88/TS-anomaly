@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 
-def generate_signature_matrix_node(data_dict, matrix_path, save_dir, gap_time, win_size):
+def generate_signature_matrix_node(data_dict, save_dir, gap_time, win_size):
     data = np.concatenate((data_dict["train"], data_dict["test"]), axis=0)
     data = data.transpose()
     sensor_n = data.shape[0]
@@ -24,46 +24,51 @@ def generate_signature_matrix_node(data_dict, matrix_path, save_dir, gap_time, w
                 for l in range(sensor_n):
                     for m in range(l, sensor_n):
                         # if np.var(data[i, t - win:t]) and np.var(data[j, t - win:t]):
-                        matrix_t[l][m] = np.inner(data[l, t - win:t], data[m, t - win:t]) / win  # rescale by win
+                        matrix_t[l][m] = (
+                            np.inner(data[l, t - win : t], data[m, t - win : t]) / win
+                        )  # rescale by win
                         matrix_t[m][l] = matrix_t[l][m]
             matrix_all.append(matrix_t)
 
-        matrix_data_path = save_dir + "matrix_data_" + matrix_path + '/'
+        matrix_data_path = os.path.join(save_dir, "matrix")
 
-        if not os.path.exists(matrix_data_path):
-            os.makedirs(matrix_data_path)
-        path_temp = matrix_data_path + "matrix_win_" + str(win)
+        os.makedirs(matrix_data_path, exist_ok=True)
+        path_temp = os.path.join(matrix_data_path, "matrix_win_" + str(win))
         np.save(path_temp, matrix_all)
         del matrix_all[:]
-    print('Generation for ' + matrix_path + ' complete')
+        print("Generation matrix for win={} complete.".format(win))
 
 
-def generate_train_test_data(matrix_path, x_train, x_test, save_dir, step_max, gap_time, win_size):
+def generate_train_test_data(x_train, x_test, save_dir, step_max, gap_time, win_size):
     # data sample generation
-    print("generating train/test data samples of " + matrix_path)
-    matrix_data_path = save_dir + "matrix_data_" + matrix_path + '/'
+    matrix_data_path = os.path.join(save_dir, "matrix")
+    print("generating train/test data samples of " + matrix_data_path)
 
     train_start = 0
     train_end = x_train.shape[0]
     test_start = train_end
     test_end = x_train.shape[0] + x_test.shape[0]
 
-    train_data_path = matrix_data_path + "train_data/"
+    train_data_path = os.path.join(matrix_data_path, "train_data/")
     if not os.path.exists(train_data_path):
-        os.makedirs(train_data_path)
-    test_data_path = matrix_data_path + "test_data/"
+        os.makedirs(train_data_path, exist_ok=True)
+    test_data_path = os.path.join(matrix_data_path, "test_data/")
     if not os.path.exists(test_data_path):
-        os.makedirs(test_data_path)
+        os.makedirs(test_data_path, exist_ok=True)
 
     data_all = []
 
     for w in range(len(win_size)):
-        path_temp = matrix_data_path + "matrix_win_" + str(win_size[w]) + ".npy"
+        path_temp = os.path.join(
+            matrix_data_path, "matrix_win_" + str(win_size[w]) + ".npy"
+        )
         data_all.append(np.load(path_temp))
 
     train_test_time = [[train_start, train_end], [test_start, test_end]]
     for m in range(len(train_test_time)):
-        for data_id in range(int(train_test_time[m][0] / gap_time), int(train_test_time[m][1] / gap_time)):
+        for data_id in range(
+            int(train_test_time[m][0] / gap_time), int(train_test_time[m][1] / gap_time)
+        ):
             # print data_id
             step_multi_matrix = []
             for step_id in range(step_max, 0, -1):
@@ -72,12 +77,15 @@ def generate_train_test_data(matrix_path, x_train, x_test, save_dir, step_max, g
                     multi_matrix.append(data_all[k][data_id - step_id])
                 step_multi_matrix.append(multi_matrix)
 
-            if (train_start / gap_time + win_size[-1] / gap_time + step_max) <= data_id < (
-                    train_end / gap_time):  # remove start points with invalid value
-                path_temp = os.path.join(train_data_path, 'train_data_' + str(data_id))
+            if (
+                (train_start / gap_time + win_size[-1] / gap_time + step_max)
+                <= data_id
+                < (train_end / gap_time)
+            ):  # remove start points with invalid value
+                path_temp = os.path.join(train_data_path, "train_data_" + str(data_id))
                 np.save(path_temp, step_multi_matrix)
             elif (test_start / gap_time) <= data_id < (test_end / gap_time):
-                path_temp = os.path.join(test_data_path, 'test_data_' + str(data_id))
+                path_temp = os.path.join(test_data_path, "test_data_" + str(data_id))
                 np.save(path_temp, step_multi_matrix)
 
             del step_multi_matrix[:]

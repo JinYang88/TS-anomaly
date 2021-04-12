@@ -1,9 +1,12 @@
+import time
 import torch
-import torch.nn as nn
 import os
+import torch.nn as nn
+import numpy as np
 from .convolution_lstm import ConvLSTM
 from .matrix_generator import generate_signature_matrix_node, generate_train_test_data
-from .utils import train, test, load_data, evaluate
+from .utils import train, test, load_signature_data, evaluate
+from common.utils import set_device
 
 
 def attention(ConvLstm_out):
@@ -48,7 +51,7 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device
+            device=device,
         )
         self.conv2_lstm = ConvLSTM(
             input_channels=64,
@@ -56,7 +59,7 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device
+            device=device,
         )
         self.conv3_lstm = ConvLSTM(
             input_channels=128,
@@ -64,7 +67,7 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device
+            device=device,
         )
         self.conv4_lstm = ConvLSTM(
             input_channels=256,
@@ -72,7 +75,7 @@ class Conv_LSTM(nn.Module):
             kernel_size=3,
             step=5,
             effective_step=[4],
-            device=device
+            device=device,
         )
 
     def forward(self, conv1_out, conv2_out, conv3_out, conv4_out):
@@ -118,7 +121,6 @@ class MSCRED(nn.Module):
         self,
         in_channels_encoder,
         in_channels_decoder,
-        matrix_path,
         save_path,
         device,
         step_max,
@@ -129,11 +131,10 @@ class MSCRED(nn.Module):
         thred_b,
     ):
         super(MSCRED, self).__init__()
-        self.device = device
+        self.device = set_device(device)
         self.cnn_encoder = CnnEncoder(in_channels_encoder)
-        self.conv_lstm = Conv_LSTM(device)
+        self.conv_lstm = Conv_LSTM(self.device)
         self.cnn_decoder = CnnDecoder(in_channels_decoder)
-        self.matrix_path = matrix_path
         self.save_path = save_path
         self.step_max = step_max
         self.gap_time = gap_time
@@ -141,6 +142,7 @@ class MSCRED(nn.Module):
         self.learning_rate = learning_rate
         self.epoch = epoch
         self.thred_b = thred_b
+        self.time_tracker = {}
 
     def forward(self, x):
         conv1_out, conv2_out, conv3_out, conv4_out = self.cnn_encoder(x)
@@ -156,7 +158,6 @@ class MSCRED(nn.Module):
     def data_preprocessing(self, data_dict):
         generate_signature_matrix_node(
             data_dict,
-            self.matrix_path,
             self.save_path,
             self.gap_time,
             self.win_size,
@@ -166,7 +167,6 @@ class MSCRED(nn.Module):
         x_test = data_dict["test"]
 
         generate_train_test_data(
-            self.matrix_path,
             x_train,
             x_test,
             self.save_path,
@@ -175,47 +175,44 @@ class MSCRED(nn.Module):
             self.win_size,
         )
 
-    def fit(self):
+    def fit(self, data_dict):
+        start = time.time()
         self.data_preprocessing(data_dict)
-        dataLoader = load_data(self.matrix_path, self.save_path)
+        signature_data_dict = load_signature_data(self.save_path)
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        train(dataLoader["train"], self, optimizer, epochs=self.epoch, Device=torch.device(self.device))
-        print("save %s's model" % self.matrix_path)
-
-        if not os.path.exists("./mscred_data/checkpoints"):
-            os.makedirs("./mscred_data/checkpoints")
-
-        torch.save(
-            self.state_dict(),
-            "./mscred_data/checkpoints/model-" + self.matrix_path + ".pth",
+        train(
+            signature_data_dict["train"],
+            self,
+            optimizer,
+            epochs=self.epoch,
+            device=self.device,
         )
+
+        end = time.time()
+        self.time_tracker["train"] = end - start
 
     def predict_prob(self, x_test, x_test_labels):
-        dataLoader = load_data(self.matrix_path, self.save_path)
-        self.load_state_dict(
-            torch.load("./mscred_data/checkpoints/model-" + self.matrix_path + ".pth")
-        )
-        self.to(torch.device(self.device))
+        signature_data_dict = load_signature_data(self.save_path)
+        start = time.time()
         test(
-            dataLoader["test"],
+            signature_data_dict["test"],
             self,
-            self.matrix_path,
             x_test,
             save_dir=self.save_path,
             gap_time=self.gap_time,
+            device=self.device,
         )
-        print("test of %s finished" % self.matrix_path)
+        end = time.time()
+        self.time_tracker["test"] = end - start
 
-        anomaly_score = evaluate(
-            self.matrix_path, self.save_path, self.thred_b, self.gap_time
-        )
+        anomaly_score = evaluate(self.save_path, self.thred_b, self.gap_time)
         anomaly_label = x_test_labels[
             self.gap_time
             - 1
-            - len(x_test) % self.gap_time: self.gap_time
+            - len(x_test) % self.gap_time : self.gap_time
             - 1
             - len(x_test) % self.gap_time
             + len(anomaly_score)
         ]
 
-        return anomaly_score, anomaly_label
+        return np.array(anomaly_score), np.array(anomaly_label)

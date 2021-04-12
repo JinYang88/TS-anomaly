@@ -16,8 +16,7 @@ gap_time = 10
 win_size = [10, 30, 60]  # sliding window size
 in_channels_encoder = 3
 in_channels_decoder = 256
-save_path = "./mscred_data/"
-matrix_path = "machine1-1"  # defined by user
+save_path = "./mscred_data/machine1-1"
 learning_rate = 0.0002
 epoch = 1
 thred_b = 0.005
@@ -31,22 +30,15 @@ if __name__ == "__main__":
     )
 
     # load dataset
-    data_dict = load_dataset(
-        dataset,
-        subdataset,
-        "all",
-    )
+    data_dict = load_dataset(dataset, subdataset, "all", nrows=500)
 
     x_train = data_dict["train"]
     x_test = data_dict["test"]
     x_test_labels = data_dict["test_labels"]
 
-    # data preprocessing for MSCRED
-
     mscred = MSCRED(
         in_channels_encoder,
         in_channels_decoder,
-        matrix_path,
         save_path,
         device,
         step_max,
@@ -60,6 +52,8 @@ if __name__ == "__main__":
     mscred.fit(data_dict)
 
     anomaly_score, anomaly_label = mscred.predict_prob(x_test, x_test_labels)
+    print(anomaly_score.shape)
+    print(anomaly_label.shape)
 
     # Make evaluation
     eva = evaluator(
