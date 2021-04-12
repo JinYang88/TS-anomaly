@@ -100,8 +100,6 @@ class OmniDetector:
                     saver.save()
                 print("=" * 30 + "result" + "=" * 30)
 
-            # score, z, pred_speed = self.predictor.get_score(iterator)
-
     def predict_prob(self, iterator):
         with tf.variable_scope("model") as model_vs:
             with tf.Session().as_default():
