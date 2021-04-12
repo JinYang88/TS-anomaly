@@ -246,7 +246,7 @@ if __name__ == "__main__":
             results.save_config(config)  # save experiment settings for review
             results.make_dirs(config.save_dir, exist_ok=True)
 
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, nrows=None)
 
             # preprocessing
             pp = preprocessor()
@@ -278,9 +278,9 @@ if __name__ == "__main__":
             # test_labels = DataGenerator(window_dict["test_labels"], shuffle=False)
 
             od = OmniDetector(config)
-            od.fit(x_train)
+            anomaly_score = od.fit(x_train, x_test)
 
-            anomaly_score = od.predict_prob(x_test)
+            # anomaly_score = od.predict_prob(x_test)
             anomaly_label = data_dict["test_labels"][
                 -len(anomaly_score) :
             ]  # last point of each window

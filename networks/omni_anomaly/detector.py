@@ -80,7 +80,7 @@ class OmniDetector:
                 last_point_only=True,
             )
 
-    def fit(self, iterator):
+    def fit(self, iterator, test_iterator):
         with tf.variable_scope("model") as model_vs:
             with tf.Session().as_default():
                 if self.config.restore_dir is not None:
@@ -100,16 +100,20 @@ class OmniDetector:
                     saver.save()
                 print("=" * 30 + "result" + "=" * 30)
 
-    def predict_prob(self, iterator):
-        with tf.variable_scope("model") as model_vs:
-            with tf.Session().as_default():
-                if self.config.save_dir is not None:
-                    # Restore variables from `save_dir`.
-                    saver = VariableSaver(
-                        get_variables_as_dict(model_vs), self.config.save_dir
-                    )
-                    saver.restore()
-
-                score, z, pred_time = self.predictor.get_score(iterator)
+                score, z, pred_time = self.predictor.get_score(test_iterator)
                 self.time_tracker["test"] = pred_time
-        return score
+                return score
+
+    # def predict_prob(self, iterator):
+    #     with tf.variable_scope("model") as model_vs:
+    #         with tf.Session().as_default():
+    #             if self.config.save_dir is not None:
+    #                 # Restore variables from `save_dir`.
+    #                 saver = VariableSaver(
+    #                     get_variables_as_dict(model_vs), self.config.save_dir
+    #                 )
+    #                 saver.restore()
+
+    #             score, z, pred_time = self.predictor.get_score(iterator)
+    #             self.time_tracker["test"] = pred_time
+    #     return score
