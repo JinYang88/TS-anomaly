@@ -1,0 +1,5 @@
+{
+    "cmd": "python iforest_benchmark.py --dataset SMD --n_estimators 100",
+    "dataset": "SMD",
+    "n_estimators": 100
+}

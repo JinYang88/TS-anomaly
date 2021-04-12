@@ -1,0 +1,6 @@
+8a2c860e-lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1 adj f1: [0.9412(0.0113)]
+8a2c860e-lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1 adj f1: [0.9412(0.0113)]
+8a2c860e	lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1	adj f1: [0.9412(0.0113)]
+8a2c860e	lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1	adj f1: [0.9412(0.0113)]
+8a2c860e	lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1	train:4.065158128738403 test:6.155918836593628	adj f1: [0.9412(0.0113)]
+8a2c860e	lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1	train:4.4829 test:6.6655	adj f1: [0.9412(0.0113)]
