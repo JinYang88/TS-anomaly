@@ -9,7 +9,7 @@ from common.utils import pprint
 
 dataset = "SMD"
 subdataset = "machine-1-1"
-device = "cpu"  # cuda:0, a string
+device = "0"  # cuda:0, a string
 step_max = 5
 gap_time = 10
 win_size = [10, 30, 60]  # sliding window size

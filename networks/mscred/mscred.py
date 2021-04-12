@@ -206,13 +206,16 @@ class MSCRED(nn.Module):
         self.time_tracker["test"] = end - start
 
         anomaly_score = evaluate(self.save_path, self.thred_b, self.gap_time)
-        anomaly_label = x_test_labels[
-            self.gap_time
-            - 1
-            - len(x_test) % self.gap_time : self.gap_time
-            - 1
-            - len(x_test) % self.gap_time
-            + len(anomaly_score)
-        ]
+        if len(x_test) % self.gap_time == 0:
+            anomaly_label = x_test_labels[0: len(anomaly_score)]
+        else:
+            anomaly_label = x_test_labels[
+                self.gap_time
+                - 1
+                - len(x_test) % self.gap_time: self.gap_time
+                - 1
+                - len(x_test) % self.gap_time
+                + len(anomaly_score)
+            ]
 
         return np.array(anomaly_score), np.array(anomaly_label)
