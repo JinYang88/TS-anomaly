@@ -152,7 +152,9 @@ class DAGMM:
             # Create tensorflow session and initilize
             init = tf.global_variables_initializer()
 
-            self.sess = tf.Session(graph=graph)
+            config = tf.ConfigProto(allow_soft_placement=True)
+            config.gpu_options.allow_growth = True
+            self.sess = tf.Session(graph=graph, config=config)
             self.sess.run(init)
 
             # Training
@@ -257,7 +259,9 @@ class DAGMM:
 
         with tf.Graph().as_default() as graph:
             self.graph = graph
-            self.sess = tf.Session(graph=graph)
+            config = tf.ConfigProto(allow_soft_placement=True)
+            config.gpu_options.allow_growth = True
+            self.sess = tf.Session(graph=graph, config=config)
             self.saver = tf.train.import_meta_graph(meta_path)
             self.saver.restore(self.sess, model_path)
 
