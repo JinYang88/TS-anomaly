@@ -4,25 +4,19 @@ sys.path.append("../")
 
 import os
 import hashlib
-import argparse
 import traceback
 from common import data_preprocess
-from common.config import (
-    initialize_config,
-    parse_arguments,
-    set_logger,
-    subdatasets,
-    get_trial_id,
-)
 from common.dataloader import load_dataset
 from common.batching import WindowIterator
 from common.utils import print_to_json, update_from_nni_params, seed_everything, pprint
 from networks.lstm import LSTM
+
+import argparse
+from common.config import subdatasets
 from common.evaluation import (
     store_benchmarking_results,
     evaluate_benchmarking_folder,
 )
-from collections import OrderedDict
 
 seed_everything(2020)
 
