@@ -15,7 +15,7 @@ gap_time = 10
 win_size = [10, 30, 60]  # sliding window size
 in_channels_encoder = 3
 in_channels_decoder = 256
-save_path = "./mscred_data/machine1-1"
+save_path = "../mscred_data/machine1-1"
 learning_rate = 0.0002
 epoch = 1
 thred_b = 0.005
@@ -46,12 +46,10 @@ if __name__ == "__main__":
     mscred.fit(data_dict)
 
     anomaly_score, anomaly_label = mscred.predict_prob(x_test, x_test_labels)
-    print(anomaly_score.shape)
-    print(anomaly_label.shape)
 
     # Make evaluation
     eva = evaluator(
-        ["auc", "f1", "pc", "rc"],
+        ["f1", "pc", "rc"],
         anomaly_score,
         anomaly_label,
         iterate_threshold=iterate_threshold,
