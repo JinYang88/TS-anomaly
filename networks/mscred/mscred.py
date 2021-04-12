@@ -1,5 +1,6 @@
 import time
 import torch
+import shutil
 import os
 import torch.nn as nn
 import numpy as np
@@ -144,6 +145,9 @@ class MSCRED(nn.Module):
         self.thred_b = thred_b
         self.time_tracker = {}
 
+        if os.path.exists(os.path.dirname(self.save_path)):
+            shutil.rmtree(os.path.dirname(self.save_path))
+
     def forward(self, x):
         conv1_out, conv2_out, conv3_out, conv4_out = self.cnn_encoder(x)
         conv1_lstm_out, conv2_lstm_out, conv3_lstm_out, conv4_lstm_out = self.conv_lstm(
@@ -206,16 +210,15 @@ class MSCRED(nn.Module):
         self.time_tracker["test"] = end - start
 
         anomaly_score = evaluate(self.save_path, self.thred_b, self.gap_time)
-        if len(x_test) % self.gap_time == 0:
-            anomaly_label = x_test_labels[0: len(anomaly_score)]
-        else:
-            anomaly_label = x_test_labels[
-                self.gap_time
-                - 1
-                - len(x_test) % self.gap_time: self.gap_time
-                - 1
-                - len(x_test) % self.gap_time
-                + len(anomaly_score)
-            ]
+
+        anomaly_label = x_test_labels[self.gap_time - 1:]
+
+        length = min(len(anomaly_score), len(anomaly_label))
+
+        anomaly_score = anomaly_score[0:length]
+
+        anomaly_label = anomaly_label[0:length]
+
+        shutil.rmtree(os.path.dirname(self.save_path))
 
         return np.array(anomaly_score), np.array(anomaly_label)
