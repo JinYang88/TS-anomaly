@@ -19,10 +19,11 @@ from tfsnippet.examples.utils import MLResults
 from common.dataloader import load_dataset, get_data_dim
 from common.config import subdatasets
 from common.data_preprocess import generate_windows, preprocessor
-from networks.omni_anomaly.detector import OmniDetector, DataGenerator
+
+# from networks.omni_anomaly.detector import OmniDetector, DataGenerator
 from common.evaluation import evaluator
 from tfsnippet.utils import Config
-from tensorflow.python.keras.utils import Sequence
+import tensorflow as tf
 from common.utils import pprint
 from common.evaluation import (
     store_benchmarking_results,
@@ -235,10 +236,10 @@ class ExpConfig(Config):
     test_score_filename = "test_score.pkl"
 
 
-from omni_anomaly.model import OmniAnomaly
-from omni_anomaly.prediction import Predictor
-from omni_anomaly.training import Trainer
-from omni_anomaly.utils import (
+from networks.omni_anomaly.model import OmniAnomaly
+from networks.omni_anomaly.prediction import Predictor
+from networks.omni_anomaly.training import Trainer
+from networks.omni_anomaly.utils import (
     save_z,
 )
 
@@ -252,26 +253,28 @@ if __name__ == "__main__":
         results.save_config(config)  # save experiment settings for review
         results.make_dirs(config.save_dir, exist_ok=True)
 
-        data_dict = load_dataset(dataset, subdataset, nrows=None)
+        data_dict = load_dataset(dataset, subdataset)
 
         # preprocessing
-        # pp = preprocessor()
-        # data_dict = pp.normalize(data_dict)
+        pp = preprocessor()
+        data_dict = pp.normalize(data_dict)
 
-        x_train = list(
-            BatchSlidingWindow(
-                array_size=len(data_dict["train"]),
-                window_size=config.window_length,
-                batch_size=config.batch_size,
-            ).get_iterator([data_dict["train"]])
-        )
-        x_test = list(
-            BatchSlidingWindow(
-                array_size=len(data_dict["test"]),
-                window_size=config.window_length,
-                batch_size=config.batch_size,
-            ).get_iterator([data_dict["test"]])
-        )
+        # x_train = list(
+        #     BatchSlidingWindow(
+        #         array_size=len(data_dict["train"]),
+        #         window_size=config.window_length,
+        #         batch_size=config.batch_size,
+        #     ).get_iterator([data_dict["train"]])
+        # )
+        # x_test = list(
+        #     BatchSlidingWindow(
+        #         array_size=len(data_dict["test"]),
+        #         window_size=config.window_length,
+        #         batch_size=config.batch_size,
+        #     ).get_iterator([data_dict["test"]])
+        # )
+        x_train = data_dict["train"]
+        x_test = data_dict["test"]
         test_labels = data_dict["test_labels"]
 
         tf.reset_default_graph()
@@ -349,8 +352,20 @@ if __name__ == "__main__":
                         ) as file:
                             pickle.dump(test_score, file)
 
-                    if y_test is not None and len(y_test) >= len(test_score):
-                        if config.get_score_on_dim:
-                            # get the joint score
-                            test_score = np.sum(test_score, axis=-1)
-                            train_score = np.sum(train_score, axis=-1)
+                    if config.get_score_on_dim:
+                        test_score = np.sum(test_score, axis=-1)
+
+                    eval_folder = store_benchmarking_results(
+                        hash_id,
+                        benchmarking_dir,
+                        dataset,
+                        subdataset,
+                        args,
+                        model_name,
+                        test_score,
+                        test_labels[-len(test_score) :],
+                        {"train": 0, "test": 0},
+                    )
+    average_monitor_metric = evaluate_benchmarking_folder(
+        eval_folder, benchmarking_dir, hash_id, dataset, model_name
+    )

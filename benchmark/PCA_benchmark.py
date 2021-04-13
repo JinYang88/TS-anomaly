@@ -36,11 +36,11 @@ hash_id = hashlib.md5(
 ).hexdigest()[0:8]
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:2]:
+    for subdataset in subdatasets[dataset]:
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset, nrows=500)
+            data_dict = load_dataset(dataset, subdataset)
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]

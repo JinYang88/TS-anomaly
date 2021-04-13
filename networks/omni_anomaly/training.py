@@ -13,7 +13,7 @@ from tfsnippet.utils import (
     get_variables_as_dict,
 )
 
-from omni_anomaly.utils import BatchSlidingWindow
+from networks.omni_anomaly.utils import BatchSlidingWindow
 
 __all__ = ["Trainer"]
 
