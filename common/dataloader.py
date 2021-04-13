@@ -12,6 +12,8 @@ data_path_dict = {
     "SMD": "./datasets/anomaly/SMD/processed",
     "SMAP": "./datasets/anomaly/SMAP-MSL/processed_SMAP",
     "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
+    "WADI": "./datasets/anomaly/WADI/processed",
+    "SWAT": "./datasets/anomaly/SWAT/processed",
 }
 
 
@@ -20,8 +22,12 @@ def get_data_dim(dataset):
         return 25
     elif dataset == "MSL":
         return 55
-    elif dataset == "SMD" or str(dataset).startswith("machine"):
+    elif dataset == "SMD":
         return 38
+    elif dataset == "WADI":
+        return 93
+    elif dataset == "SWAT":
+        return 40
     else:
         raise ValueError("unknown dataset " + str(dataset))
 
@@ -54,7 +60,7 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
             train_data = train_data[:, use_dim].reshape(-1, 1)
         if len(train_data) > 0:
             train_data_list.append(train_data)
-    data_dict["train"] = np.concatenate(train_data_list, axis=0)[: nrows]
+    data_dict["train"] = np.concatenate(train_data_list, axis=0)[:nrows]
 
     test_data_list = []
     for idx, f_name in enumerate(test_files):
@@ -66,7 +72,7 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
             test_data = test_data[:, use_dim].reshape(-1, 1)
         if len(test_data) > 0:
             test_data_list.append(test_data)
-    data_dict["test"] = np.concatenate(test_data_list, axis=0)[: nrows]
+    data_dict["test"] = np.concatenate(test_data_list, axis=0)[:nrows]
 
     label_data_list = []
     for idx, f_name in enumerate(label_files):
@@ -76,6 +82,10 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
         f.close()
         if len(label_data) > 0:
             label_data_list.append(label_data)
-    data_dict["test_labels"] = np.concatenate(label_data_list, axis=0)[: nrows]
+    data_dict["test_labels"] = np.concatenate(label_data_list, axis=0)[:nrows]
 
+    for k, v in data_dict.items():
+        if k == "dim":
+            continue
+        print("Shape of {} is {}.".format(k, v.shape))
     return data_dict

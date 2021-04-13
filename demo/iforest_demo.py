@@ -8,18 +8,13 @@ from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint
 
-dataset = "SMD"
-subdataset = "machine-1-1"
+dataset = "SWAT"
+subdataset = "swat"
 n_estimators = 100
 point_adjustment = True
 iterate_threshold = True
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s P%(process)d %(levelname)s %(message)s",
-    )
-
     # load dataset
     data_dict = load_dataset(
         dataset,
