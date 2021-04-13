@@ -51,7 +51,7 @@ estimation_hiddens = args["estimation_hiddens"]
 minibatch = 1024
 normalize = True
 random_seed = 123
-
+# python dagmm_benchmark.py --dataset SMD --lr 0.003 --dropout 0.25 --num_epochs 100 -ch 32 16 2 -eh 80 40
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
         try:

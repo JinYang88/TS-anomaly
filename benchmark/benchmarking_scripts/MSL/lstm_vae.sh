@@ -1,3 +1,5 @@
+# sh benchmarking_scripts/MSL/lstm_vae.sh > logs/lstm_vae.MSL.bench 2>&1 &
+
 export PATH=$PATH:/research/dept7/jyliu/cuda/cuda-9.0/bin
 export LD_LIBRARY_PATH=/research/dept7/jyliu/cuda/cuda-9.0/lib64
 
