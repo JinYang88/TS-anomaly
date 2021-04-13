@@ -3,3 +3,5 @@ python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in
 python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 64 --hidden_size 32 --num_epochs 1 --gpu 1
 
 python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 128 --hidden_size 64 --num_epochs 1 --gpu 1
+
+python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
