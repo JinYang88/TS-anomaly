@@ -287,6 +287,7 @@ def evaluate_benchmarking_folder(
     total_adj_f1 = []
     total_train_time = []
     total_test_time = []
+    folder_count = 0
     for folder in glob.glob(os.path.join(folder, "*")):
         folder_name = os.path.basename(folder)
         print("Evaluating {}".format(folder_name))
@@ -334,6 +335,7 @@ def evaluate_benchmarking_folder(
             "test": time["test"],
         }
         json_pretty_dump(metric, os.path.join(folder, "metrics.json"))
+        folder_count += 1
 
     total_adj_f1 = np.array(total_adj_f1)
     adj_f1_mean = total_adj_f1.mean()
@@ -346,7 +348,7 @@ def evaluate_benchmarking_folder(
         os.path.join(benchmarking_dir, f"{dataset}_{model_name}.txt"), "a+"
     ) as fw:
         params = " ".join(sys.argv)
-        info = f"{hash_id}\t{params}\ttrain:{train_time_sum:.4f} test:{test_time_sum:.4f}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
+        info = f"{hash_id}\t{folder_count}\t{params}\ttrain:{train_time_sum:.4f} test:{test_time_sum:.4f}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
         fw.write(info)
     print(info)
 
