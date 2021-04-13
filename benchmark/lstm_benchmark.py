@@ -53,7 +53,6 @@ hidden_size = args["hidden_size"]
 num_layers = args["num_layers"]
 
 
-save_path = "./savd_dir"
 normalize = "minmax"
 nb_epoch = 1000
 patience = 5
@@ -65,6 +64,8 @@ prediction_dims = []
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
         try:
+            save_path = os.path.join("./savd_dir_lstm", "hash_id", "subdataset")
+
             print(f"Running on {subdataset} of {dataset}")
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
