@@ -16,7 +16,7 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-# python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 0
+# python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -49,12 +49,12 @@ gap_time = 10
 thred_b = 0.005
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:2]:
+    for subdataset in subdatasets[dataset]:
         try:
-            save_path = os.path.join("./mscred_data/", subdataset)
+            save_path = os.path.join("./mscred_data/", hash_id, subdataset)
 
             # load dataset
-            data_dict = load_dataset(dataset, subdataset, "all", nrows=100)
+            data_dict = load_dataset(dataset, subdataset, "all")
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]
