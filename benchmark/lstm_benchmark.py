@@ -21,6 +21,8 @@ from common.evaluation import (
 seed_everything(2020)
 
 
+# python lstm_benchmark.py --dataset MSL --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 128 --gpu 0
+
 # python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 128 --gpu 0
 
 # python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu 0
@@ -64,7 +66,7 @@ prediction_dims = []
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
         try:
-            save_path = os.path.join("./savd_dir_lstm", "hash_id", "subdataset")
+            save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
 
             print(f"Running on {subdataset} of {dataset}")
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
