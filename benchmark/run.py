@@ -5,7 +5,7 @@ import subprocess
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--model", required=True)
 parser.add_argument("-d", "--dataset", required=True)
-parser.add_argument("-n", "--num_workers", default=2)
+parser.add_argument("-n", "--num_workers", type=int, default=2)
 args = vars(parser.parse_args())
 
 
@@ -35,5 +35,5 @@ if __name__ == "__main__":
     for idx, cmd_list in enumerate(np.array_split(running_cmds, num_workers)):
         merged_cmd = "(" + " && ".join([f"{item}" for item in cmd_list]) + ")"
         merged_cmd += f" > logs/{model}.{dataset}.multi_{idx}.log 2>&1 &"
-        subprocess.check_output(merged_cmd, shell=True)
+        subprocess.Popen(merged_cmd, shell=True)
         print(merged_cmd)
