@@ -249,8 +249,8 @@ if __name__ == "__main__":
             data_dict = load_dataset(dataset, subdataset, nrows=None)
 
             # preprocessing
-            pp = preprocessor()
-            data_dict = pp.normalize(data_dict)
+            # pp = preprocessor()
+            # data_dict = pp.normalize(data_dict)
 
             x_train = list(
                 BatchSlidingWindow(
