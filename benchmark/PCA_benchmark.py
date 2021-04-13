@@ -20,14 +20,16 @@ from common.evaluation import (
 )
 
 # write example command here
-# python PCA_benchmark.py --dataset SMD
+# python PCA_benchmark.py --dataset SMD --n_components 10
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="dataset")
+parser.add_argument("--n_components", type=int, help="n_components")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
+n_components = args["n_components"]
 
 model_name = "PCA"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
@@ -46,7 +48,7 @@ if __name__ == "__main__":
             x_test = data_dict["test"]
             x_test_labels = data_dict["test_labels"]
 
-            od = PCA()
+            od = PCA(args["n_components"])
 
             train_start = time.time()
             od.fit(x_train)
