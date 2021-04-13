@@ -32,11 +32,8 @@ if __name__ == "__main__":
 
     pre_cmds, running_cmds = read_cmds(model, dataset)
 
-    # print(pre_cmds)
-    # print(running_cmds)
-
     for idx, cmd_list in enumerate(np.array_split(running_cmds, num_workers)):
         merged_cmd = "(" + " && ".join([f"{item}" for item in cmd_list]) + ")"
         merged_cmd += f" > logs/{model}.{dataset}.multi_{idx}.log 2>&1 &"
+        subprocess.check_output(merged_cmd, shell=True)
         print(merged_cmd)
-        # subprocess.check_output()
