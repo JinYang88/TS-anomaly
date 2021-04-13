@@ -2,8 +2,7 @@
 import os
 import sys
 
-os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
-sys.path.append("./")
+sys.path.append("../")
 
 import logging
 import pickle
@@ -156,9 +155,9 @@ if __name__ == "__main__":
     test_labels = DataGenerator(window_dict["test_labels"])
 
     od = OmniDetector(config)
-    od.fit(x_train)
+    anomaly_score = od.fit(x_train, x_test)
 
-    anomaly_score = od.predict_prob(x_test)
+    # anomaly_score = od.predict_prob(x_test)
     anomaly_label = window_dict["test_labels"][:, -1]  # last point of each window
     print(anomaly_score.shape, anomaly_label.shape)
     # Make evaluation

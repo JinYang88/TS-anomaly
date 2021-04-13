@@ -55,6 +55,7 @@ class OmniDetector:
         tf.reset_default_graph()
         self.config = config
         self.time_tracker = {}
+        tf.reset_default_graph()
         with tf.variable_scope("model") as model_vs:
             model = OmniAnomaly(config=self.config, name="model")
 
