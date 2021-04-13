@@ -235,72 +235,122 @@ class ExpConfig(Config):
     test_score_filename = "test_score.pkl"
 
 
+from omni_anomaly.model import OmniAnomaly
+from omni_anomaly.prediction import Predictor
+from omni_anomaly.training import Trainer
+from omni_anomaly.utils import (
+    save_z,
+)
+
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset][0:1]:
-        try:
-            print(f"Running on {subdataset} of {dataset}")
-            config = ExpConfig()
-            config.x_dim = get_data_dim(dataset)
+        print(f"Running on {subdataset} of {dataset}")
+        config = ExpConfig()
+        config.x_dim = get_data_dim(dataset)
 
-            results = MLResults(config.result_dir)
-            results.save_config(config)  # save experiment settings for review
-            results.make_dirs(config.save_dir, exist_ok=True)
+        results = MLResults(config.result_dir)
+        results.save_config(config)  # save experiment settings for review
+        results.make_dirs(config.save_dir, exist_ok=True)
 
-            data_dict = load_dataset(dataset, subdataset, nrows=None)
+        data_dict = load_dataset(dataset, subdataset, nrows=None)
 
-            # preprocessing
-            # pp = preprocessor()
-            # data_dict = pp.normalize(data_dict)
+        # preprocessing
+        # pp = preprocessor()
+        # data_dict = pp.normalize(data_dict)
 
-            x_train = list(
-                BatchSlidingWindow(
-                    array_size=len(data_dict["train"]),
-                    window_size=config.window_length,
-                    batch_size=config.batch_size,
-                ).get_iterator([data_dict["train"]])
+        x_train = list(
+            BatchSlidingWindow(
+                array_size=len(data_dict["train"]),
+                window_size=config.window_length,
+                batch_size=config.batch_size,
+            ).get_iterator([data_dict["train"]])
+        )
+        x_test = list(
+            BatchSlidingWindow(
+                array_size=len(data_dict["test"]),
+                window_size=config.window_length,
+                batch_size=config.batch_size,
+            ).get_iterator([data_dict["test"]])
+        )
+        test_labels = data_dict["test_labels"]
+
+        tf.reset_default_graph()
+        # construct the model under `variable_scope` named 'model'
+        with tf.variable_scope("model") as model_vs:
+            model = OmniAnomaly(config=config, name="model")
+
+            # construct the trainer
+            trainer = Trainer(
+                model=model,
+                model_vs=model_vs,
+                max_epoch=config.max_epoch,
+                batch_size=config.batch_size,
+                valid_batch_size=config.test_batch_size,
+                initial_lr=config.initial_lr,
+                lr_anneal_epochs=config.lr_anneal_epoch_freq,
+                lr_anneal_factor=config.lr_anneal_factor,
+                grad_clip_norm=config.gradient_clip_norm,
+                valid_step_freq=config.valid_step_freq,
             )
-            x_test = list(
-                BatchSlidingWindow(
-                    array_size=len(data_dict["test"]),
-                    window_size=config.window_length,
-                    batch_size=config.batch_size,
-                ).get_iterator([data_dict["test"]])
+
+            # construct the predictor
+            predictor = Predictor(
+                model,
+                batch_size=config.batch_size,
+                n_z=config.test_n_z,
+                last_point_only=True,
             )
-            test_labels = data_dict["test_labels"]
-            # # generate sliding windows
-            # window_dict = generate_windows(
-            #     data_dict, window_size=config.window_length, stride=config.stride
-            # )
+            tf_config = tf.ConfigProto(allow_soft_placement=True)
+            tf_config.gpu_options.allow_growth = True
 
-            # # batch data
-            # x_train = DataGenerator(window_dict["train_windows"], shuffle=True)
-            # x_test = DataGenerator(window_dict["test_windows"], shuffle=False)
-            # test_labels = DataGenerator(window_dict["test_labels"], shuffle=False)
+            with tf.Session(config=tf_config).as_default():
 
-            od = OmniDetector(config)
-            anomaly_score = od.fit(x_train, x_test)
+                if config.restore_dir is not None:
+                    # Restore variables from `save_dir`.
+                    saver = VariableSaver(
+                        get_variables_as_dict(model_vs), config.restore_dir
+                    )
+                    saver.restore()
 
-            # anomaly_score = od.predict_prob(x_test)
-            anomaly_label = data_dict["test_labels"][
-                -len(anomaly_score) :
-            ]  # last point of each window
-            print(anomaly_score.shape, anomaly_label.shape)
+                if config.max_epoch > 0:
+                    # train the model
+                    train_start = time.time()
+                    best_valid_metrics = trainer.fit(x_train)
+                    train_time = time.time() - train_start
+                    # best_valid_metrics.update({"train_time": train_time})
+                else:
+                    best_valid_metrics = {}
 
-            eval_folder = store_benchmarking_results(
-                hash_id,
-                benchmarking_dir,
-                dataset,
-                subdataset,
-                args,
-                model_name,
-                anomaly_score,
-                anomaly_label,
-                od.time_tracker,
-            )
-        except Exception as e:
-            print(f"Running on {subdataset} failed.")
-            print(traceback.format_exc())
+                # get score of train set for POT algorithm
+                train_score, train_z, train_pred_speed = predictor.get_score(x_train)
+                if config.train_score_filename is not None:
+                    with open(
+                        os.path.join(config.result_dir, config.train_score_filename),
+                        "wb",
+                    ) as file:
+                        pickle.dump(train_score, file)
+                if config.save_z:
+                    save_z(train_z, "train_z")
 
-    average_monitor_metric = evaluate_benchmarking_folder(
-        eval_folder, benchmarking_dir, hash_id, dataset, model_name
-    )
+                if x_test is not None:
+                    # get score of test set
+                    test_start = time.time()
+                    test_score, test_z, pred_speed = predictor.get_score(x_test)
+                    test_time = time.time() - test_start
+                    if config.save_z:
+                        save_z(test_z, "test_z")
+                    best_valid_metrics.update(
+                        {"pred_time": pred_speed, "pred_total_time": test_time}
+                    )
+                    if config.test_score_filename is not None:
+                        with open(
+                            os.path.join(config.result_dir, config.test_score_filename),
+                            "wb",
+                        ) as file:
+                            pickle.dump(test_score, file)
+
+                    if y_test is not None and len(y_test) >= len(test_score):
+                        if config.get_score_on_dim:
+                            # get the joint score
+                            test_score = np.sum(test_score, axis=-1)
+                            train_score = np.sum(train_score, axis=-1)

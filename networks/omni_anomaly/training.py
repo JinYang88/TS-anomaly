@@ -13,9 +13,7 @@ from tfsnippet.utils import (
     get_variables_as_dict,
 )
 
-from .utils import BatchSlidingWindow
-
-from IPython import embed
+from omni_anomaly.utils import BatchSlidingWindow
 
 __all__ = ["Trainer"]
 
@@ -214,18 +212,41 @@ class Trainer(VarScopeObject):
         """
         return self._model
 
-    def fit(self, train_iterator, summary_dir=None):
+    def fit(self, values, valid_portion=0.01, summary_dir=None):
         """
         Train the :class:`OmniAnomaly` model with given data.
 
         Args:
             values (np.ndarray): 1-D `float32` array, the standardized
                 KPI observations.
+            valid_portion (float): Ratio of validation data out of all the
+                specified training data. (default 0.3)
             summary_dir (str): Optional summary directory for
                 :class:`tf.summary.FileWriter`. (default :obj:`None`,
                 summary is disabled)
         """
         sess = get_default_session_or_error()
+
+        # split the training & validation set
+        values = np.asarray(values, dtype=np.float32)
+        if len(values.shape) != 2:
+            raise ValueError("`values` must be a 2-D array")
+
+        n = int(len(values) * valid_portion)
+        train_values, v_x = values[:-n], values[-n:]
+
+        train_sliding_window = BatchSlidingWindow(
+            array_size=len(train_values),
+            window_size=self.model.window_length,
+            batch_size=self._batch_size,
+            shuffle=True,
+            ignore_incomplete_batch=True,
+        )
+        valid_sliding_window = BatchSlidingWindow(
+            array_size=len(v_x),
+            window_size=self.model.window_length,
+            batch_size=self._valid_batch_size,
+        )
 
         # initialize the variables of the trainer, and the model
         sess.run(self._trainer_initializer)
@@ -235,21 +256,23 @@ class Trainer(VarScopeObject):
         lr = self._initial_lr
         with TrainLoop(
             param_vars=self._train_params,
+            early_stopping=True,
             summary_dir=summary_dir,
             max_epoch=self._max_epoch,
             max_step=self._max_step,
         ) as loop:  # type: TrainLoop
-            # loop.print_training_summary()
+            loop.print_training_summary()
 
             train_batch_time = []
             valid_batch_time = []
 
             time_train_start = time.time()
             for epoch in loop.iter_epochs():
+                print("train_values:", train_values.shape)
+                train_iterator = train_sliding_window.get_iterator([train_values])
                 start_time = time.time()
-                for step, idx in loop.iter_steps(range(len(train_iterator))):
+                for step, (batch_x,) in loop.iter_steps(train_iterator):
                     # run a training step
-                    batch_x = train_iterator[idx]
                     start_batch_time = time.time()
                     feed_dict = dict(six.iteritems(self._feed_dict))
                     feed_dict[self._learning_rate] = lr
@@ -259,6 +282,30 @@ class Trainer(VarScopeObject):
                     )
                     loop.collect_metrics({"loss": loss})
                     train_batch_time.append(time.time() - start_batch_time)
+
+                    # if step % self._valid_step_freq == 0:
+                    #     train_duration = time.time() - start_time
+                    #     loop.collect_metrics({"train_time": train_duration})
+                    #     # collect variable summaries
+                    #     if summary_dir is not None:
+                    #         loop.add_summary(sess.run(self._summary_op))
+
+                    #     # do validation in batches
+                    #     with loop.timeit("valid_time"), loop.metric_collector(
+                    #         "valid_loss"
+                    #     ) as mc:
+                    #         v_it = valid_sliding_window.get_iterator([v_x])
+                    #         for (b_v_x,) in v_it:
+                    #             start_batch_time = time.time()
+                    #             feed_dict = dict(six.iteritems(self._valid_feed_dict))
+                    #             feed_dict[self._input_x] = b_v_x
+                    #             loss = sess.run(self._loss, feed_dict=feed_dict)
+                    #             valid_batch_time.append(time.time() - start_batch_time)
+                    #             mc.collect(loss, weight=len(b_v_x))
+
+                    #     # print the logs of recent steps
+                    #     loop.print_logs()
+                    #     start_time = time.time()
 
                 # anneal the learning rate
                 if self._lr_anneal_epochs and epoch % self._lr_anneal_epochs == 0:
@@ -271,5 +318,6 @@ class Trainer(VarScopeObject):
             return {
                 # "best_valid_loss": float(loop.best_valid_metric),
                 "train_time": np.sum(train_batch_time),
+                "valid_time": 0,
                 "total_train_time": time_train_end - time_train_start,
             }
