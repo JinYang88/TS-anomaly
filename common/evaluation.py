@@ -348,7 +348,7 @@ def evaluate_benchmarking_folder(
         os.path.join(benchmarking_dir, f"{dataset}_{model_name}.txt"), "a+"
     ) as fw:
         params = " ".join(sys.argv)
-        info = f"{hash_id}\t{folder_count}\t{params}\ttrain:{train_time_sum:.4f} test:{test_time_sum:.4f}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
+        info = f"{hash_id}\tcount:{folder_count}\t{params}\ttrain:{train_time_sum:.4f} test:{test_time_sum:.4f}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
         fw.write(info)
     print(info)
 
