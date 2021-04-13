@@ -49,7 +49,6 @@ def train(DataLoader, model, Optimizer, epochs, device):
         for x in tqdm(DataLoader):
             x = x.to(device)
             x = x.squeeze()
-            # print(type(x))
             l = torch.mean((model(x) - x[-1].unsqueeze(0)) ** 2)
             train_l_sum += l
             Optimizer.zero_grad()
