@@ -1,9 +1,9 @@
+import os
 import sys
-import logging
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'.
+sys.path.append("../")import logging
+
 from pyod.models.auto_encoder import AutoEncoder
-
-sys.path.append("../")
-
 from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint

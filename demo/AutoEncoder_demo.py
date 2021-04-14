@@ -36,8 +36,13 @@ if __name__ == "__main__":
     x_test_labels = data_dict["test_labels"]
 
     # data preprocessing for MSCRED
-    od = AutoEncoder(hidden_neurons=hidden_neurons, batch_size=batch_size, epochs=epochs, l2_regularizer=l2_regularizer,
-                     verbose=0)
+    od = AutoEncoder(
+        hidden_neurons=hidden_neurons,
+        batch_size=batch_size,
+        epochs=epochs,
+        l2_regularizer=l2_regularizer,
+        verbose=1,
+    )
     od.fit(x_train)
 
     # get outlier scores
