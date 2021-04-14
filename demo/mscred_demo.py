@@ -9,8 +9,8 @@ from common.utils import pprint
 
 # python mscred_benchmark.py --dataset SMAP --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 32 --hidden_size 16 --num_epochs 1 --gpu 2
 
-dataset = "SMD"
-subdataset = "machine-1-1"
+dataset = "SMAP"
+subdataset = "F-3"
 device = "0"  # cuda:0, a string
 step_max = 5
 gap_time = 10
@@ -26,7 +26,7 @@ iterate_threshold = True
 
 if __name__ == "__main__":
     # load dataset
-    data_dict = load_dataset(dataset, subdataset, "all", nrows=500)
+    data_dict = load_dataset(dataset, subdataset, "all")
 
     x_train = data_dict["train"]
     x_test = data_dict["test"]
