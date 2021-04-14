@@ -126,22 +126,25 @@ def iter_thresholds(score, label, metric="f1", adjustment=False):
     best_raw = None
     adjusted_pred = None
     for anomaly_ratio in np.linspace(1e-3, 1, 500):
-        threshold = np.percentile(score, 100 * (1 - anomaly_ratio))
-        pred = (score >= threshold).astype(int)
+        for trial in ["higher", "less"]:
+            threshold = np.percentile(score, 100 * (1 - anomaly_ratio))
+            if trial == "higher":
+                pred = (score >= threshold).astype(int)
+            elif trial == "less":
+                pred = (score <= threshold).astype(int)
 
-        if adjustment:
-            pred, adjusted_pred = point_adjustment(pred, label)
-        else:
-            adjusted_pred = pred
+            if adjustment:
+                pred, adjusted_pred = point_adjustment(pred, label)
+            else:
+                adjusted_pred = pred
 
-        current_value = metric_func[metric](adjusted_pred, label)
-        if current_value > best_metric:
-            best_metric = current_value
-            best_adjust = adjusted_pred
-            best_raw = pred
-            best_theta = threshold
+            current_value = metric_func[metric](adjusted_pred, label)
+            if current_value > best_metric:
+                best_metric = current_value
+                best_adjust = adjusted_pred
+                best_raw = pred
+                best_theta = threshold
     return best_metric, best_theta, best_adjust, best_raw
-
 
 def point_adjustment(pred, label):
     """

@@ -159,6 +159,7 @@ if __name__ == "__main__":
 
     # anomaly_score = od.predict_prob(x_test)
     anomaly_label = window_dict["test_labels"][:, -1]  # last point of each window
+
     print(anomaly_score.shape, anomaly_label.shape)
     # Make evaluation
     eva = evaluator(

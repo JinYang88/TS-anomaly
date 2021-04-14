@@ -12,14 +12,9 @@ from tfsnippet.distributions import Normal
 from tfsnippet.utils import VarScopeObject, reopen_variable_scope
 from tfsnippet.variational import VariationalInference
 
-from networks.omni_anomaly.recurrent_distribution import RecurrentDistribution
-from networks.omni_anomaly.vae import Lambda, VAE
-from networks.omni_anomaly.wrapper import (
-    TfpDistribution,
-    softplus_std,
-    rnn,
-    wrap_params_net,
-)
+from .recurrent_distribution import RecurrentDistribution
+from .vae import Lambda, VAE
+from .wrapper import TfpDistribution, softplus_std, rnn, wrap_params_net
 
 
 class OmniAnomaly(VarScopeObject):

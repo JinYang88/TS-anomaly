@@ -19,142 +19,17 @@ from tfsnippet.examples.utils import MLResults
 from common.dataloader import load_dataset, get_data_dim
 from common.config import subdatasets
 from common.data_preprocess import generate_windows, preprocessor
-
-# from networks.omni_anomaly.detector import OmniDetector, DataGenerator
+from networks.omni_anomaly.detector import OmniDetector, DataGenerator
 from common.evaluation import evaluator
 from tfsnippet.utils import Config
-import tensorflow as tf
+from tensorflow.python.keras.utils import Sequence
 from common.utils import pprint
 from common.evaluation import (
     store_benchmarking_results,
     evaluate_benchmarking_folder,
 )
 
-
-def minibatch_slices_iterator(length, batch_size, ignore_incomplete_batch=False):
-    """
-    Iterate through all the mini-batch slices.
-    Args:
-        length (int): Total length of data in an epoch.
-        batch_size (int): Size of each mini-batch.
-        ignore_incomplete_batch (bool): If :obj:`True`, discard the final
-            batch if it contains less than `batch_size` number of items.
-            (default :obj:`False`)
-    Yields
-        slice: Slices of each mini-batch.  The last mini-batch may contain
-               less indices than `batch_size`.
-    """
-    start = 0
-    stop1 = (length // batch_size) * batch_size
-    while start < stop1:
-        yield slice(start, start + batch_size, 1)
-        start += batch_size
-    if not ignore_incomplete_batch and start < length:
-        yield slice(start, length, 1)
-
-
-class BatchSlidingWindow(object):
-    """
-    Class for obtaining mini-batch iterators of sliding windows.
-    Each mini-batch will have `batch_size` windows.  If the final batch
-    contains less than `batch_size` windows, it will be discarded if
-    `ignore_incomplete_batch` is :obj:`True`.
-    Args:
-        array_size (int): Size of the arrays to be iterated.
-        window_size (int): The size of the windows.
-        batch_size (int): Size of each mini-batch.
-        excludes (np.ndarray): 1-D `bool` array, indicators of whether
-            or not to totally exclude a point.  If a point is excluded,
-            any window which contains that point is excluded.
-            (default :obj:`None`, no point is totally excluded)
-        shuffle (bool): If :obj:`True`, the windows will be iterated in
-            shuffled order. (default :obj:`False`)
-        ignore_incomplete_batch (bool): If :obj:`True`, discard the final
-            batch if it contains less than `batch_size` number of windows.
-            (default :obj:`False`)
-    """
-
-    def __init__(
-        self,
-        array_size,
-        window_size,
-        batch_size,
-        excludes=None,
-        shuffle=False,
-        ignore_incomplete_batch=False,
-    ):
-        # check the parameters
-        if window_size < 1:
-            raise ValueError("`window_size` must be at least 1")
-        if array_size < window_size:
-            raise ValueError(
-                "`array_size` must be at least as large as " "`window_size`"
-            )
-        if excludes is not None:
-            excludes = np.asarray(excludes, dtype=np.bool)
-            expected_shape = (array_size,)
-            if excludes.shape != expected_shape:
-                raise ValueError(
-                    "The shape of `excludes` is expected to be "
-                    "{}, but got {}".format(expected_shape, excludes.shape)
-                )
-
-        # compute which points are not excluded
-        if excludes is not None:
-            mask = np.logical_not(excludes)
-        else:
-            mask = np.ones([array_size], dtype=np.bool)
-        mask[: window_size - 1] = False
-        where_excludes = np.where(excludes)[0]
-        for k in range(1, window_size):
-            also_excludes = where_excludes + k
-            also_excludes = also_excludes[also_excludes < array_size]
-            mask[also_excludes] = False
-
-        # generate the indices of window endings
-        indices = np.arange(array_size)[mask]
-        self._indices = indices.reshape([-1, 1])
-
-        # the offset array to generate the windows
-        self._offsets = np.arange(-window_size + 1, 1)
-
-        # memorize arguments
-        self._array_size = array_size
-        self._window_size = window_size
-        self._batch_size = batch_size
-        self._shuffle = shuffle
-        self._ignore_incomplete_batch = ignore_incomplete_batch
-
-    def get_iterator(self, arrays):
-        """
-        Iterate through the sliding windows of each array in `arrays`.
-        This method is not re-entrant, i.e., calling :meth:`get_iterator`
-        would invalidate any previous obtained iterator.
-        Args:
-            arrays (Iterable[np.ndarray]): 1-D arrays to be iterated.
-        Yields:
-            tuple[np.ndarray]: The windows of arrays of each mini-batch.
-        """
-        # check the parameters
-        arrays = tuple(np.asarray(a) for a in arrays)
-        if not arrays:
-            raise ValueError("`arrays` must not be empty")
-
-        # shuffle if required
-        if self._shuffle:
-            np.random.shuffle(self._indices)
-
-        # iterate through the mini-batches
-        for s in minibatch_slices_iterator(
-            length=len(self._indices),
-            batch_size=self._batch_size,
-            ignore_incomplete_batch=self._ignore_incomplete_batch,
-        ):
-            idx = self._indices[s] + self._offsets
-            yield tuple(a[idx] if len(a.shape) == 1 else a[idx, :] for a in arrays)[0]
-
-
-#  python omnianomaly_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --rnn_num_hidden 500 --window_size 32 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 10
+#  python omnianomaly_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --rnn_num_hidden 500 --window_size 32 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -236,136 +111,57 @@ class ExpConfig(Config):
     test_score_filename = "test_score.pkl"
 
 
-from networks.omni_anomaly.model import OmniAnomaly
-from networks.omni_anomaly.prediction import Predictor
-from networks.omni_anomaly.training import Trainer
-from networks.omni_anomaly.utils import (
-    save_z,
-)
-
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:1]:
-        print(f"Running on {subdataset} of {dataset}")
-        config = ExpConfig()
-        config.x_dim = get_data_dim(dataset)
+    for subdataset in subdatasets[dataset][0:2]:
+        try:
+            print(f"Running on {subdataset} of {dataset}")
+            config = ExpConfig()
+            config.x_dim = get_data_dim(dataset)
 
-        results = MLResults(config.result_dir)
-        results.save_config(config)  # save experiment settings for review
-        results.make_dirs(config.save_dir, exist_ok=True)
+            results = MLResults(config.result_dir)
+            results.save_config(config)  # save experiment settings for review
+            results.make_dirs(config.save_dir, exist_ok=True)
 
-        data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset)
 
-        # preprocessing
-        pp = preprocessor()
-        data_dict = pp.normalize(data_dict)
+            # preprocessing
+            pp = preprocessor()
+            data_dict = pp.normalize(data_dict)
 
-        # x_train = list(
-        #     BatchSlidingWindow(
-        #         array_size=len(data_dict["train"]),
-        #         window_size=config.window_length,
-        #         batch_size=config.batch_size,
-        #     ).get_iterator([data_dict["train"]])
-        # )
-        # x_test = list(
-        #     BatchSlidingWindow(
-        #         array_size=len(data_dict["test"]),
-        #         window_size=config.window_length,
-        #         batch_size=config.batch_size,
-        #     ).get_iterator([data_dict["test"]])
-        # )
-        x_train = data_dict["train"]
-        x_test = data_dict["test"]
-        test_labels = data_dict["test_labels"]
-
-        tf.reset_default_graph()
-        # construct the model under `variable_scope` named 'model'
-        with tf.variable_scope("model") as model_vs:
-            model = OmniAnomaly(config=config, name="model")
-
-            # construct the trainer
-            trainer = Trainer(
-                model=model,
-                model_vs=model_vs,
-                max_epoch=config.max_epoch,
-                batch_size=config.batch_size,
-                valid_batch_size=config.test_batch_size,
-                initial_lr=config.initial_lr,
-                lr_anneal_epochs=config.lr_anneal_epoch_freq,
-                lr_anneal_factor=config.lr_anneal_factor,
-                grad_clip_norm=config.gradient_clip_norm,
-                valid_step_freq=config.valid_step_freq,
+            # generate sliding windows
+            window_dict = generate_windows(
+                data_dict, window_size=config.window_length, stride=config.stride
             )
 
-            # construct the predictor
-            predictor = Predictor(
-                model,
-                batch_size=config.batch_size,
-                n_z=config.test_n_z,
-                last_point_only=True,
+            # batch data
+            x_train = DataGenerator(window_dict["train_windows"])
+            x_test = DataGenerator(window_dict["test_windows"])
+            test_labels = DataGenerator(window_dict["test_labels"])
+
+            od = OmniDetector(config)
+            od.fit(x_train)
+
+            anomaly_score = od.predict_prob(x_test)
+            anomaly_label = window_dict["test_labels"][
+                :, -1
+            ]  # last point of each window
+            print(anomaly_score.shape, anomaly_label.shape)
+
+            eval_folder = store_benchmarking_results(
+                hash_id,
+                benchmarking_dir,
+                dataset,
+                subdataset,
+                args,
+                model_name,
+                anomaly_score,
+                anomaly_label,
+                od.time_tracker,
             )
-            tf_config = tf.ConfigProto(allow_soft_placement=True)
-            tf_config.gpu_options.allow_growth = True
+        except Exception as e:
+            print(f"Running on {subdataset} failed.")
+            print(traceback.format_exc())
 
-            with tf.Session(config=tf_config).as_default():
-
-                if config.restore_dir is not None:
-                    # Restore variables from `save_dir`.
-                    saver = VariableSaver(
-                        get_variables_as_dict(model_vs), config.restore_dir
-                    )
-                    saver.restore()
-
-                if config.max_epoch > 0:
-                    # train the model
-                    train_start = time.time()
-                    best_valid_metrics = trainer.fit(x_train)
-                    train_time = time.time() - train_start
-                    # best_valid_metrics.update({"train_time": train_time})
-                else:
-                    best_valid_metrics = {}
-
-                # get score of train set for POT algorithm
-                train_score, train_z, train_pred_speed = predictor.get_score(x_train)
-                if config.train_score_filename is not None:
-                    with open(
-                        os.path.join(config.result_dir, config.train_score_filename),
-                        "wb",
-                    ) as file:
-                        pickle.dump(train_score, file)
-                if config.save_z:
-                    save_z(train_z, "train_z")
-
-                if x_test is not None:
-                    # get score of test set
-                    test_start = time.time()
-                    test_score, test_z, pred_speed = predictor.get_score(x_test)
-                    test_time = time.time() - test_start
-                    if config.save_z:
-                        save_z(test_z, "test_z")
-                    best_valid_metrics.update(
-                        {"pred_time": pred_speed, "pred_total_time": test_time}
-                    )
-                    if config.test_score_filename is not None:
-                        with open(
-                            os.path.join(config.result_dir, config.test_score_filename),
-                            "wb",
-                        ) as file:
-                            pickle.dump(test_score, file)
-
-                    if config.get_score_on_dim:
-                        test_score = np.sum(test_score, axis=-1)
-
-                    eval_folder = store_benchmarking_results(
-                        hash_id,
-                        benchmarking_dir,
-                        dataset,
-                        subdataset,
-                        args,
-                        model_name,
-                        test_score,
-                        test_labels[-len(test_score) :],
-                        {"train": 0, "test": 0},
-                    )
     average_monitor_metric = evaluate_benchmarking_folder(
         eval_folder, benchmarking_dir, hash_id, dataset, model_name
     )

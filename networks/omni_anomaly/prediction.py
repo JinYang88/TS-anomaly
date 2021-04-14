@@ -10,7 +10,7 @@ from tfsnippet.utils import (
     reopen_variable_scope,
 )
 
-from networks.omni_anomaly.utils import BatchSlidingWindow
+from IPython import embed
 
 __all__ = ["Predictor"]
 
@@ -94,7 +94,7 @@ class Predictor(VarScopeObject):
         """
         return self._model
 
-    def get_score(self, values):
+    def get_score(self, test_iterator):
         """
         Get the `reconstruction probability` of specified KPI observations.
 
@@ -114,22 +114,10 @@ class Predictor(VarScopeObject):
             sess = get_default_session_or_error()
             collector = []
             collector_z = []
-
-            # validate the arguments
-            values = np.asarray(values, dtype=np.float32)
-            if len(values.shape) != 2:
-                raise ValueError("`values` must be a 2-D array")
-
-            # run the prediction in mini-batches
-            sliding_window = BatchSlidingWindow(
-                array_size=len(values),
-                window_size=self.model.window_length,
-                batch_size=self._batch_size,
-            )
-
             pred_time = []
 
-            for (b_x,) in sliding_window.get_iterator([values]):
+            for idx in range(len(test_iterator)):
+                b_x = test_iterator[idx]
                 start_iter_time = time.time()
                 feed_dict = dict(six.iteritems(self._feed_dict))
                 feed_dict[self._input_x] = b_x
