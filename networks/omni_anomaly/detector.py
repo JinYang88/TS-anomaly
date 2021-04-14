@@ -103,10 +103,6 @@ class OmniDetector:
                     saver.save()
                 print("=" * 30 + "result" + "=" * 30)
 
-                # score, z, pred_time = self.predictor.get_score(test_iterator)
-                # self.time_tracker["test"] = pred_time
-                # return score
-
     def predict_prob(self, iterator):
         tf_config = tf.ConfigProto(allow_soft_placement=True)
         tf_config.gpu_options.allow_growth = True
