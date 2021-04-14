@@ -28,6 +28,7 @@ seed_everything(2020)
 # python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu 0
 # python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1
 
+# python lstm_benchmark.py --dataset WADI --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
 

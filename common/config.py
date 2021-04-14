@@ -95,6 +95,8 @@ subdatasets = {
         "M-7",
         "F-8",
     ],
+    "WADI": ["wadi"],
+    "SWAT": ["swat"],
 }
 
 
