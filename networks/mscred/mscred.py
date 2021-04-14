@@ -31,8 +31,8 @@ class CnnEncoder(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels_encoder, 32, 3, (1, 1), 1), nn.SELU()
         )
-        self.conv2 = nn.Sequential(nn.Conv2d(32, 64, 3, (2, 2), 1), nn.SELU())
-        self.conv3 = nn.Sequential(nn.Conv2d(64, 128, 2, (2, 2), 1), nn.SELU())
+        self.conv2 = nn.Sequential(nn.Conv2d(32, 64, 2, (2, 2), 0), nn.SELU())
+        self.conv3 = nn.Sequential(nn.Conv2d(64, 128, 2, (2, 2), 0), nn.SELU())
         self.conv4 = nn.Sequential(nn.Conv2d(128, 256, 2, (2, 2), 0), nn.SELU())
 
     def forward(self, X):
@@ -99,19 +99,33 @@ class Conv_LSTM(nn.Module):
 class CnnDecoder(nn.Module):
     def __init__(self, in_channels):
         super(CnnDecoder, self).__init__()
-        self.deconv4 = nn.Sequential(
+        self.deconv4_a = nn.Sequential(
             nn.ConvTranspose2d(in_channels, 128, 2, 2, 0, 0), nn.SELU()
         )
-        self.deconv3 = nn.Sequential(nn.ConvTranspose2d(256, 64, 2, 2, 1, 1), nn.SELU())
-        self.deconv2 = nn.Sequential(nn.ConvTranspose2d(128, 32, 3, 2, 1, 1), nn.SELU())
+        self.deconv4_b = nn.Sequential(
+            nn.ConvTranspose2d(in_channels, 128, 2, 2, 0, 1), nn.SELU()
+        )
+        self.deconv3_a = nn.Sequential(nn.ConvTranspose2d(256, 64, 2, 2, 0, 0), nn.SELU())
+        self.deconv3_b = nn.Sequential(nn.ConvTranspose2d(256, 64, 2, 2, 0, 1), nn.SELU())
+        self.deconv2_a = nn.Sequential(nn.ConvTranspose2d(128, 32, 2, 2, 0, 0), nn.SELU())
+        self.deconv2_b = nn.Sequential(nn.ConvTranspose2d(128, 32, 2, 2, 0, 1), nn.SELU())
         self.deconv1 = nn.Sequential(nn.ConvTranspose2d(64, 3, 3, 1, 1, 0), nn.SELU())
 
     def forward(self, conv1_lstm_out, conv2_lstm_out, conv3_lstm_out, conv4_lstm_out):
-        deconv4 = self.deconv4(conv4_lstm_out)
+        if conv3_lstm_out.shape[-1] % 2 == 0:
+            deconv4 = self.deconv4_a(conv4_lstm_out)
+        else:
+            deconv4 = self.deconv4_b(conv4_lstm_out)
         deconv4_concat = torch.cat((deconv4, conv3_lstm_out), dim=1)
-        deconv3 = self.deconv3(deconv4_concat)
+        if conv2_lstm_out.shape[-1] % 2 == 0:
+            deconv3 = self.deconv3_a(deconv4_concat)
+        else:
+            deconv3 = self.deconv3_b(deconv4_concat)
         deconv3_concat = torch.cat((deconv3, conv2_lstm_out), dim=1)
-        deconv2 = self.deconv2(deconv3_concat)
+        if conv1_lstm_out.shape[-1] % 2 == 0:
+            deconv2 = self.deconv2_a(deconv3_concat)
+        else:
+            deconv2 = self.deconv2_b(deconv3_concat)
         deconv2_concat = torch.cat((deconv2, conv1_lstm_out), dim=1)
         deconv1 = self.deconv1(deconv2_concat)
         return deconv1
@@ -195,13 +209,13 @@ class MSCRED(nn.Module):
         end = time.time()
         self.time_tracker["train"] = end - start
 
-    def predict_prob(self, x_test, x_test_labels):
+    def predict_prob(self, len_x_train, x_test, x_test_labels):
         signature_data_dict = load_signature_data(self.save_path)
         start = time.time()
         test(
             signature_data_dict["test"],
             self,
-            x_test,
+            len_x_train,
             save_dir=self.save_path,
             gap_time=self.gap_time,
             device=self.device,
@@ -219,6 +233,6 @@ class MSCRED(nn.Module):
 
         anomaly_label = anomaly_label[0:length]
 
-        shutil.rmtree(os.path.dirname(self.save_path))
+        # shutil.rmtree(os.path.dirname(self.save_path))
 
         return np.array(anomaly_score), np.array(anomaly_label)

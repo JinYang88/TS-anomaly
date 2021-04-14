@@ -25,7 +25,7 @@ def generate_signature_matrix_node(data_dict, save_dir, gap_time, win_size):
                     for m in range(l, sensor_n):
                         # if np.var(data[i, t - win:t]) and np.var(data[j, t - win:t]):
                         matrix_t[l][m] = (
-                            np.inner(data[l, t - win : t], data[m, t - win : t]) / win
+                            np.inner(data[l, t - win: t], data[m, t - win: t]) / win
                         )  # rescale by win
                         matrix_t[m][l] = matrix_t[l][m]
             matrix_all.append(matrix_t)

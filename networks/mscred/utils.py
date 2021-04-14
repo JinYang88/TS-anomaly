@@ -59,10 +59,9 @@ def train(DataLoader, model, Optimizer, epochs, device):
         print("[Epoch %d/%d] [loss: %f]" % (epoch + 1, epochs, train_l_sum / n))
 
 
-def test(DataLoader, model, x_test, save_dir, gap_time, device):
+def test(DataLoader, model, len_x_train, save_dir, gap_time, device):
     print("------Testing-------")
-    data_get_len = x_test.shape[0]
-    index = math.ceil(data_get_len / gap_time)
+    index = math.ceil(len_x_train / gap_time)
     reconstructed_data_path = os.path.join(save_dir, "reconstructed_data")
 
     os.makedirs(reconstructed_data_path, exist_ok=True)
