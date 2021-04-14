@@ -108,8 +108,10 @@ class OmniDetector:
                 # return score
 
     def predict_prob(self, iterator):
+        tf_config = tf.ConfigProto(allow_soft_placement=True)
+        tf_config.gpu_options.allow_growth = True
         with tf.variable_scope("model") as model_vs:
-            with tf.Session().as_default():
+            with tf.Session(config=tf_config).as_default():
                 if self.config.save_dir is not None:
                     # Restore variables from `save_dir`.
                     saver = VariableSaver(
