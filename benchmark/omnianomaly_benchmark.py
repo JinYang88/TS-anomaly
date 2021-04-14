@@ -57,6 +57,7 @@ dataset = args["dataset"]
 
 if tf.test.is_gpu_available() and args["gpu"] != -1:
     os.environ["CUDA_VISIBLE_DEVICES"] = args["gpu"]
+    print("Using gpu: {}".format(args["gpu"]))
 
 
 class ExpConfig(Config):
