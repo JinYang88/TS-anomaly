@@ -56,7 +56,7 @@ hash_id = hashlib.md5(
 dataset = args["dataset"]
 
 if tf.test.is_gpu_available() and args["gpu"] != -1:
-    os.environ["CUDA_VISIBLE_DEVICES"] = args["gpu"]
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args["gpu"])
     print("Using gpu: {}".format(args["gpu"]))
 
 
