@@ -27,6 +27,7 @@ def read_cmds(model, dataset):
 
 
 if __name__ == "__main__":
+    cmd_logs = []
     model = args["model"]
     dataset = args["dataset"]
     num_workers = args["num_workers"]
@@ -37,5 +38,10 @@ if __name__ == "__main__":
         merged_cmd = "(" + " && ".join([f"{item}" for item in cmd_list]) + ")"
         merged_cmd += f" > logs/{model}.{dataset}.multi_{idx}.log 2>&1 &"
         print(merged_cmd)
+        cmd_logs.append(merged_cmd)
         if args["run"] > 0:
             subprocess.Popen(merged_cmd, shell=True)
+
+    with open("cmd_history.txt", "a+") as fw:
+        for item in cmd_logs:
+            fw.write(item + "\n")
