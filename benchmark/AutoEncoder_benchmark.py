@@ -25,7 +25,7 @@ from common.evaluation import (
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="dataset")
-parser.add_argument("--hidden_neurons", nargs='+', type=int, help="hidden_neurons")
+parser.add_argument("--hidden_neurons", nargs="+", type=int, help="hidden_neurons")
 parser.add_argument("--batch_size", type=int, help="batch_size")
 parser.add_argument("--epochs", type=int, help="epochs")
 parser.add_argument("--l2_regularizer", type=float, help="l2_regularizer")
@@ -55,8 +55,13 @@ if __name__ == "__main__":
             x_test = data_dict["test"]
             x_test_labels = data_dict["test_labels"]
 
-            od = AutoEncoder(hidden_neurons=hidden_neurons, batch_size=batch_size, epochs=epochs,
-                             l2_regularizer=l2_regularizer, verbose=0)
+            od = AutoEncoder(
+                hidden_neurons=hidden_neurons,
+                batch_size=batch_size,
+                epochs=epochs,
+                l2_regularizer=l2_regularizer,
+                verbose=0,
+            )
 
             train_start = time.time()
             od.fit(x_train)
