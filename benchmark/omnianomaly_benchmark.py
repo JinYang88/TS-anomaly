@@ -15,6 +15,7 @@ import time
 import numpy as np
 import pandas as pd
 import argparse
+import tensorflow as tf
 from tfsnippet.examples.utils import MLResults
 from common.dataloader import load_dataset, get_data_dim
 from common.config import subdatasets
@@ -53,6 +54,9 @@ hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
 ).hexdigest()[0:8]
 dataset = args["dataset"]
+
+if tf.test.is_gpu_available() and args["gpu"] != -1:
+    tf.device("/gpu:{}".format(args["gpu"]))
 
 
 class ExpConfig(Config):
