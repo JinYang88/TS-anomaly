@@ -30,7 +30,7 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-#  python omnianomaly_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --rnn_num_hidden 500 --window_size 32 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 1
+#  python omnianomaly_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --rnn_num_hidden 500 --window_size 32 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 1 --gpu 4
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -56,7 +56,7 @@ hash_id = hashlib.md5(
 dataset = args["dataset"]
 
 if tf.test.is_gpu_available() and args["gpu"] != -1:
-    tf.device("/gpu:{}".format(args["gpu"]))
+    os.environ["CUDA_VISIBLE_DEVICES"] = args["gpu"]
 
 
 class ExpConfig(Config):
