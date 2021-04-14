@@ -7,6 +7,8 @@ from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint
 
+# python mscred_benchmark.py --dataset SMAP --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 32 --hidden_size 16 --num_epochs 1 --gpu 2
+
 dataset = "SMD"
 subdataset = "machine-1-1"
 device = "0"  # cuda:0, a string
