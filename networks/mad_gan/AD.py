@@ -30,13 +30,13 @@ Here, only the discriminator was used to do the anomaly detection
 
 # --- get settings --- #
 # parse command line arguments, or use defaults
-parser = utils.rgan_options_parser("")
-settings = vars(parser.parse_args())
+# parser = utils.rgan_options_parser("")
+# settings = vars(parser.parse_args())
 # if a settings file is specified, it overrides command line arguments/defaults
 
 
 class myADclass:
-    def __init__(self, epoch, samples, labels, index, settings=settings):
+    def __init__(self, epoch, samples, labels, index, settings):
         self.epoch = epoch
         self.settings = settings
         self.samples = samples

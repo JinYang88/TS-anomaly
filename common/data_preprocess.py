@@ -161,7 +161,7 @@ def generate_windows_with_index(
 
     idx = np.asarray(list(range(0, test.shape[0] + stride * window_size)))
     i = 0
-    ts_len = 28479
+    ts_len = test.shape[0]
     windows = []
     while i + window_size < ts_len:
         windows.append(idx[i : i + window_size])

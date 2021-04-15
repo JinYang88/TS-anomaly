@@ -9,15 +9,15 @@ from common.utils import pprint
 
 # python mscred_benchmark.py --dataset SMAP --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 32 --hidden_size 16 --num_epochs 1 --gpu 2
 
-dataset = "SMAP"
-subdataset = "F-1"
+dataset = "MSL"
+subdataset = "F-8"
 device = "0"  # cuda:0, a string
 step_max = 5
 gap_time = 10
 win_size = [10, 30, 60]  # sliding window size
 in_channels_encoder = 3
-in_channels_decoder = 256
-save_path = "../mscred_data/" + dataset + '/' + subdataset + '/'
+in_channels_decoder = 32
+save_path = "../mscred_data/" + dataset + "/" + subdataset + "/"
 learning_rate = 0.0002
 epoch = 1
 thred_b = 0.005
@@ -47,7 +47,9 @@ if __name__ == "__main__":
 
     mscred.fit(data_dict)
 
-    anomaly_score, anomaly_label = mscred.predict_prob(len(x_train), x_test, x_test_labels)
+    anomaly_score, anomaly_label = mscred.predict_prob(
+        len(x_train), x_test, x_test_labels
+    )
 
     # Make evaluation
     eva = evaluator(
