@@ -27,8 +27,10 @@ num_epochs = 5
 window_size = 32
 batch_size = 64
 stride = 5
-dataset = "SMD"
-subdataset = "machine-1-1"
+dataset = "SMAP"
+subdataset = "A-1"
+# dataset = "SMD"
+# subdataset = "machine-1-1"
 save_dir = "./experiments"
 
 settings = {
@@ -36,7 +38,6 @@ settings = {
     "eval_single": False,
     "seq_length": window_size,
     "seq_step": stride,
-    "num_signals": 38,
     "normalise": False,
     "scale": 0.1,
     "freq_low": 1.0,
@@ -72,6 +73,7 @@ settings = {
     "dp_sigma": 1e-05,
     "use_time": False,
     "num_generated_features": 38,
+    "num_signals": 38,
 }
 
 if __name__ == "__main__":
@@ -84,6 +86,8 @@ if __name__ == "__main__":
 
     pp = preprocessor()
     data_dict = pp.normalize(data_dict)
+    settings["num_generated_features"] = data_dict["dim"]
+    settings["num_signals"] = data_dict["dim"]
 
     # generate sliding windows
     window_dict = generate_windows_with_index(

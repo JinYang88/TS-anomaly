@@ -52,7 +52,6 @@ class DataGenerator(Sequence):
 
 class OmniDetector:
     def __init__(self, config):
-        tf.reset_default_graph()
         self.config = config
         self.time_tracker = {}
         tf.reset_default_graph()

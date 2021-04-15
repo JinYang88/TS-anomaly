@@ -18,7 +18,9 @@ tf.disable_v2_behavior()
 
 class MAD_GAN:
     def __init__(self, save_dir):
+        tf.reset_default_graph()
         self.save_dir = save_dir
+        self.time_tracker = {}
         os.makedirs(save_dir, exist_ok=True)
 
     def load_settings_from_file(self, settings):
@@ -41,55 +43,6 @@ class MAD_GAN:
                 # overwrite parsed/default settings with those read from file, allowing for
         # (potentially new) default settings not present in file
         settings.update(settings_loaded)
-        return settings
-
-    def get_settings(self, pattern, window_size, stride, datasets):
-        settings = {}
-        # model architecture configuration
-        settings["eval_an"] = False
-        settings["eval_single"] = False
-        settings["seq_length"] = window_size
-        if pattern == "train":
-            settings["seq_step"] = stride
-        elif pattern == "test":
-            settings["seq_step"] = 1
-
-        settings["num_signals"] = 38
-        settings["normalise"] = False
-        settings["scale"] = 0.1
-        settings["freq_low"] = 1.0
-        settings["freq_high"] = 5.0
-        settings["amplitude_low"] = 0.1
-        settings["amplitude_high"] = 0.9
-        settings["multivariate_mnist"] = False
-        settings["full_mnist"] = False
-        settings["resample_rate_in_min"] = 15
-        settings["hidden_units_g"] = 100
-        settings["hidden_units_d"] = 100
-        settings["hidden_units_e"] = 100
-        settings["kappa"] = 1
-        settings["latent_dim"] = 15
-        settings["weight"] = 0.5
-        settings["degree"] = 1
-        settings["batch_mean"] = False
-        settings["learn_scale"] = False
-        settings["learning_rate"] = 0.05
-        settings["batch_size"] = 64
-        settings["num_epochs"] = 100
-        settings["D_rounds"] = 1
-        settings["G_rounds"] = 3
-        settings["E_rounds"] = 1
-        settings["shuffle"] = True
-        settings["eval_mul"] = False
-        settings["wrong_labels"] = False
-        settings["identifier"] = datasets
-        settings["sub_id"] = datasets
-        settings["dp"] = False
-        settings["l2norm_bound"] = 1e-05
-        settings["batches_per_lot"] = 1
-        settings["dp_sigma"] = 1e-05
-        settings["use_time"] = False
-        settings["num_generated_features"] = 38
         return settings
 
     def fit(self, samples, labels, settings):
@@ -206,7 +159,7 @@ class MAD_GAN:
             print("%d\t%.4f\t%.4f\t%d" % (epoch, D_loss_curr, G_loss_curr, seq_length))
             print(sub_id)
             model.dump_parameters(sub_id + "_" + str(seq_length), sess)
-
+        self.time_tracker["train"] = time() - begin
         print("Training terminated | training time = %ds  " % (time() - begin))
 
     def detect(self, samples, labels, index, settings):
@@ -229,6 +182,9 @@ class MAD_GAN:
         ob = myADclass(
             epoch=epoch, samples=samples, labels=labels, index=index, settings=settings
         )
+
+        begin = time()
         anomaly_score, anomaly_label = ob.ADfunc()
+        self.time_tracker["test"] = time() - begin
 
         return anomaly_score, anomaly_label
