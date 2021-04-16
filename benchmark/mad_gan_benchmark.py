@@ -59,7 +59,7 @@ learning_rate = args["lr"]
 
 # print(num_epochs)
 # sys.exit()
-batch_size = 256
+batch_size = 32
 save_dir = "./experiments"
 
 settings = {
