@@ -1,3 +1,4 @@
+import os
 import pickle
 
 
@@ -6,6 +7,7 @@ def split_data(subdataset_num, dataset_name):
 
     data_path = "./" + dataset_name + "/processed/"
     save_root_path = "./" + dataset_name + "_SPLIT" + "/processed/"
+    os.makedirs(save_root_path, exist_ok=True)
 
     train_path = data_path + dataset_name.lower() + "_train.pkl"
     test_path = data_path + dataset_name.lower() + "_test.pkl"
