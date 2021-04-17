@@ -59,4 +59,4 @@ def split_data(subdataset_num, dataset_name):
         print(anomaly_ratio)
 
 
-split_data(6, "SWAT")
+split_data(6, "WADI")
