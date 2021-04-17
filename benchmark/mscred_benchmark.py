@@ -16,7 +16,7 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-# python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
+# python mscred_benchmark.py --dataset SWAT --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -77,7 +77,9 @@ if __name__ == "__main__":
 
             mscred.fit(data_dict)
 
-            anomaly_score, anomaly_label = mscred.predict_prob(x_test, x_test_labels)
+            anomaly_score, anomaly_label = mscred.predict_prob(
+                len(x_train), x_test, x_test_labels
+            )
 
             print(anomaly_score.shape)
             print(anomaly_label.shape)

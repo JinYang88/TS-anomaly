@@ -146,6 +146,7 @@ def iter_thresholds(score, label, metric="f1", adjustment=False):
                 best_theta = threshold
     return best_metric, best_theta, best_adjust, best_raw
 
+
 def point_adjustment(pred, label):
     """
     Borrow from https://github.com/NetManAIOps/OmniAnomaly/blob/master/omni_anomaly/eval_methods.py
