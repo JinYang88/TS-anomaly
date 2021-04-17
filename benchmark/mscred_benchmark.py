@@ -16,7 +16,7 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-# python mscred_benchmark.py --dataset SWAT --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
+# python mscred_benchmark.py --dataset WADI --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
