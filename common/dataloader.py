@@ -14,6 +14,7 @@ data_path_dict = {
     "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
     "WADI": "./datasets/anomaly/WADI/processed",
     "SWAT": "./datasets/anomaly/SWAT/processed",
+    "SWAT_SPLIT": "./datasets/anomaly/SWAT_SPLIT/processed",
 }
 
 
