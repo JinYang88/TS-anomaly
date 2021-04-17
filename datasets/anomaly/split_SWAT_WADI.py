@@ -3,7 +3,10 @@ import pickle
 
 # because the length of SWAT and WADI is very large
 def split_data(subdataset_num, dataset_name):
+
     data_path = "./" + dataset_name + "/processed/"
+    save_root_path = "./" + dataset_name + "_SPLIT" + "/processed/"
+
     train_path = data_path + dataset_name.lower() + "_train.pkl"
     test_path = data_path + dataset_name.lower() + "_test.pkl"
     test_label_path = data_path + dataset_name.lower() + "_test_label.pkl"
@@ -13,7 +16,9 @@ def split_data(subdataset_num, dataset_name):
     train_sub_size = train_length // subdataset_num
     for i in range(0, subdataset_num):
         print(data_path)
-        save_path = data_path + dataset_name.lower() + "-" + str(i + 1) + "_train.pkl"
+        save_path = (
+            save_root_path + dataset_name.lower() + "-" + str(i + 1) + "_train.pkl"
+        )
         if i == subdataset_num - 1:
             sub_dataset = train_data[i * train_sub_size :, :]
         else:
@@ -24,7 +29,9 @@ def split_data(subdataset_num, dataset_name):
     test_length = test_data.shape[0]
     test_sub_size = test_length // subdataset_num
     for i in range(0, subdataset_num):
-        save_path = data_path + dataset_name.lower() + "-" + str(i + 1) + "_test.pkl"
+        save_path = (
+            save_root_path + dataset_name.lower() + "-" + str(i + 1) + "_test.pkl"
+        )
         if i == subdataset_num - 1:
             sub_dataset = test_data[i * test_sub_size :, :]
         else:
@@ -36,7 +43,7 @@ def split_data(subdataset_num, dataset_name):
     test_label_sub_size = test_label_length // subdataset_num
     for i in range(0, subdataset_num):
         save_path = (
-            data_path + dataset_name.lower() + "-" + str(i + 1) + "_test_label.pkl"
+            save_root_path + dataset_name.lower() + "-" + str(i + 1) + "_test_label.pkl"
         )
         if i == subdataset_num - 1:
             sub_dataset = test_label_data[i * test_label_sub_size :]
