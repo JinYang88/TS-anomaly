@@ -14,20 +14,20 @@ data_path_dict = {
     "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
     "WADI": "./datasets/anomaly/WADI/processed",
     "SWAT": "./datasets/anomaly/SWAT/processed",
-    "SWAT_SPLIT": "./datasets/anomaly/SWAT_SPLIT/processed",
+    "WADI_SPLIT": "./datasets/anomaly/WADI_SPLIT/processed",
 }
 
 
 def get_data_dim(dataset):
-    if dataset == "SMAP":
+    if "SMAP" in dataset:
         return 25
-    elif dataset == "MSL":
+    elif "MSL" in dataset:
         return 55
-    elif dataset == "SMD":
+    elif "SMD" in dataset:
         return 38
-    elif dataset == "WADI":
+    elif "WADI" in dataset:
         return 93
-    elif dataset == "SWAT":
+    elif "SWAT" in dataset:
         return 40
     else:
         raise ValueError("unknown dataset " + str(dataset))

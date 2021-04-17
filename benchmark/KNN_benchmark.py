@@ -21,6 +21,7 @@ from common.evaluation import (
 
 # write example command here
 # python KNN_benchmark.py --dataset SMD --n_neighbors 5
+# python KNN_benchmark.py --dataset WADI_SPLIT --n_neighbors 5
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="dataset")

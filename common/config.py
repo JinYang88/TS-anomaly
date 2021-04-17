@@ -97,6 +97,7 @@ subdatasets = {
     ],
     "WADI": ["wadi"],
     "SWAT": ["swat"],
+    "WADI_SPLIT": ["wadi-1", "wadi-2", "wadi-3"],
 }
 
 
