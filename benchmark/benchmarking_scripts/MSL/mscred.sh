@@ -4,4 +4,4 @@
 
 # python mscred_benchmark.py --dataset MSL --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 128 --hidden_size 64 --num_epochs 1 --gpu 3
 
-python mscred_benchmark.py --dataset SMAP --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --num_epochs 1 --gpu 3
+python mscred_benchmark.py --dataset SMAP --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --num_epochs 1 --gpu 3
