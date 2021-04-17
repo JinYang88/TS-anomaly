@@ -17,7 +17,6 @@ def split_data(subdataset_num, dataset_name):
     train_length = train_data.shape[0]
     train_sub_size = train_length // subdataset_num
     for i in range(0, subdataset_num):
-        print(data_path)
         save_path = (
             save_root_path + dataset_name.lower() + "-" + str(i + 1) + "_train.pkl"
         )
@@ -59,4 +58,4 @@ def split_data(subdataset_num, dataset_name):
         print(anomaly_ratio)
 
 
-split_data(6, "WADI")
+split_data(3, "WADI")
