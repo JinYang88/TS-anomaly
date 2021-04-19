@@ -7,16 +7,16 @@ from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint
 
-# python mscred_benchmark.py --dataset SMAP --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 32 --hidden_size 16 --num_epochs 1 --gpu 2
+# python mscred_benchmark.py --dataset SMAP --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 16 --num_epochs 1 --gpu 2
 
-dataset = "MSL"
-subdataset = "F-8"
+dataset = "SMD"
+subdataset = "machine-3-5"
 device = "0"  # cuda:0, a string
 step_max = 5
 gap_time = 10
 win_size = [10, 30, 60]  # sliding window size
 in_channels_encoder = 3
-in_channels_decoder = 32
+in_channels_decoder = 256
 save_path = "../mscred_data/" + dataset + "/" + subdataset + "/"
 learning_rate = 0.0002
 epoch = 1

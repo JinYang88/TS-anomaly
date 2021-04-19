@@ -27,6 +27,7 @@ def read_cmds(model, dataset):
 
 
 if __name__ == "__main__":
+    total_gpu = 8
     cmd_logs = []
     model = args["model"]
     dataset = args["dataset"]
@@ -39,7 +40,14 @@ if __name__ == "__main__":
             running_cmds.extend(running_cmd)
 
     for idx, cmd_list in enumerate(np.array_split(running_cmds, num_workers)):
-        merged_cmd = "(" + " && ".join([f"{item}" for item in cmd_list]) + ")"
+        gpu_idx = idx % total_gpu
+        merged_cmd = (
+            "("
+            + " && ".join(
+                [f"CUDA_VISIBLE_DEVICES={gpu_idx} {item}" for item in cmd_list]
+            )
+            + ")"
+        )
         merged_cmd += (
             f" > logs/{'-'.join(model)}.{'-'.join(dataset)}.multi_{idx}.log 2>&1 &"
         )
