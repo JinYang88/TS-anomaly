@@ -156,7 +156,7 @@ class TimeSeriesEncoder(torch.nn.Module):
     def predict(self, X):
         raise NotImplementedError("TBD")
 
-    def predict_prob(self, iterator, anomaly_label, percent=88):
+    def predict_prob(self, iterator):
         print("Evaluating")
         self = self.eval()
         test_start = time.time()
@@ -175,32 +175,9 @@ class TimeSeriesEncoder(torch.nn.Module):
                 score_list.append(score.mean(dim=-1))
         test_end = time.time()
         self.time_tracker["test"] = test_end - test_start
-        anomaly_label = anomaly_label[:, -1]  # actually predict the last window
         score_list = torch.cat(score_list, dim=0).cpu().numpy()
-        auc = roc_auc_score(anomaly_label, score_list)
-
-        f1_adjusted, theta, pred_adjusted, pred_raw = iter_thresholds(
-            score_list, anomaly_label
-        )
-        ps_adjusted = precision_score(pred_adjusted, anomaly_label)
-        rc_adjusted = recall_score(pred_adjusted, anomaly_label)
-
-        f1_raw = f1_score(pred_raw, anomaly_label)
-        ps_raw = precision_score(pred_raw, anomaly_label)
-        rc_raw = recall_score(pred_raw, anomaly_label)
 
         self = self.train()
         return {
             "score": score_list,
-            "pred_raw": pred_raw,
-            "pred": pred_adjusted,
-            "anomaly_label": anomaly_label,
-            "theta": theta,
-            "AUC": auc,
-            "F1": f1_raw,
-            "PS": ps_raw,
-            "RC": rc_raw,
-            "F1_adj": f1_adjusted,
-            "PS_adj": ps_adjusted,
-            "RC_adj": rc_adjusted,
         }

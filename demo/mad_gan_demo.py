@@ -27,10 +27,8 @@ num_epochs = 5
 window_size = 32
 batch_size = 64
 stride = 5
-dataset = "SMAP"
-subdataset = "A-1"
-# dataset = "SMD"
-# subdataset = "machine-1-1"
+dataset = "SMD"
+subdataset = "machine-1-1"
 save_dir = "./experiments"
 
 settings = {

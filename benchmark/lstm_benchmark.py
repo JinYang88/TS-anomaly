@@ -113,12 +113,13 @@ if __name__ == "__main__":
             )
 
             encoder.load_encoder()
-            records = encoder.predict_prob(
-                test_iterator.loader, window_dict["test_labels"]
-            )
+            records = encoder.predict_prob(test_iterator.loader)
 
+            records_train = encoder.predict_prob(train_iterator.loader)
+
+            train_anomaly_score = records_train["score"]
             anomaly_score = records["score"]
-            anomaly_label = records["anomaly_label"]
+            anomaly_label = window_dict["test_labels"][:, -1]
 
             eval_folder = store_benchmarking_results(
                 hash_id,
@@ -127,7 +128,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"train": train_anomaly_score, "test": anomaly_score},
                 anomaly_label,
                 encoder.time_tracker,
             )

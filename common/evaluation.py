@@ -7,7 +7,7 @@ import hashlib
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.cluster import AgglomerativeClustering
-
+from common.spot import SPOT
 
 metric_func = {
     "f1": f1_score,
@@ -295,7 +295,10 @@ def evaluate_benchmarking_folder(
     for folder in glob.glob(os.path.join(folder, "*")):
         folder_name = os.path.basename(folder)
         print("Evaluating {}".format(folder_name))
-        anomaly_score = np.load(os.path.join(folder, "anomaly_score.npz"))["arr_0"]
+        anomaly_score = np.load(
+            os.path.join(folder, "anomaly_score.npz"), allow_pickle=True
+        )["arr_0"].item()["test"]
+
         anomaly_label = np.load(os.path.join(folder, "anomaly_label.npz"))[
             "arr_0"
         ].astype(int)
@@ -381,6 +384,30 @@ def compute_delay(label, pred):
             total_delay += np.where(pred_interval == 1)[0][0]
             count += 1
     return total_delay / (count + 1e-6)
+
+
+def pot_eval(init_score, score, label, q=1e-3, level=0.02):
+    s = SPOT(q)  # SPOT object
+    s.fit(init_score, score)  # data import
+    s.initialize(level=level, min_extrema=True)  # initialization step
+    ret = s.run(dynamic=False)  # run
+    print(len(ret["alarms"]))
+    print(len(ret["thresholds"]))
+    pot_th = -np.mean(ret["thresholds"])
+    pred, p_latency = adjust_predicts(score, label, pot_th, calc_latency=True)
+    p_t = calc_point2point(pred, label)
+    print("POT result: ", p_t, pot_th, p_latency)
+    return {
+        "pot-f1": p_t[0],
+        "pot-precision": p_t[1],
+        "pot-recall": p_t[2],
+        "pot-TP": p_t[3],
+        "pot-TN": p_t[4],
+        "pot-FP": p_t[5],
+        "pot-FN": p_t[6],
+        "pot-threshold": pot_th,
+        "pot-latency": p_latency,
+    }
 
 
 if __name__ == "__main__":

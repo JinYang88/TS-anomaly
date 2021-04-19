@@ -91,6 +91,9 @@ if __name__ == "__main__":
             )
 
             # predict anomaly score for each window
+            anomaly_score_train = vae.predict_prob(df_train).mean(axis=-1)[
+                :, -1
+            ]  # mean for all dims
             anomaly_score = vae.predict_prob(df_test).mean(axis=-1)[
                 :, -1
             ]  # mean for all dims
@@ -105,7 +108,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"train": anomaly_score_train, "test": anomaly_score},
                 anomaly_label,
                 vae.time_tracker,
             )
