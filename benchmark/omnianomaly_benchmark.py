@@ -105,8 +105,8 @@ class ExpConfig(Config):
     # outputs config
     save_z = False  # whether to save sampled z in hidden space
     get_score_on_dim = False  # whether to get score on dim. If `True`, the score will be a 2-dim ndarray
-    save_dir = "model"
     restore_dir = None  # If not None, restore variables from this dir
+    save_dir = "model"
     result_dir = "result"  # Where to save the result file
     train_score_filename = "train_score.pkl"
     test_score_filename = "test_score.pkl"
@@ -118,6 +118,10 @@ if __name__ == "__main__":
             print(f"Running on {subdataset} of {dataset}")
             config = ExpConfig()
             config.x_dim = get_data_dim(dataset)
+
+            save_path = os.path.join("./savd_dir_omni", hash_id, subdataset)
+            config.result_dir = os.path.join(save_path, "result")
+            config.save_dir = os.path.join(save_path, "model")
 
             results = MLResults(config.result_dir)
             results.save_config(config)  # save experiment settings for review
