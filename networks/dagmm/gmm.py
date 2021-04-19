@@ -2,8 +2,10 @@
 import numpy as np
 import tensorflow as tf
 
+
 class GMM:
     """ Gaussian Mixture Model (GMM) """
+
     def __init__(self, n_comp):
         self.n_comp = n_comp
         self.phi = self.mu = self.sigma = None
@@ -11,21 +13,27 @@ class GMM:
 
     def create_variables(self, n_features):
         with tf.variable_scope("GMM"):
-            phi = tf.Variable(tf.zeros(shape=[self.n_comp]),
-                dtype=tf.float32, name="phi")
-            mu = tf.Variable(tf.zeros(shape=[self.n_comp, n_features]),
-                dtype=tf.float32, name="mu")
-            sigma = tf.Variable(tf.zeros(
-                shape=[self.n_comp, n_features, n_features]),
-                dtype=tf.float32, name="sigma")
-            L = tf.Variable(tf.zeros(
-                shape=[self.n_comp, n_features, n_features]),
-                dtype=tf.float32, name="L")
+            phi = tf.Variable(
+                tf.zeros(shape=[self.n_comp]), dtype=tf.float32, name="phi"
+            )
+            mu = tf.Variable(
+                tf.zeros(shape=[self.n_comp, n_features]), dtype=tf.float32, name="mu"
+            )
+            sigma = tf.Variable(
+                tf.zeros(shape=[self.n_comp, n_features, n_features]),
+                dtype=tf.float32,
+                name="sigma",
+            )
+            L = tf.Variable(
+                tf.zeros(shape=[self.n_comp, n_features, n_features]),
+                dtype=tf.float32,
+                name="L",
+            )
 
         return phi, mu, sigma, L
 
     def fit(self, z, gamma):
-        """ fit data to GMM model
+        """fit data to GMM model
 
         Parameters
         ----------
@@ -42,20 +50,22 @@ class GMM:
             # l,m : index of features
             gamma_sum = tf.reduce_sum(gamma, axis=0)
             self.phi = phi = tf.reduce_mean(gamma, axis=0)
-            self.mu = mu = tf.einsum('ik,il->kl', gamma, z) / gamma_sum[:,None]
-            z_centered = tf.sqrt(gamma[:,:,None]) * (z[:,None,:] - mu[None,:,:])
-            self.sigma = sigma = tf.einsum(
-                'ikl,ikm->klm', z_centered, z_centered) / gamma_sum[:,None,None]
+            self.mu = mu = tf.einsum("ik,il->kl", gamma, z) / gamma_sum[:, None]
+            z_centered = tf.sqrt(gamma[:, :, None]) * (z[:, None, :] - mu[None, :, :])
+            self.sigma = sigma = (
+                tf.einsum("ikl,ikm->klm", z_centered, z_centered)
+                / gamma_sum[:, None, None]
+            )
 
             # Calculate a cholesky decomposition of covariance in advance
             n_features = z.shape[1]
             min_vals = tf.diag(tf.ones(n_features, dtype=tf.float32)) * 1e-6
-            self.L = tf.cholesky(sigma + min_vals[None,:,:])
+            self.L = tf.cholesky(sigma + min_vals[None, :, :])
 
         self.training = False
 
     def fix_op(self):
-        """ return operator to fix paramters of GMM
+        """return operator to fix paramters of GMM
         Using this operator outside of this class,
         you can fix current parameter to static tensor variable.
 
@@ -75,7 +85,7 @@ class GMM:
             tf.assign(phi, self.phi),
             tf.assign(mu, self.mu),
             tf.assign(sigma, self.sigma),
-            tf.assign(L, self.L)
+            tf.assign(L, self.L),
         )
 
         self.phi, self.phi_org = phi, self.phi
@@ -88,7 +98,7 @@ class GMM:
         return op
 
     def energy(self, z):
-        """ calculate an energy of each row of z
+        """calculate an energy of each row of z
 
         Parameters
         ----------
@@ -107,17 +117,24 @@ class GMM:
         with tf.variable_scope("GMM_energy"):
             # Instead of inverse covariance matrix, exploit cholesky decomposition
             # for stability of calculation.
-            z_centered = z[:,None,:] - self.mu[None,:,:]  #ikl
-            v = tf.matrix_triangular_solve(self.L, tf.transpose(z_centered, [1, 2, 0]))  # kli
+            z_centered = z[:, None, :] - self.mu[None, :, :]  # ikl
+            v = tf.matrix_triangular_solve(
+                self.L, tf.transpose(z_centered, [1, 2, 0])
+            )  # kli
 
             # log(det(Sigma)) = 2 * sum[log(diag(L))]
-            log_det_sigma = 2.0 * tf.reduce_sum(tf.log(tf.matrix_diag_part(self.L)), axis=1)
+            log_det_sigma = 2.0 * tf.reduce_sum(
+                tf.log(tf.matrix_diag_part(self.L)), axis=1
+            )
 
             # To calculate energies, use "log-sum-exp" (different from orginal paper)
             d = z.get_shape().as_list()[1]
-            logits = tf.log(self.phi[:,None]) - 0.5 * (tf.reduce_sum(tf.square(v), axis=1)
-                + d * tf.log(2.0 * np.pi) + log_det_sigma[:,None])
-            energies = - tf.reduce_logsumexp(logits, axis=0)
+            logits = tf.log(self.phi[:, None]) - 0.5 * (
+                tf.reduce_sum(tf.square(v), axis=1)
+                + d * tf.log(2.0 * np.pi)
+                + log_det_sigma[:, None]
+            )
+            energies = -tf.reduce_logsumexp(logits, axis=0)
 
         return energies
 

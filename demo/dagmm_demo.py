@@ -1,25 +1,24 @@
 import os
 import sys
 
-os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../"))
-sys.path.append("./")
-from networks.da_gmm.dagmm import DAGMM
+sys.path.append("../")
+from networks.dagmm.dagmm import DAGMM
 from common.data_preprocess import generate_windows, preprocessor
 from common.dataloader import load_dataset
-from common.evaluation import evaluator, store_output
+from common.evaluation import evaluator
 from common.utils import pprint
 from IPython import embed
 import tensorflow as tf
 
-dataset = "SMD"
-subdataset = "machine-1-2"
-compression_hiddens = [32, 16, 2]
+dataset = "SMAP"
+subdataset = "D-1"
+compression_hiddens = [128, 64, 2]
 compression_activation = tf.nn.tanh
-estimation_hiddens = [80, 40]
+estimation_hiddens = [100, 50]
 estimation_activation = tf.nn.tanh
 estimation_dropout_ratio = 0.25
 minibatch = 1024
-epoch = 100
+epoch = 2
 lr = 0.0001
 lambdaone = 0.1
 lambdatwo = 0.0001
@@ -76,7 +75,3 @@ if __name__ == "__main__":
     eval_results = eva.compute_metrics()
 
     pprint(eval_results)
-
-    store_output(
-        "./demo/output", dataset, "dagmm", subdataset, anomaly_score, anomaly_label
-    )

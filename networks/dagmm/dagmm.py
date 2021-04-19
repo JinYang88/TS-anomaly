@@ -1,3 +1,4 @@
+import sys
 import tensorflow as tf
 import numpy as np
 import time
@@ -230,6 +231,7 @@ class DAGMM:
             Path of directory trained model is saved.
             If not exists, it is created automatically.
         """
+        sys.exit()
         if self.sess is None:
             raise Exception("Trained model does not exist.")
 
