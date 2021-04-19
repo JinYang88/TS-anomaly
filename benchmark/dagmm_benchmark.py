@@ -83,6 +83,7 @@ if __name__ == "__main__":
             # predict anomaly score
             dagmm.fit(x_train)
             anomaly_score = dagmm.predict_prob(x_test)
+            anomaly_score_train = dagmm.predict_prob(x_train)
             anomaly_label = x_test_labels
 
             eval_folder = store_benchmarking_results(
@@ -92,7 +93,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"test": anomaly_score, "train": anomaly_score_train},
                 anomaly_label,
                 dagmm.time_tracker,
             )

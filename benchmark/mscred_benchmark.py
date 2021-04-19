@@ -16,7 +16,7 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-# python mscred_benchmark.py --dataset WADI --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
+# python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -80,12 +80,8 @@ if __name__ == "__main__":
             anomaly_score, anomaly_label = mscred.predict_prob(
                 len(x_train), x_test, x_test_labels
             )
-            anomaly_score_train, anomaly_label = mscred.predict_prob(
-                len(x_train), x_train
-            )
+            anomaly_score_train = mscred.predict_prob(len(x_train), x_train)
 
-            print(anomaly_score.shape)
-            print(anomaly_label.shape)
             eval_folder = store_benchmarking_results(
                 hash_id,
                 benchmarking_dir,
@@ -93,7 +89,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"train": anomaly_score_train, "test": anomaly_score},
                 anomaly_label,
                 mscred.time_tracker,
             )
