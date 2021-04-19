@@ -106,7 +106,9 @@ if __name__ == "__main__":
     index = index.reshape([index.shape[0], index.shape[1], 1])
 
     settings["seq_step"] = 1
-    anomaly_score, anomaly_label = gan_model.detect(test, test_labels, index, settings)
+    
+    
+    anomaly_score, anomaly_label = gan_model.detect(test, test_labels, index, settings)anomaly_score_train = gan_model.detect(train, index, settings)
 
     eva = evaluator(
         ["auc", "f1", "pc", "rc"],

@@ -59,6 +59,8 @@ if __name__ == "__main__":
             anomaly_score = od.score(x_test)
             test_end = time.time()
 
+            anomaly_score_train = od.score(x_train)
+
             time_tracker = {
                 "train": train_end - train_start,
                 "test": test_end - test_start,
@@ -73,7 +75,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"test": anomaly_score, "train": anomaly_score_train},
                 anomaly_label,
                 time_tracker,
             )

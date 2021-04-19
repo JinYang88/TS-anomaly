@@ -105,10 +105,18 @@ class CnnDecoder(nn.Module):
         self.deconv4_b = nn.Sequential(
             nn.ConvTranspose2d(in_channels, 128, 2, 2, 0, 1), nn.SELU()
         )
-        self.deconv3_a = nn.Sequential(nn.ConvTranspose2d(256, 64, 2, 2, 0, 0), nn.SELU())
-        self.deconv3_b = nn.Sequential(nn.ConvTranspose2d(256, 64, 2, 2, 0, 1), nn.SELU())
-        self.deconv2_a = nn.Sequential(nn.ConvTranspose2d(128, 32, 2, 2, 0, 0), nn.SELU())
-        self.deconv2_b = nn.Sequential(nn.ConvTranspose2d(128, 32, 2, 2, 0, 1), nn.SELU())
+        self.deconv3_a = nn.Sequential(
+            nn.ConvTranspose2d(256, 64, 2, 2, 0, 0), nn.SELU()
+        )
+        self.deconv3_b = nn.Sequential(
+            nn.ConvTranspose2d(256, 64, 2, 2, 0, 1), nn.SELU()
+        )
+        self.deconv2_a = nn.Sequential(
+            nn.ConvTranspose2d(128, 32, 2, 2, 0, 0), nn.SELU()
+        )
+        self.deconv2_b = nn.Sequential(
+            nn.ConvTranspose2d(128, 32, 2, 2, 0, 1), nn.SELU()
+        )
         self.deconv1 = nn.Sequential(nn.ConvTranspose2d(64, 3, 3, 1, 1, 0), nn.SELU())
 
     def forward(self, conv1_lstm_out, conv2_lstm_out, conv3_lstm_out, conv4_lstm_out):
@@ -209,7 +217,7 @@ class MSCRED(nn.Module):
         end = time.time()
         self.time_tracker["train"] = end - start
 
-    def predict_prob(self, len_x_train, x_test, x_test_labels):
+    def predict_prob(self, len_x_train, x_test, x_test_labels=None):
         signature_data_dict = load_signature_data(self.save_path)
         start = time.time()
         test(
@@ -225,14 +233,11 @@ class MSCRED(nn.Module):
 
         anomaly_score = evaluate(self.save_path, self.thred_b, self.gap_time)
 
-        anomaly_label = x_test_labels[self.gap_time - 1:]
-
-        length = min(len(anomaly_score), len(anomaly_label))
-
-        anomaly_score = anomaly_score[0:length]
-
-        anomaly_label = anomaly_label[0:length]
-
-        # shutil.rmtree(os.path.dirname(self.save_path))
-
-        return np.array(anomaly_score), np.array(anomaly_label)
+        if x_test_labels is not None:
+            anomaly_label = x_test_labels[self.gap_time - 1 :]
+            length = min(len(anomaly_score), len(anomaly_label))
+            anomaly_score = anomaly_score[0:length]
+            anomaly_label = anomaly_label[0:length]
+            return np.array(anomaly_score), np.array(anomaly_label)
+        else:
+            return np.array(anomaly_score)

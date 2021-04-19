@@ -80,6 +80,9 @@ if __name__ == "__main__":
             anomaly_score, anomaly_label = mscred.predict_prob(
                 len(x_train), x_test, x_test_labels
             )
+            anomaly_score_train, anomaly_label = mscred.predict_prob(
+                len(x_train), x_train
+            )
 
             print(anomaly_score.shape)
             print(anomaly_label.shape)

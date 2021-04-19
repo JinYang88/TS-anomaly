@@ -143,6 +143,7 @@ if __name__ == "__main__":
             od.fit(x_train)
 
             anomaly_score = od.predict_prob(x_test)
+            anomaly_score_train = od.predict_prob(x_train)
             anomaly_label = window_dict["test_labels"][
                 :, -1
             ]  # last point of each window
@@ -155,7 +156,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"train": anomaly_score_train, "test": anomaly_score},
                 anomaly_label,
                 od.time_tracker,
             )
