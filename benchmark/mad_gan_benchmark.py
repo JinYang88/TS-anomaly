@@ -136,8 +136,12 @@ if __name__ == "__main__":
             index = index.reshape([index.shape[0], index.shape[1], 1])
 
             anomaly_score, anomaly_label = gan_model.detect(
-                test, test_labels, index, settings
+                test,
+                settings,
+                test_labels,
+                index,
             )
+            anomaly_score_train = gan_model.detect(train, settings)
 
             eval_folder = store_benchmarking_results(
                 hash_id,
@@ -146,7 +150,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"train": anomaly_score_train, "test": anomaly_score},
                 anomaly_label,
                 gan_model.time_tracker,
             )

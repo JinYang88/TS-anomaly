@@ -43,7 +43,67 @@ class myADclass:
         self.labels = labels
         self.index = index
 
-    def ADfunc(self):
+    def ADfunc(self, Islabeled=True):
+        if Islabeled == False:
+            num_samples_t = self.samples.shape[0]
+
+            D_test = np.empty([num_samples_t, self.settings["seq_length"], 1])
+            DL_test = np.empty([num_samples_t, self.settings["seq_length"], 1])
+            batch_times = num_samples_t // self.settings["batch_size"]
+
+            for batch_idx in range(0, num_samples_t // self.settings["batch_size"]):
+                # print('batch_idx:{}
+                # display batch progress
+                model.display_batch_progression(batch_idx, batch_times)
+                start_pos = batch_idx * self.settings["batch_size"]
+                end_pos = start_pos + self.settings["batch_size"]
+                T_mb = self.samples[start_pos:end_pos, :, :]
+                para_path = (
+                    "./experiments/parameters/"
+                    + self.settings["sub_id"]
+                    + "_"
+                    + str(self.settings["seq_length"])
+                    + ".npy"
+                )
+                D_t, L_t = DR_discriminator.dis_trained_model(
+                    self.settings, T_mb, para_path
+                )
+                D_test[start_pos:end_pos, :, :] = D_t
+                DL_test[start_pos:end_pos, :, :] = L_t
+
+            start_pos = (num_samples_t // self.settings["batch_size"]) * self.settings[
+                "batch_size"
+            ]
+            end_pos = start_pos + self.settings["batch_size"]
+            size = self.samples[start_pos:end_pos, :, :].shape[0]
+            fill = np.ones(
+                [
+                    self.settings["batch_size"] - size,
+                    self.samples.shape[1],
+                    self.samples.shape[2],
+                ]
+            )
+            batch = np.concatenate(
+                [self.samples[start_pos:end_pos, :, :], fill], axis=0
+            )
+            para_path = (
+                "./experiments/parameters/"
+                + self.settings["sub_id"]
+                + "_"
+                + str(self.settings["seq_length"])
+                + ".npy"
+            )
+            D_t, L_t = DR_discriminator.dis_trained_model(
+                self.settings, batch, para_path
+            )
+            D_test[start_pos:end_pos, :, :] = D_t[:size, :, :]
+            DL_test[start_pos:end_pos, :, :] = L_t[:size, :, :]
+
+            anomaly_score = DL_test.reshape([D_test.shape[0], D_test.shape[1]])
+            anomaly_score = anomaly_score.mean(axis=-1)
+
+            return anomaly_score
+
         num_samples_t = self.samples.shape[0]
         print("sample_shape:", self.samples.shape[0])
         print("num_samples_t", num_samples_t)

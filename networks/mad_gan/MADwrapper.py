@@ -162,7 +162,29 @@ class MAD_GAN:
         self.time_tracker["train"] = time() - begin
         print("Training terminated | training time = %ds  " % (time() - begin))
 
-    def detect(self, samples, labels, index, settings):
+    def detect(self, samples, settings, labels=None, index=None):
+        if labels is None:
+            identifier = settings["identifier"]
+
+            json.dump(
+                settings,
+                open(os.path.join(self.save_dir, identifier + "_train.txt"), "w"),
+                indent=0,
+            )
+
+            epoch = settings["num_epochs"] - 1
+            ob = myADclass(
+                epoch=epoch,
+                samples=samples,
+                labels=labels,
+                index=index,
+                settings=settings,
+            )
+
+            begin = time()
+            anomaly_score = ob.ADfunc(Islabeled=False)
+
+            return anomaly_score
 
         identifier = settings["identifier"]
 
