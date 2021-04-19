@@ -73,6 +73,7 @@ if __name__ == "__main__":
             anomaly_score = od.decision_function(x_test)
             test_end = time.time()
 
+            anomaly_score_train = od.decision_function(x_train)
             time_tracker = {
                 "train": train_end - train_start,
                 "test": test_end - test_start,
@@ -87,11 +88,10 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                anomaly_score,
+                {"train": anomaly_score_train, "test": anomaly_score},
                 anomaly_label,
                 time_tracker,
             )
-
         except Exception as e:
             print(f"Running on {subdataset} failed.")
             print(traceback.format_exc())
