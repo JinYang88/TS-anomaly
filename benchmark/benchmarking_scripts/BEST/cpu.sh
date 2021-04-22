@@ -21,7 +21,12 @@ python LOF_benchmark.py --dataset WADI_SPLIT --n_neighbors 3
 python PCA_benchmark.py --dataset MSL --n_components 25
 # possible buggy
 # python PCA_benchmark.py --dataset SMAP --n_components 10
-python PCA_benchmark.py --dataset SMAP --n_components 5
+python PCA_benchmark.py --dataset SMAP --n_components 5 B
+python PCA_benchmark.py --dataset SMAP --n_components 10 B
+python PCA_benchmark.py --dataset SMAP --n_components 15 B
+python PCA_benchmark.py --dataset SMAP --n_components 25 B
+python PCA_benchmark.py --dataset SMAP --n_components 30 B
+
 python PCA_benchmark.py --dataset SMD --n_components 5
 python PCA_benchmark.py --dataset SWAT --n_components 20
 python PCA_benchmark.py --dataset WADI_SPLIT --n_components 10

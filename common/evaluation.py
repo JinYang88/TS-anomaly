@@ -134,8 +134,8 @@ def iter_thresholds(score, label, metric="f1", adjustment=False, threshold=None)
     for trial in ["higher", "less"]:
         for anomaly_ratio in search_range:
             if threshold is None:
-                theta = anomaly_ratio
-                # theta = np.percentile(score, 100 * (1 - anomaly_ratio))
+                # theta = anomaly_ratio
+                theta = np.percentile(score, 100 * (1 - anomaly_ratio))
             else:
                 theta = threshold
             if trial == "higher":
