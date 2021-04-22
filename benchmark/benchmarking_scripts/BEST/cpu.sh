@@ -22,4 +22,4 @@ python PCA_benchmark.py --dataset MSL --n_components 25
 python PCA_benchmark.py --dataset SMAP --n_components 10
 python PCA_benchmark.py --dataset SMD --n_components 5
 python PCA_benchmark.py --dataset SWAT --n_components 20
-python PCA_benchmark.py --dataset WADI --n_components 10
+python PCA_benchmark.py --dataset WADI_SPLIT --n_components 10

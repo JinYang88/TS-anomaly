@@ -119,19 +119,29 @@ class evaluator:
         return results
 
 
-def iter_thresholds(score, label, metric="f1", adjustment=False):
+def iter_thresholds(score, label, metric="f1", adjustment=False, threshold=None):
     best_metric = -float("inf")
     best_theta = None
     best_adjust = None
     best_raw = None
     adjusted_pred = None
-    for anomaly_ratio in np.linspace(1e-3, 1, 500):
-        for trial in ["higher", "less"]:
-            threshold = np.percentile(score, 100 * (1 - anomaly_ratio))
+    if threshold is not None:
+        search_range = [0]
+    else:
+        search_range = np.linspace(0, 1, 100)
+
+    best_set = []
+    for trial in ["higher", "less"]:
+        for anomaly_ratio in search_range:
+            if threshold is None:
+                theta = anomaly_ratio
+                # theta = np.percentile(score, 100 * (1 - anomaly_ratio))
+            else:
+                theta = threshold
             if trial == "higher":
-                pred = (score >= threshold).astype(int)
+                pred = (score >= theta).astype(int)
             elif trial == "less":
-                pred = (score <= threshold).astype(int)
+                pred = (score <= theta).astype(int)
 
             if adjustment:
                 pred, adjusted_pred = point_adjustment(pred, label)
@@ -139,12 +149,17 @@ def iter_thresholds(score, label, metric="f1", adjustment=False):
                 adjusted_pred = pred
 
             current_value = metric_func[metric](adjusted_pred, label)
+            # print(anomaly_ratio, current_value)
+
             if current_value > best_metric:
                 best_metric = current_value
                 best_adjust = adjusted_pred
                 best_raw = pred
-                best_theta = threshold
-    return best_metric, best_theta, best_adjust, best_raw
+                best_theta = theta
+        best_set.append((best_metric, best_theta, best_adjust, best_raw))
+
+    return max(best_set, key=lambda x: x[0])
+    # return best_metric, best_theta, best_adjust, best_raw
 
 
 def point_adjustment(pred, label):

@@ -15,6 +15,7 @@ data_path_dict = {
     "WADI": "./datasets/anomaly/WADI/processed",
     "SWAT": "./datasets/anomaly/SWAT/processed",
     "WADI_SPLIT": "./datasets/anomaly/WADI_SPLIT/processed",
+    "SWAT_SPLIT": "./datasets/anomaly/SWAT_SPLIT/processed",
 }
 
 

@@ -5,7 +5,7 @@
 CUDA_VISIBLE_DEVICES=1 python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 3 --gpu 0 > logs/mscred_smd_only.log 2>&1 &
 
 # running
-CUDA_VISIBLE_DEVICES=2 python mscred_benchmark.py --dataset SWAT --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 0 > logs/mscred_swat_only.log 2>&1 &
+# CUDA_VISIBLE_DEVICES=2 python mscred_benchmark.py --dataset SWAT --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 0 > logs/mscred_swat_only.log 2>&1 &
 
 # running
 python mscred_benchmark.py --dataset WADI_SPLIT --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 0
@@ -24,8 +24,7 @@ python mscred_benchmark.py --dataset WADI_SPLIT --lr 0.003 --in_channels_encoder
 
 # python AutoEncoder_benchmark.py --dataset SWAT --hidden_neurons 16 8 8 16 --batch_size 512 --epochs 100 --l2_regularizer 0.1
 # python AutoEncoder_benchmark.py --dataset WADI --hidden_neurons 32 16 16 32 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
-
-
+python AutoEncoder_benchmark.py --dataset WADI_SPLIT --hidden_neurons 32 16 16 32 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
 
 
 # python lstm_benchmark.py --dataset MSL --lr 0.001 --window_size 32 --stride 5 --num_layers 1 --hidden_size 256 --gpu 0

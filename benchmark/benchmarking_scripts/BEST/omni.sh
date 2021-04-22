@@ -8,8 +8,8 @@ export LD_LIBRARY_PATH=/research/dept7/jyliu/cuda/cuda-9.0/lib64
 # python lstm_vae_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 10
 # python lstm_vae_benchmark.py --dataset WADI --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 40
 
-# running
-CUDA_VISIBLE_DEVICES=1 python lstm_vae_benchmark.py --dataset SWAT --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 40 > logs/lstm_vae_swat_best.log 2>&1 &
+# running on omni
+CUDA_VISIBLE_DEVICES="" python lstm_vae_benchmark.py --dataset SWAT --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 40 > logs/lstm_vae_swat_best.log 2>&1 &
 
 
 
