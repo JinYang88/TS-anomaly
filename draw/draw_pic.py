@@ -20,8 +20,9 @@ width = 0.35       # the width of the bars: can also be len(x) sequence
 
 fig, ax = plt.subplots()
 
-ax.bar(model, np.log(train_time), width, label='Train time')
-ax.bar(model, np.log(test_time), width, bottom=np.log(train_time),
+ax.set_yscale('symlog')
+ax.bar(model, train_time, width, label='Train time')
+ax.bar(model, train_time * test_time, width, bottom=train_time,
        label='Test Time')
 ax.set_ylabel('Time')
 ax.set_title('Efficiency of different models')
