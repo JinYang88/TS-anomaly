@@ -397,7 +397,7 @@ class LSTMCell(RNNCell):
 
     dtype = inputs.dtype
     input_size = inputs.get_shape().with_rank(2)[1]
-    if input_size.value is None:
+    if input_size.test_value is None:
       raise ValueError("Could not infer input size from inputs.get_shape()[-1]")
     with _checked_scope(self, scope or "lstm_cell",
                         initializer=self._initializer,
@@ -985,8 +985,8 @@ class _SlimRNNCell(RNNCell):
     init_output, init_state = self._cell_fn(None, None)
     output_shape = init_output.get_shape()
     state_shape = init_state.get_shape()
-    self._output_size = output_shape.with_rank(2)[1].value
-    self._state_size = state_shape.with_rank(2)[1].value
+    self._output_size = output_shape.with_rank(2)[1].test_value
+    self._state_size = state_shape.with_rank(2)[1].test_value
     if self._output_size is None:
       raise ValueError("Initial output created by %s has invalid shape %s" %
                        (self._cell_name, output_shape))
@@ -1035,11 +1035,11 @@ def _linear(args, output_size, bias, bias_start=0.0, scope=None):
   for shape in shapes:
     if shape.ndims != 2:
       raise ValueError("linear is expecting 2D arguments: %s" % shapes)
-    if shape[1].value is None:
+    if shape[1].test_value is None:
       raise ValueError("linear expects shape[1] to be provided for shape %s, "
                        "but saw %s" % (shape, shape[1]))
     else:
-      total_arg_size += shape[1].value
+      total_arg_size += shape[1].test_value
 
   dtype = [a.dtype for a in args][0]
 

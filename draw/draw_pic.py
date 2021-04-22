@@ -24,6 +24,16 @@ ax.set_yscale('symlog')
 ax.bar(model, train_time, width, label='Train time')
 ax.bar(model, train_time * test_time, width, bottom=train_time,
        label='Test Time')
+
+train_value = [round(i, 3) for i in train_time]
+for i in range(len(train_value)):
+    plt.text(x=i-0.2, y=train_value[i], s=train_value[i], size=15)
+
+test_value = [round(i, 3) for i in test_time]
+for i in range(len(test_value)):
+    plt.text(x=i-0.2, y=test_value[i]*train_value[i]+train_value[i], s=test_value[i], size=15)
+
+
 ax.set_ylabel('Time')
 ax.set_title('Efficiency of different models')
 ax.legend()
