@@ -23,7 +23,7 @@ fig, ax = plt.subplots()
 ax.bar(model, np.log(train_time), width, label='Train time')
 ax.bar(model, np.log(test_time), width, bottom=np.log(train_time),
        label='Test Time')
-ax.set_ylabel('Time/s')
+ax.set_ylabel('Time')
 ax.set_title('Efficiency of different models')
 ax.legend()
 
