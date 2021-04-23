@@ -10,11 +10,7 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from common.evaluation import iter_thresholds, point_adjustment
-from dtaidistance import dtw
-from sklearn.metrics.pairwise import euclidean_distances
-from scipy.stats import wasserstein_distance
 from sklearn.preprocessing import normalize
-from sklearn.metrics import pairwise_distances
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from common.spot import SPOT
 from common.evaluation import iter_thresholds
