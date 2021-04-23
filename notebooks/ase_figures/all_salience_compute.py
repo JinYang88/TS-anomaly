@@ -308,10 +308,10 @@ for hash_id, model_id in list(zip(best_data["hash_id"], best_data["model"])):
     dataset = best_data.loc[
         (best_data["model"] == model_id) & (best_data["hash_id"] == hash_id), "dataset"
     ].tolist()[0]
-    if dataset != "SWAT":
-        continue
-    if model_id != "omnianomaly":
-        continue
+    # if dataset != "SWAT":
+    #     continue
+    # if model_id != "omnianomaly":
+    #     continue
     print(model_id, dataset, "begin")
 
     salience_list = []
@@ -319,22 +319,26 @@ for hash_id, model_id in list(zip(best_data["hash_id"], best_data["model"])):
         train_score = value_dict["train_score"]
         test_score = value_dict["test_score"]
         label = value_dict["label"]
-
+        # print(test_score.shape, label.shape)
         if dataset == "SWAT":
             import random
 
             K = len(test_score) // 10
+            # print(K)
             test_score = np.array(
-                test_score[i] for i in sorted(random.sample(range(len(test_score)), K))
-            )
+                [
+                    test_score[i]
+                    for i in sorted(random.sample(range(len(test_score)), K))
+                ]
+            ).reshape(-1, 1)
             label = np.array(
-                label[i] for i in sorted(random.sample(range(len(label)), K))
-            )
-            print(
-                "Sample to {}, {}%".format(
-                    len(test_score), test_score.sum() / len(test_score)
-                )
-            )
+                [label[i] for i in sorted(random.sample(range(len(label)), K))]
+            ).reshape(-1)
+            # print(
+            #     "Sample to {}, {}%".format(
+            #         test_score.shape[0], test_score.sum() / test_score.shape[0]
+            #     )
+            # )
 
         salience = compute_salience(
             test_score, label, plot=False, ax=None, fig_saving_path=""
