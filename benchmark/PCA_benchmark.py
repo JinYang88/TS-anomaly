@@ -48,6 +48,9 @@ if __name__ == "__main__":
             x_test = data_dict["test"]
             x_test_labels = data_dict["test_labels"]
 
+            print(x_test_labels.sum()/len(x_test_labels))
+            sys.exit()
+
             od = PCA(args["n_components"], standardization=False)
 
             train_start = time.time()

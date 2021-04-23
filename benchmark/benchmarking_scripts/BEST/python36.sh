@@ -24,11 +24,15 @@ python mscred_benchmark.py --dataset WADI_SPLIT --lr 0.003 --in_channels_encoder
 
 # python AutoEncoder_benchmark.py --dataset SWAT --hidden_neurons 16 8 8 16 --batch_size 512 --epochs 100 --l2_regularizer 0.1
 # python AutoEncoder_benchmark.py --dataset WADI --hidden_neurons 32 16 16 32 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
-python AutoEncoder_benchmark.py --dataset WADI_SPLIT --hidden_neurons 32 16 16 32 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
+python AutoEncoder_benchmark.py --dataset WADI_SPLIT --hidden_neurons 32 16 16 32 --batch_size 512 --epochs 100 --l2_regularizer 0.00001 > logs/rerun_time_ae.log 2>&1 &
 
 
 # python lstm_benchmark.py --dataset MSL --lr 0.001 --window_size 32 --stride 5 --num_layers 1 --hidden_size 256 --gpu 0
 # python lstm_benchmark.py --dataset SMAP --lr 0.001 --window_size 250 --stride 5 --num_layers 1 --hidden_size 32 --gpu 0
 # python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 1 --hidden_size 128 --gpu 0
 # python lstm_benchmark.py --dataset SWAT --lr 0.001 --window_size 32 --stride 5 --num_layers 1 --hidden_size 32 --gpu 0
-# python lstm_benchmark.py --dataset WADI --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 256 --gpu 0
+
+
+# python lstm_benchmark.py --dataset WADI --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 256 --gpu 0 > logs/rerun_time_lstm.log 2>&1 &
+
+

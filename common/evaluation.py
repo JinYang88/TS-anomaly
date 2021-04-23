@@ -119,7 +119,9 @@ class evaluator:
         return results
 
 
-def iter_thresholds(score, label, metric="f1", adjustment=False, threshold=None):
+def iter_thresholds(
+    score, label, metric="f1", adjustment=False, normalized=False, threshold=None
+):
     best_metric = -float("inf")
     best_theta = None
     best_adjust = None
@@ -134,8 +136,10 @@ def iter_thresholds(score, label, metric="f1", adjustment=False, threshold=None)
     for trial in ["higher", "less"]:
         for anomaly_ratio in search_range:
             if threshold is None:
-                # theta = anomaly_ratio
-                theta = np.percentile(score, 100 * (1 - anomaly_ratio))
+                if not normalized:
+                    theta = np.percentile(score, 100 * (1 - anomaly_ratio))
+                else:
+                    theta = anomaly_ratio
             else:
                 theta = threshold
             if trial == "higher":
@@ -398,7 +402,7 @@ def compute_delay(label, pred):
         if pred_interval.sum() > 0:
             total_delay += np.where(pred_interval == 1)[0][0]
             count += 1
-    return total_delay / (count + 1e-6)
+    return total_delay
 
 
 def pot_eval(init_score, score, label, q=1e-3, level=0.02):
