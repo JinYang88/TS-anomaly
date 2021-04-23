@@ -60,3 +60,4 @@ ax.legend()
 
 plt.show()
 ax.figure.savefig('./time_efficiency.pdf')
+
