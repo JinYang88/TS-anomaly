@@ -1,0 +1,12 @@
+{
+    "adj_f1": 0.0,
+    "adj_precision": 0.0,
+    "adj_recall": 0.0,
+    "auc": 0,
+    "delay": 0.0,
+    "raw_f1": 0.0,
+    "raw_precision": 0.0,
+    "raw_recall": 0.0,
+    "test": 0.03690767288208008,
+    "train": 0.006009101867675781
+}

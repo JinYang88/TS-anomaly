@@ -1,0 +1,4 @@
+{
+    "cmd": "python PCA_benchmark.py --dataset SMD",
+    "dataset": "SMD"
+}

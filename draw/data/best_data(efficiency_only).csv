@@ -1,0 +1,61 @@
+model,dataset,count,hash_id,adj_f1,raw_f1,train_time,test_time,cmd
+AutoEncoder,MSL,27,789dc9fd,0.890237832603679,0.0259981279757789,230.31243562698364,5.105341672897339,python AutoEncoder_benchmark.py --dataset MSL --hidden_neurons 16 8 8 16 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
+AutoEncoder,SMAP,53,88e6097e,0.8367604934841855,0.080096683579486,434.2386817932129,20.153684854507446,python AutoEncoder_benchmark.py --dataset SMAP --hidden_neurons 32 16 16 32 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
+AutoEncoder,SMD,28,78b9fea9,0.9242014988113788,0.3298644038397939,1029.6143906116486,26.866024494171143,python AutoEncoder_benchmark.py --dataset SMD --hidden_neurons 16 8 8 16 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
+AutoEncoder,SWAT,1,3bc20ec0,0.8494342906875543,0.7260141961556397,565.0435230731964,17.489739894866943,python AutoEncoder_benchmark.py --dataset SWAT --hidden_neurons 16 8 8 16 --batch_size 512 --epochs 100 --l2_regularizer 0.1
+AutoEncoder,WADI,3,bb3f8e71,0.7615683337174523,0.05660947814309775,1412.5463166236877,4.381268501281738,python AutoEncoder_benchmark.py --dataset WADI_SPLIT --hidden_neurons 32 16 16 32 --batch_size 512 --epochs 100 --l2_regularizer 0.00001
+KNN,MSL,27,d44ed074,0.9423655015335975,0.10449447266585556,4.612268447875977,16.481045246124268,python KNN_benchmark.py --dataset MSL --n_neighbors 5
+KNN,SMAP,53,8fd9a874,0.8526480281178451,0.08178086314646595,10.841767311096191,43.33530592918396,python KNN_benchmark.py --dataset SMAP --n_neighbors 20
+KNN,SMD,28,a1155f90,0.9217360411499306,0.28505572519128136,377.3029658794403,492.38207507133484,python KNN_benchmark.py --dataset SMD --n_neighbors 30
+KNN,SWAT,1,236b34ad,0.8067735496748438,0.7421577167162524,2808.9726889133453,553.6832654476166,python KNN_benchmark.py --dataset SWAT --n_neighbors 30
+KNN,WADI,3,fa19078f,0.7190678094570107,0.04335363606299828,6178.267297506332,4043.6945221424103,python KNN_benchmark.py --dataset WADI_SPLIT --n_neighbors 3
+LODA,MSL,27,a5b82300,0.8858160409234566,0.0424568031335101,4.602700471878052,1.7254602909088135,python LODA_benchmark.py --dataset MSL --n_bins 40
+LODA,SMAP,53,bd01d43a,0.7975101281377331,0.10195369115215165,7.898590326309204,5.903474569320679,python LODA_benchmark.py --dataset SMAP --n_bins 30
+LODA,SMD,28,460b955a,0.8781278888796255,0.18506097379522687,17.31614899635315,13.545504093170166,python LODA_benchmark.py --dataset SMD --n_bins 20
+LODA,SWAT,1,7b8504f7,0.8237868233851617,0.753885778275476,5.210769414901733,6.471240043640137,python LODA_benchmark.py --dataset SWAT --n_bins 40
+LODA,WADI,1,2ae4435e,0.5747178534197525,0.18010301522078823,33.033344984054565,3.7535574436187744,python LODA_benchmark.py --dataset WADI --n_bins 40
+LOF,MSL,27,d44ed074,0.9496008619036517,0.08353473421586123,4.619149446487427,4.699256658554077,python LOF_benchmark.py --dataset MSL --n_neighbors 5
+LOF,SMAP,53,b36fe5a7,0.8690563579651335,0.09681119783036146,9.84057354927063,22.439143896102905,python LOF_benchmark.py --dataset SMAP --n_neighbors 10
+LOF,SMD,28,a1155f90,0.7803492920083163,0.16148242721723666,330.96714758872986,313.5995156764984,python LOF_benchmark.py --dataset SMD --n_neighbors 30
+LOF,SWAT,1,8eb77511,0.8198352677642209,0.7183483670965103,2867.7202486991882,2903.743025779724,python LOF_benchmark.py --dataset SWAT --n_neighbors 3
+LOF,WADI,3,fa19078f,0.8177511223241841,0.0157098035827388,5571.649974822998,894.7548763751984,python LOF_benchmark.py --dataset WADI_SPLIT --n_neighbors 3
+PCA,MSL,27,3211df4c,0.8903731816407648,0.038602699083069444,5.658012866973877,0.3484663963317871,python PCA_benchmark.py --dataset MSL --n_components 25
+PCA,SMAP,53,67fca19d,0.7450407164010784,0.058574876560635904,4.954928398132324,0.25850462913513184,python PCA_benchmark.py --dataset SMAP --n_components 10
+PCA,SMD,28,7da0a329,0.923643714201582,0.3320565206937031,7.921584367752075,1.1136698722839355,python PCA_benchmark.py --dataset SMD --n_components 5
+PCA,SWAT,1,c331568a,0.8563503594543087,0.7320746822864912,7.385819435119629,0.6583099365234375,python PCA_benchmark.py --dataset SWAT --n_components 20
+PCA,WADI,3,6e5f07f0,0.7404047248300047,0.06354974901762654,19.300719738006592,1.3208224773406982,python PCA_benchmark.py --dataset WADI_SPLIT --n_components 10
+dagmm,MSL,26,e8db8f5d,0.883608505106656,0.041811035942364724,78.52407002449036,0.08551216125488281,python dagmm_benchmark.py --dataset MSL --lr 0.0003 --dropout 0.25 --num_epochs 100 -ch 128 64 2 -eh 100 50
+dagmm,SMAP,50,f519fafa,0.7755617333410378,0.07486758182725187,201.53083300590515,0.2193591594696045,python dagmm_benchmark.py --dataset SMAP --lr 0.0001 --dropout 0.25 --num_epochs 100 -ch 128 64 2 -eh 100 50
+dagmm,SMD,28,2d87e614,0.8920650682121047,0.14091321321542746,868.9038791656494,0.16557073593139648,python dagmm_benchmark.py --dataset SMD --lr 0.0003 --dropout 0.25 --num_epochs 100 -ch 128 64 2 -eh 100 50
+dagmm,SWAT,1,92077b0f,0.9071872466900837,0.7569181457942283,396.8813202381134,0.25943803787231445,python dagmm_benchmark.py --dataset SWAT --lr 0.0001 --dropout 0.25 --num_epochs 100 -ch 64 32 2 -eh 60 30
+dagmm,WADI,1,edbd2847,0.5031932132303879,0.0241585404215162,1407.262703180313,1.357858657836914,python dagmm_benchmark.py --dataset WADI --lr 0.0001 --dropout 0.25 --num_epochs 100 -ch 128 64 2 -eh 100 50
+iforest,MSL,27,8ecad499,0.8545554563782635,0.03720321339370472,1.5010688304901123,0.8383352756500244,python iforest_benchmark.py --dataset MSL --n_estimators 16
+iforest,SMAP,53,08706dab,0.7236427050271002,0.08540886577115205,14.18743371963501,16.203734159469604,python iforest_benchmark.py --dataset SMAP --n_estimators 150
+iforest,SMD,28,38b8878c,0.8461734977298493,0.13471750059763238,4.652720212936401,4.494153261184692,python iforest_benchmark.py --dataset SMD --n_estimators 16
+iforest,SWAT,1,a4f7a5d9,0.8478215941187469,0.7275118473109865,4.366060256958008,5.028165578842163,python iforest_benchmark.py --dataset SWAT --n_estimators 32
+iforest,WADI,1,4b16cf63,0.6617172762124992,0.12849970215300827,57.53103446960449,8.063238382339478,python iforest_benchmark.py --dataset WADI --n_estimators 64
+lstm,MSL,27,81d1d828,0.9205300220299805,0.030059950196652103,1132.5526914596558,5.025047779083252,python lstm_benchmark.py --dataset MSL --lr 0.001 --window_size 32 --stride 5 --num_layers 1 --hidden_size 256 --gpu 0
+lstm,SMAP,53,f50ed1cb,0.876900368153869,0.07517025251657433,7190.925193786621,9.869065046310425,python lstm_benchmark.py --dataset SMAP --lr 0.001 --window_size 250 --stride 5 --num_layers 1 --hidden_size 32 --gpu 0
+lstm,SMD,28,8690c1d4,0.9447485270057074,0.20552662492058804,1717.2294039726257,6.562496900558472,python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 1 --hidden_size 128 --gpu 0
+lstm,SWAT,1,5ffec6c4,0.9643129718347418,0.7636172034512283,507.1327373981476,0.6987123489379883,python lstm_benchmark.py --dataset SWAT --lr 0.001 --window_size 32 --stride 5 --num_layers 1 --hidden_size 32 --gpu 0
+lstm,WADI,1,6692aa8e,0.9539460926895481,0.10652860652860653,1126.425552368164,2.7425315380096436,python lstm_benchmark.py --dataset WADI --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 256 --gpu 0
+lstm_vae,MSL,27,47d8ae31,0.9438020208984642,0.041933003626602745,76.26789903640747,2.087344169616699,python lstm_vae_benchmark.py --dataset MSL --lr 0.001 --z_dim 2 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 40
+lstm_vae,SMAP,53,328f377e,0.8637306903470914,0.02621925089127081,142.16545701026917,5.445854902267456,python lstm_vae_benchmark.py --dataset SMAP --lr 0.001 --z_dim 2 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 40
+lstm_vae,SMD,28,2ea5c31d,0.7974326547072718,0.16164954238607532,92.80601048469543,15.739501714706421,python lstm_vae_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 10
+lstm_vae,SWAT,1,e4d46419,0.8595864882890658,0.7484176533907427,633.7073934078217,48.15436816215515,python lstm_vae_benchmark.py --dataset SWAT --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 40
+lstm_vae,WADI,1,6f9dadb1,0.6842957366432811,0.19018632618216907,559.9042327404022,7.087588787078857,python lstm_vae_benchmark.py --dataset WADI --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 40
+mad_gan,MSL,27,d6094833,0.7942511695519928,0.0499684976106212,12483.177680253983,883.0358180999756,python mad_gan_benchmark.py --dataset MSL --window_size 16 --stride 1 --lr 0.001 --num_epochs 150
+mad_gan,SMAP,53,0fc1aa6e,0.6661149079830732,0.029237725952515874,10975.897282361984,4593.890531301498,python mad_gan_benchmark.py --dataset SMAP --window_size 16 --stride 1 --lr 0.005 --num_epochs 50
+mad_gan,SMD,28,560dd229,0.5034110341579433,0.046615758519041206,12130.202720403671,4920.836504936218,python mad_gan_benchmark.py --dataset SMD --window_size 32 --stride 5 --lr 0.001 --num_epochs 50
+mad_gan,SWAT,1,d5f57c02,0.818880503269073,0.010662224073302792,27180.750981092453,3328.7631299495697,python mad_gan_benchmark.py --dataset SWAT --window_size 64 --stride 5 --lr 0.005 --num_epochs 50
+mad_gan,WADI,3,02735b1c,0.7896868781096883,0.04766033329797605,71714.90652418137,1372.0182631015778,python mad_gan_benchmark.py --dataset WADI_SPLIT --window_size 64 --stride 5 --lr 0.005 --num_epochs 50
+mscred,MSL,27,b95ed780,0.7413427958871378,0.10599426822949448,1518.0797271728516,741.0074400901794,python mscred_benchmark.py --dataset MSL --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --num_epochs 1 --gpu 0
+mscred,SMAP,53,a6d1e63e,0.5752494691848088,0.09424141555332986,2059.4068536758423,2861.9677090644836,python mscred_benchmark.py --dataset SMAP --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --num_epochs 1 --gpu 0
+mscred,SMD,28,9ec960d8,0.7421780929598115,0.19698427123528353,53792.3835003376,12003.281168460846,python mscred_benchmark.py --dataset SMD --lr 0.001 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 3 --gpu 0
+mscred,SWAT,1,e8ec5657,0.8713520526689518,0.020236502591071952,18433.862496852875,11577.814548492432,python mscred_benchmark.py --dataset SWAT --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 0
+mscred,WADI,3,9871a6cb,0.8430768305976778,0.03617170395573389,60215.801206827164,5405.736147403717,python mscred_benchmark.py --dataset WADI_SPLIT --lr 0.003 --in_channels_encoder 3 --in_channels_decoder 256 --hidden_size 64 --num_epochs 1 --gpu 0
+omnianomaly,MSL,27,13c386ad,0.9411190840308629,0.04313971539238506,426.99566864967346,40.60538053512573,python omnianomaly_benchmark.py --dataset MSL --lr 0.001 --z_dim 3 --rnn_num_hidden 300 --window_size 64 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 10
+omnianomaly,SMAP,53,1619ae25,0.7914348377201577,0.04833411274710965,954.566413640976,85.89696836471558,python omnianomaly_benchmark.py --dataset SMAP --lr 0.001 --z_dim 3 --rnn_num_hidden 300 --window_size 64 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 10
+omnianomaly,SMD,28,9ea0b5f0,0.938243776689349,0.249877004553319,4613.083760976791,287.08083724975586,python omnianomaly_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --rnn_num_hidden 300 --window_size 64 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 10
+omnianomaly,SWAT,1,823706c6,0.8671525743306944,0.7547829962672016,2658.7260644435883,154.52232766151428,python omnianomaly_benchmark.py --dataset SWAT --lr 0.001 --z_dim 3 --rnn_num_hidden 200 --window_size 64 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 10
+omnianomaly,WADI,1,40f62061,0.4695763352124136,0.019702210858775757,3872.3564076423645,220.3165578842163,python omnianomaly_benchmark.py --dataset WADI --lr 0.001 --z_dim 3 --rnn_num_hidden 500 --window_size 32 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 10

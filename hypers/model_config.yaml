@@ -1,0 +1,48 @@
+Base:
+    window_size: 250
+    batch_size: 64
+    nb_epoch: 20
+    lr: 0.001
+    prediction_length: 1
+    # prediction_dims: [] # a list or empty indicating "all"
+    normalize: False
+
+casualCnn:
+    channels: 40
+    depth: 2
+    in_channels: 1 # 输入有几维度KPI
+    kernel_size: 3 # 同时考虑多少个token
+    out_channels: 64
+    reduced_size: 32
+    discretized: False
+
+mlstm:
+    hidden_size: 128
+    num_layers: 2
+    discretized: True
+    normalize: False # minmax, standard, robust
+    # use_dim: 1
+
+mlstm_250:
+    stride: 5
+    window_size: 64
+    hidden_size: 128
+    num_layers: 2
+    discretized: False
+    dropout: 0.1
+    normalize: minmax # minmax, standard, robust
+    # n_bins: 50
+    # embedding_dim: 16
+    # use_dim: 1
+
+# mlstm_250: For SMD
+#     stride: 5
+#     window_size: 32
+#     hidden_size: 128
+#     num_layers: 2
+#     discretized: True
+#     # normalize: False # minmax, standard, robust
+#     dropout: 0.1
+#     # n_bins: 50
+#     # embedding_dim: 16
+#     # use_dim: 1

@@ -1,0 +1,1 @@
+44670684	LOF_benchmark.py --dataset SMD --n_neighbors 20	train:0.0110 test:0.0089	adj f1: [0.0000(0.0000)]
