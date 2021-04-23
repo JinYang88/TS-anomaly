@@ -325,9 +325,11 @@ for hash_id, model_id in list(zip(best_data["hash_id"], best_data["model"])):
 
             K = len(test_score) // 10
             test_score = np.array(
-                [x[1] for x in sorted(random.sample(enumerate(test_score), K))]
+                test_score[i] for i in sorted(random.sample(range(len(test_score)), K))
             )
-            label = np.array([x[1] for x in sorted(random.sample(enumerate(label), K))])
+            label = np.array(
+                label[i] for i in sorted(random.sample(range(len(label)), K))
+            )
             print(
                 "Sample to {}, {}%".format(
                     len(test_score), test_score.sum() / len(test_score)
