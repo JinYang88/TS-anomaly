@@ -1,2 +1,0 @@
-810175d4	KNN_benchmark.py --dataset SMD --n_neighbors 5	train:0.0060 test:0.0359	adj f1: [0.0000(0.0000)]
-810175d4	KNN_benchmark.py --dataset SMD --n_neighbors 5	train:0.0130 test:0.0788	adj f1: [0.0000(0.0000)]

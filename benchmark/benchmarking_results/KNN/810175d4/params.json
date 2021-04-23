@@ -1,5 +1,0 @@
-{
-    "cmd": "python KNN_benchmark.py --dataset SMD --n_neighbors 5",
-    "dataset": "SMD",
-    "n_neighbors": 5
-}

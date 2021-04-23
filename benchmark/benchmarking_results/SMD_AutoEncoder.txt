@@ -1,1 +1,0 @@
-9dd60736	count:2	AutoEncoder_benchmark.py --dataset SMD --hidden_neurons 64 32 64 --batch_size 32 --epochs 100 --l2_regularizer 0.1	train:136.2038 test:0.5193	adj f1: [0.9456(0.0538)]

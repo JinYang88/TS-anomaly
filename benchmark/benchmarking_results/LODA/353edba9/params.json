@@ -1,5 +1,0 @@
-{
-    "cmd": "python LODA_benchmark.py --dataset SMD --n_bins 10",
-    "dataset": "SMD",
-    "n_bins": 10
-}

@@ -1,5 +1,0 @@
-{
-    "cmd": "python LOF_benchmark.py --dataset SMD --n_neighbors 20",
-    "dataset": "SMD",
-    "n_neighbors": 20
-}
