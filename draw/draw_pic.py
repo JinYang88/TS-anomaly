@@ -58,5 +58,5 @@ ax.set_ylabel("Time (s)")
 # ax.set_title('Efficiency of different models')
 ax.legend()
 
-plt.show()
+# plt.show()
 ax.figure.savefig("./time_efficiency.pdf")
