@@ -238,7 +238,8 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
     a_count_ratio = a_count_ratio / (a_count_ratio + n_count_ratio)
     n_count_ratio = n_count_ratio / (a_count_ratio + n_count_ratio)
 
-    salience = a_count_ratio * a_dict["mean"] - n_count_ratio * n_dict["mean"]
+    # salience = a_count_ratio * a_dict["mean"] - n_count_ratio * n_dict["mean"]
+    salience = a_dict["mean"] - n_dict["mean"]
 
     #     salience = a_dict["mean"], n_dict["mean"]
 
@@ -308,8 +309,8 @@ for hash_id, model_id in list(zip(best_data["hash_id"], best_data["model"])):
     dataset = best_data.loc[
         (best_data["model"] == model_id) & (best_data["hash_id"] == hash_id), "dataset"
     ].tolist()[0]
-    # if dataset != "SWAT":
-    #     continue
+    if dataset != "SMAP":
+        continue
     # if model_id != "omnianomaly":
     #     continue
     print(model_id, dataset, "begin")
