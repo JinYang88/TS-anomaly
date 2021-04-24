@@ -170,7 +170,7 @@ def compute_support(score, label, combine_id, dtype="normal"):
     clusters = []
     dscore = score[score_idx]
 
-    if combine_id in cluster_labels_dict:
+    if dtype in cluster_labels_dict[combine_id]:
         print("Loding directly!")
         cluster_labels = cluster_labels_dict[combine_id][dtype]
     else:
@@ -311,7 +311,7 @@ from common.evaluation import compute_delay
 with open("./compute_delay/all_best_scores.pkl", "rb") as fr:
     res_dict = pickle.load(fr)
 
-if os.path.isfile("./cluster_labels_dict.pkl"):
+if not os.path.isfile("./cluster_labels_dict.pkl"):
     cluster_labels_dict = defaultdict(dict)
 else:
     with open("./cluster_labels_dict.pkl", "rb") as fr:
@@ -322,8 +322,8 @@ for hash_id, model_id in list(zip(best_data["hash_id"], best_data["model"])):
     dataset = best_data.loc[
         (best_data["model"] == model_id) & (best_data["hash_id"] == hash_id), "dataset"
     ].tolist()[0]
-    if dataset != "SMAP":
-        continue
+    # if dataset != "SMAP":
+    #     continue
     # if model_id != "omnianomaly":
     #     continue
     print(model_id, dataset, "begin")
