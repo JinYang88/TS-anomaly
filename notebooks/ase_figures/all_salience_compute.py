@@ -250,7 +250,7 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
     #     print(f"a ratio: {a_count_ratio}")
     #     print(f"n ratio: {n_count_ratio}")
     #     print(f"non_overlapping: {non_overlapping}")
-    #     print(salience)
+    print(salience)
     if plot:
         if ax is None:
             fig, ax = plt.subplots(figsize=(20, 5))
