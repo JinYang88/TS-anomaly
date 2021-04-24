@@ -161,7 +161,7 @@ best_data = data_df.loc[data_df.groupby(["model", "dataset"])["adj_f1"].idxmax()
 from sklearn.cluster import AgglomerativeClustering
 
 
-def compute_support(score, label, dtype="normal"):
+def compute_support(score, label, combine_id, dtype="normal"):
     if dtype == "normal":
         score_idx = np.arange(len(score))[(label == 0).astype(bool)]
     elif dtype == "anomaly":
@@ -169,8 +169,16 @@ def compute_support(score, label, dtype="normal"):
 
     clusters = []
     dscore = score[score_idx]
-    clustering = AgglomerativeClustering(affinity="l1", linkage="complete").fit(dscore)
-    cluster_labels = clustering.labels_
+
+    if combine_id in cluster_labels_dict:
+        print("Loding directly!")
+        cluster_labels = cluster_labels_dict[combine_id][dtype]
+    else:
+        clustering = AgglomerativeClustering(affinity="l1", linkage="complete").fit(
+            dscore
+        )
+        cluster_labels = clustering.labels_
+        cluster_labels_dict[combine_id][dtype] = cluster_labels
 
     for label in range(len(set(cluster_labels))):
         clusters.append(dscore[cluster_labels == label])
@@ -200,17 +208,17 @@ def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
 
 
-def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
+def compute_salience(score, label, combine_id, plot=False, ax=None, fig_saving_path=""):
     total_indice = np.arange(len(score))
     score_n = score[~label.astype(bool)]
     score_a = score[label.astype(bool)]
 
     score_n_idx = total_indice[~label.astype(bool)]
-    n_dict = compute_support(score, label, "normal")
+    n_dict = compute_support(score, label, combine_id, "normal")
     salient_score_n = score[n_dict["idx"]]
 
     score_a_idx = total_indice[label.astype(bool)]
-    a_dict = compute_support(score, label, "anomaly")
+    a_dict = compute_support(score, label, combine_id, "anomaly")
     salient_score_a = score[a_dict["idx"]]
 
     a_upper = a_dict["mean"] + a_dict["std"]
@@ -298,11 +306,16 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
 
 
 import pickle
+from common.evaluation import compute_delay
 
 with open("./compute_delay/all_best_scores.pkl", "rb") as fr:
     res_dict = pickle.load(fr)
 
-from common.evaluation import compute_delay
+if os.path.isfile("./cluster_labels_dict.pkl"):
+    cluster_labels_dict = defaultdict(dict)
+else:
+    with open("./cluster_labels_dict.pkl", "rb") as fr:
+        cluster_labels_dict = pickle.load(fr)
 
 salience_dict = defaultdict(list)
 for hash_id, model_id in list(zip(best_data["hash_id"], best_data["model"])):
@@ -342,13 +355,21 @@ for hash_id, model_id in list(zip(best_data["hash_id"], best_data["model"])):
             # )
 
         salience = compute_salience(
-            test_score, label, plot=False, ax=None, fig_saving_path=""
+            test_score,
+            label,
+            (model_id, subdataset),
+            plot=False,
+            ax=None,
+            fig_saving_path="",
         )
         salience_list.append(salience)
     avg_saliencee = np.array(salience_list).mean()
     salience_dict[(model_id, dataset)] = avg_saliencee
 
     print(model_id, dataset, "done")
+
+with open("./cluster_labels_dict.pkl", "wb") as fr:
+    pickle.dump(cluster_labels_dict, fr)
 
 
 def reorder_df(df):
