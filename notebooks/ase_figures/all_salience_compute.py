@@ -158,7 +158,6 @@ data_df["dataset"] = data_df["dataset"].map(
     lambda x: "WADI" if x == "WADI_SPLIT" else x
 )
 best_data = data_df.loc[data_df.groupby(["model", "dataset"])["adj_f1"].idxmax()]
-
 from sklearn.cluster import AgglomerativeClustering
 
 
@@ -170,7 +169,6 @@ def compute_support(score, label, dtype="normal"):
 
     clusters = []
     dscore = score[score_idx]
-    print("Clustering...")
     clustering = AgglomerativeClustering(affinity="l1", linkage="complete").fit(dscore)
     cluster_labels = clustering.labels_
 
@@ -240,10 +238,12 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
     a_count_ratio = a_count_ratio / (a_count_ratio + n_count_ratio)
     n_count_ratio = n_count_ratio / (a_count_ratio + n_count_ratio)
 
-    salience = non_overlapping * (
-        a_count_ratio * a_dict["mean"] - n_count_ratio * n_dict["mean"]
-    )
+    salience = a_count_ratio * a_dict["mean"] - n_count_ratio * n_dict["mean"]
 
+    #     salience = a_dict["mean"], n_dict["mean"]
+
+    #     print(f"a mean: {a_dict['mean']}")
+    #     print(f"n mean: {n_dict['mean']}")
     #     print(f"a count: {len(a_dict['idx'])}")
     #     print(f"n count: {len(n_dict['idx'])}")
     #     print(f"a ratio: {a_count_ratio}")
