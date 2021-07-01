@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 import sys
 import copy
@@ -7,7 +8,7 @@ import hashlib
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.cluster import AgglomerativeClustering
-from common.spot import SPOT
+from common.thresholding import bf_search, pot_eval
 
 metric_func = {
     "f1": f1_score,
@@ -307,7 +308,17 @@ def evaluate_benchmarking_folder(
 ):
     # compute auc, raw f1, etc.
 
-    total_adj_f1 = []
+    concerned_metrics = [
+        "train_time",
+        "test_time",
+        "adj_precision",
+        "adj_recall",
+        "pot-precision",
+        "pot-recall",
+        "pot-f1",
+        "adj_f1",
+    ]
+    metric_values_dict = defaultdict(list)
     total_train_time = []
     total_test_time = []
     folder_count = 0
@@ -317,6 +328,9 @@ def evaluate_benchmarking_folder(
         anomaly_score = np.load(
             os.path.join(folder, "anomaly_score.npz"), allow_pickle=True
         )["arr_0"].item()["test"]
+        anomaly_score_train = np.load(
+            os.path.join(folder, "anomaly_score.npz"), allow_pickle=True
+        )["arr_0"].item()["train"]
 
         anomaly_label = np.load(os.path.join(folder, "anomaly_label.npz"))[
             "arr_0"
@@ -342,11 +356,22 @@ def evaluate_benchmarking_folder(
         raw_precision = precision_score(anomaly_label, best_raw_pred)
         raw_recall = recall_score(anomaly_label, best_raw_pred)
 
-        avg_delay = compute_delay(anomaly_label, best_raw_pred)
+        total_delay = compute_delay(anomaly_label, best_raw_pred)
 
-        total_adj_f1.append(adj_f1)
-        total_train_time.append(time["train"])
-        total_test_time.append(time["test"])
+        # bf_search_min, bf_search_max = 0, 1
+        # bf_search_step_size = 0.01
+        # t, th = bf_search(
+        #     anomaly_score,
+        #     anomaly_label,
+        #     start=bf_search_min,
+        #     end=bf_search_max,
+        #     step_num=int(abs(bf_search_max - bf_search_min) / bf_search_step_size),
+        #     display_freq=50,
+        # )
+        # get pot results
+        pot_result = pot_eval(
+            anomaly_score_train, anomaly_score, anomaly_label, level=0.0001
+        )
 
         metric = {
             "auc": auc,
@@ -356,25 +381,30 @@ def evaluate_benchmarking_folder(
             "adj_f1": adj_f1,
             "adj_precision": adj_precision,
             "adj_recall": adj_recall,
-            "delay": avg_delay,
-            "train": time["train"],
-            "test": time["test"],
+            "delay": total_delay,
+            "train_time": time["train"],
+            "test_time": time["test"],
         }
+        metric.update(pot_result)
+
+        for metric_name in concerned_metrics:
+            metric_values_dict[metric_name].append(metric[metric_name])
+
         json_pretty_dump(metric, os.path.join(folder, "metrics.json"))
         folder_count += 1
-
-    total_adj_f1 = np.array(total_adj_f1)
-    adj_f1_mean = total_adj_f1.mean()
-    adj_f1_std = total_adj_f1.std()
-
-    train_time_sum = sum(total_train_time)
-    test_time_sum = sum(total_test_time)
 
     with open(
         os.path.join(benchmarking_dir, f"{dataset}_{model_name}.txt"), "a+"
     ) as fw:
         params = " ".join(sys.argv)
-        info = f"{hash_id}\tcount:{folder_count}\t{params}\ttrain:{train_time_sum:.4f} test:{test_time_sum:.4f}\tadj f1: [{adj_f1_mean:.4f}({adj_f1_std:.4f})]\n"
+        info = f"{hash_id}\tcount:{folder_count}\t{params}\t"
+        metric_str = []
+        for metric_name in concerned_metrics:
+            values = np.array(metric_values_dict[metric_name])
+            mean, std = values.mean(), values.std()
+            metric_str.append("{}: {:.3f} ({:.3f})".format(metric_name, mean, std))
+        metric_str = "\t".join(metric_str)
+        info += metric_str + "\n"
         fw.write(info)
     print(info)
 
@@ -402,31 +432,7 @@ def compute_delay(label, pred):
         if pred_interval.sum() > 0:
             total_delay += np.where(pred_interval == 1)[0][0]
             count += 1
-    return total_delay
-
-
-def pot_eval(init_score, score, label, q=1e-3, level=0.02):
-    s = SPOT(q)  # SPOT object
-    s.fit(init_score, score)  # data import
-    s.initialize(level=level, min_extrema=True)  # initialization step
-    ret = s.run(dynamic=False)  # run
-    print(len(ret["alarms"]))
-    print(len(ret["thresholds"]))
-    pot_th = -np.mean(ret["thresholds"])
-    pred, p_latency = adjust_predicts(score, label, pot_th, calc_latency=True)
-    p_t = calc_point2point(pred, label)
-    print("POT result: ", p_t, pot_th, p_latency)
-    return {
-        "pot-f1": p_t[0],
-        "pot-precision": p_t[1],
-        "pot-recall": p_t[2],
-        "pot-TP": p_t[3],
-        "pot-TN": p_t[4],
-        "pot-FP": p_t[5],
-        "pot-FN": p_t[6],
-        "pot-threshold": pot_th,
-        "pot-latency": p_latency,
-    }
+    return int(total_delay)
 
 
 if __name__ == "__main__":
