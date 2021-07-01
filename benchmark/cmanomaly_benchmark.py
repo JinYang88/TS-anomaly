@@ -35,7 +35,7 @@ parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cp
 
 args = vars(parser.parse_args())
 
-model_name = "lstm"  # change this name for different models
+model_name = "CMAnomaly"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")

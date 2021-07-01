@@ -57,7 +57,7 @@ num_layers = args["num_layers"]
 
 
 normalize = "minmax"
-nb_epoch = 1000
+nb_epoch = 1
 patience = 5
 dropout = 0
 batch_size = 1024

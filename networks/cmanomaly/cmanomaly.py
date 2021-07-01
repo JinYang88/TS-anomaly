@@ -10,31 +10,29 @@ from networks.wrappers import TimeSeriesEncoder
 
 
 class AFMLayer(torch.nn.Module):
-    def __init__(self, embed_dim, attn_size=32, dropout=0.1):
+    def __init__(self, embed_dim, num_fields, attn_size=32, dropout=0.1):
         super().__init__()
         self.attention = torch.nn.Linear(embed_dim, attn_size)
         self.projection = torch.nn.Linear(attn_size, 1)
         self.fc = torch.nn.Linear(embed_dim, 1)
         self.dropout = nn.Dropout(dropout)
+        self.row, self.col = list(), list()
+        for i in range(num_fields - 1):
+            for j in range(i + 1, num_fields):
+                self.row.append(i), self.col.append(j)
 
     def forward(self, x):
         """
         :param x: Float tensor of size ``(batch_size, num_fields, embed_dim)``
         """
-        num_fields = x.shape[1]
-        row, col = list(), list()
-        for i in range(num_fields - 1):
-            for j in range(i + 1, num_fields):
-                row.append(i), col.append(j)
-        p, q = x[:, row], x[:, col]
+        p, q = x[:, self.row], x[:, self.col]
         inner_product = p * q
-
         attn_scores = F.relu(self.attention(inner_product))
         attn_scores = F.softmax(self.projection(attn_scores), dim=1)
         attn_scores = self.dropout(attn_scores)
         attn_output = torch.sum(attn_scores * inner_product, dim=1)
         attn_output = self.dropout(attn_output)
-        return attn_output
+        return attn_output, attn_scores
 
 
 class CMAnomaly(TimeSeriesEncoder):
@@ -67,33 +65,26 @@ class CMAnomaly(TimeSeriesEncoder):
         self.prediction_length = prediction_length
         self.gamma = gamma
 
-        if vocab_size is not None and embedding_dim is not None:
-            self.embedder = nn.Embedding(vocab_size, embedding_dim)
-            lstm_input_dim = embedding_dim
-        else:
-            self.embedder = None
-            lstm_input_dim = in_channels
-
         final_output_dim = prediction_length * len(self.prediction_dims)
 
-        clf_input_dim = in_channels + window_size - 1
-
-        self.time_afm = AFMLayer(in_channels)
-        self.feat_afm = AFMLayer(window_size - 1)
+        self.embed = nn.Linear(in_channels, embedding_dim)
+        clf_input_dim = embedding_dim + window_size - 1
+        self.time_afm = AFMLayer(embedding_dim, num_fields=window_size - 1)
+        self.feat_afm = AFMLayer(window_size - 1, num_fields=embedding_dim)
 
         self.res_w = nn.Linear(
-            in_channels * (window_size - 1),
-            window_size - 1 + in_channels,
+            embedding_dim * (window_size - 1),
+            window_size - 1 + embedding_dim,
         )
 
         self.linear = nn.Sequential(
-            nn.Linear(clf_input_dim, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(64, final_output_dim),
+            nn.Linear(clf_input_dim, final_output_dim),
+            # nn.ReLU(),
+            # nn.Dropout(dropout),
+            # nn.Linear(128, 64),
+            # nn.ReLU(),
+            # nn.Dropout(dropout),
+            # nn.Linear(64, final_output_dim),
         )
 
         # self.linear = nn.Sequential(nn.Linear(clf_input_dim, final_output_dim))
@@ -121,8 +112,10 @@ class CMAnomaly(TimeSeriesEncoder):
             batch_window[:, -self.prediction_length :, self.prediction_dims],
         )
 
-        time_inter = self.time_afm(x)
-        dim_inter = self.feat_afm(x.transpose(2, 1))
+        x = self.embed(x)
+
+        time_inter, time_attn_scores = self.time_afm(x)
+        dim_inter, dim_attn_scores = self.feat_afm(x.transpose(2, 1))
 
         interactions = torch.cat([time_inter, dim_inter], dim=-1)
         outputs = self.dropout(interactions)
@@ -137,6 +130,8 @@ class CMAnomaly(TimeSeriesEncoder):
             "repr": outputs,
             "score": loss,
             "y": y,
+            "time_attn_scores": time_attn_scores,
+            "dim_attn_scores": dim_attn_scores,
         }
 
         return return_dict

@@ -154,7 +154,6 @@ def iter_thresholds(
                 adjusted_pred = pred
 
             current_value = metric_func[metric](adjusted_pred, label)
-            # print(anomaly_ratio, current_value)
 
             if current_value > best_metric:
                 best_metric = current_value
@@ -164,7 +163,6 @@ def iter_thresholds(
         best_set.append((best_metric, best_theta, best_adjust, best_raw))
 
     return max(best_set, key=lambda x: x[0])
-    # return best_metric, best_theta, best_adjust, best_raw
 
 
 def point_adjustment(pred, label):
@@ -306,8 +304,6 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
 def evaluate_benchmarking_folder(
     folder, benchmarking_dir, hash_id, dataset, model_name
 ):
-    # compute auc, raw f1, etc.
-
     concerned_metrics = [
         "train_time",
         "test_time",
