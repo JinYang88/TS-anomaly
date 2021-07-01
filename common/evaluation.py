@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.cluster import AgglomerativeClustering
 from common.thresholding import bf_search, pot_eval
+from datetime import datetime
 
 metric_func = {
     "f1": f1_score,
@@ -389,11 +390,12 @@ def evaluate_benchmarking_folder(
         json_pretty_dump(metric, os.path.join(folder, "metrics.json"))
         folder_count += 1
 
+    current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
     with open(
         os.path.join(benchmarking_dir, f"{dataset}_{model_name}.txt"), "a+"
     ) as fw:
         params = " ".join(sys.argv)
-        info = f"{hash_id}\tcount:{folder_count}\t{params}\t"
+        info = f"{current_time}\t{hash_id}\tcount:{folder_count}\t{params}\t"
         metric_str = []
 
         # from IPython import embed
