@@ -21,7 +21,7 @@ metric_func = {
 def json_pretty_dump(obj, filename):
     with open(filename, "w") as fw:
         json.dump(
-            {k: str(v) for k,v in obj.items()},
+            {k: str(v) for k, v in obj.items()},
             fw,
             sort_keys=True,
             indent=4,
@@ -399,8 +399,11 @@ def evaluate_benchmarking_folder(
         params = " ".join(sys.argv)
         info = f"{hash_id}\tcount:{folder_count}\t{params}\t"
         metric_str = []
+
+        # from IPython import embed
+        # embed()
         for metric_name in concerned_metrics:
-            values = np.array(metric_values_dict[metric_name])
+            values = np.array(metric_values_dict[metric_name], dtype=float)
             mean, std = values.mean(), values.std()
             metric_str.append("{}: {:.3f} ({:.3f})".format(metric_name, mean, std))
         metric_str = "\t".join(metric_str)
