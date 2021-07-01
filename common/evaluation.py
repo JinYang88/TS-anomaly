@@ -21,7 +21,7 @@ metric_func = {
 def json_pretty_dump(obj, filename):
     with open(filename, "w") as fw:
         json.dump(
-            {k: float(v) for k,v in obj.items()},
+            {k: str(v) for k,v in obj.items()},
             fw,
             sort_keys=True,
             indent=4,
