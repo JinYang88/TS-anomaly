@@ -39,7 +39,7 @@ hash_id = hashlib.md5(
 ).hexdigest()[0:8]
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:1]:
+    for subdataset in subdatasets[dataset]:
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
