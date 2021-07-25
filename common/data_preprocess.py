@@ -11,7 +11,7 @@ from sklearn.preprocessing import (
     RobustScaler,
     StandardScaler,
 )
-
+from pyts.approximation import SymbolicAggregateApproximation
 from common.utils import load_hdf5, save_hdf5
 
 
@@ -22,23 +22,37 @@ class preprocessor:
 
     def save(self, filepath):
         filepath = os.path.join(filepath, "preprocessor.pkl")
-        logging.info("Saving preprocessor into {}".format(filepath))
+        print("Saving preprocessor into {}".format(filepath))
         with open(filepath, "wb") as fw:
             pickle.dump(self.__dict__, fw)
 
     def load(self, filepath):
         filepath = os.path.join(filepath, "preprocessor.pkl")
-        logging.info("Loading preprocessor from {}".format(filepath))
+        print("Loading preprocessor from {}".format(filepath))
         with open(filepath, "rb") as fw:
             self.__dict__.update(pickle.load(fw))
     
     def symbolize(self, data_dict, n_bins=26, strategy="normal", nrows=None):
+        def add_postfix(x):
+            postfix = np.array([["_"+str(i)]*x.shape[0] for i in range(x.shape[1])]).T
+            return np.char.add(x, postfix)
+
+        print("Discarding constant dimensions.")
+        constant_cols = []
+        for idx, col in enumerate(data_dict["train"].T):
+            if len(set(col)) == 1:
+                constant_cols.append(idx)
+        reserved_cols = [idx for idx in range(data_dict["train"].shape[1]) if idx not in constant_cols]
+        data_dict["train"] = data_dict["train"][:, reserved_cols]
+        data_dict["test"] = data_dict["test"][:, reserved_cols]
+
+        print("Convert time series to symbolics.")
         sax = SymbolicAggregateApproximation(n_bins=n_bins, strategy=strategy)
         train_sax = sax.fit_transform(data_dict["train"].T[:, :nrows])
         test_sax = sax.transform(data_dict["test"].T[:, :nrows])
 
-        data_dict["train_tokens"] = train_sax.T
-        data_dict["test_tokens"] = test_sax.T
+        data_dict["train_tokens"] = add_postfix(train_sax.T)
+        data_dict["test_tokens"] = add_postfix(test_sax.T)
         return data_dict
 
     def discretize(self, data_dict, n_bins=1000):
@@ -61,16 +75,8 @@ class preprocessor:
                 discretized_dict[data_name] = train_.astype(int)
         return discretized_dict
 
-    def build_vocab(self, data_dict):
-        max_index = -float("inf")
-        index = np.max(data_dict["train"].reshape(-1))
-        self.vocab_size = index + 1
-        logging.info("# of Discretized tokens: {}".format(self.vocab_size))
-
-        return self.vocab_size
-
     def normalize(self, data_dict, method="minmax"):
-        logging.info("Normalizing data")
+        print("Normalizing data")
         # method: minmax, standard, robust
         normalized_dict = defaultdict(dict)
 
@@ -93,6 +99,8 @@ class preprocessor:
             if k not in ["train", "test"]:
                 normalized_dict[k] = v
         return normalized_dict
+
+
 
 
 def get_windows(ts, labels=None, window_size=128, stride=1, dim=None):
@@ -139,7 +147,7 @@ def generate_windows_with_index(
         if not clear and os.path.isfile(cache_file):
             return load_hdf5(cache_file)
 
-    logging.info("Generating sliding windows (size {}).".format(window_size))
+    print("Generating sliding windows (size {}).".format(window_size))
 
     if "train" in data_dict:
         train = data_dict["train"][0:nrows]
@@ -158,7 +166,7 @@ def generate_windows_with_index(
 
     if len(train_windows) > 0:
         results["train_windows"] = train_windows
-        logging.info("Train windows #: {}".format(train_windows.shape))
+        print("Train windows #: {}".format(train_windows.shape))
 
     if len(test_windows) > 0:
         if test_label is not None:
@@ -166,7 +174,7 @@ def generate_windows_with_index(
             results["test_labels"] = test_labels
         else:
             results["test_windows"] = test_windows
-        logging.info("Test windows #: {}".format(test_windows.shape))
+        print("Test windows #: {}".format(test_windows.shape))
 
     idx = np.asarray(list(range(0, test.shape[0] + stride * window_size)))
     i = 0
@@ -206,7 +214,7 @@ def generate_windows(
         if not clear and os.path.isfile(cache_file):
             return load_hdf5(cache_file)
 
-    logging.info("Generating sliding windows (size {}).".format(window_size))
+    print("Generating sliding windows (size {}).".format(window_size))
 
     if "train" in data_dict:
         train = data_dict["train"][0:nrows]
@@ -225,7 +233,7 @@ def generate_windows(
 
     if len(train_windows) > 0:
         results["train_windows"] = train_windows
-        logging.info("Train windows #: {}".format(train_windows.shape))
+        print("Train windows #: {}".format(train_windows.shape))
 
     if len(test_windows) > 0:
         if test_label is not None:
@@ -233,7 +241,7 @@ def generate_windows(
             results["test_labels"] = test_labels
         else:
             results["test_windows"] = test_windows
-        logging.info("Test windows #: {}".format(test_windows.shape))
+        print("Test windows #: {}".format(test_windows.shape))
 
     # save_hdf5(cache_file, results)
     return results
