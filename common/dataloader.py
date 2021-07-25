@@ -47,6 +47,7 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
     test_files = glob(os.path.join(root_dir, path, prefix + "_test.pkl"))
     label_files = glob(os.path.join(root_dir, path, prefix + "_test_label.pkl"))
 
+    print(os.path.join(root_dir, path, prefix + "_train.pkl"))
     logging.info("{} files found.".format(len(train_files)))
 
     data_dict = defaultdict(dict)

@@ -31,6 +31,15 @@ class preprocessor:
         logging.info("Loading preprocessor from {}".format(filepath))
         with open(filepath, "rb") as fw:
             self.__dict__.update(pickle.load(fw))
+    
+    def symbolize(self, data_dict, n_bins=26, strategy="normal", nrows=None):
+        sax = SymbolicAggregateApproximation(n_bins=n_bins, strategy=strategy)
+        train_sax = sax.fit_transform(data_dict["train"].T[:, :nrows])
+        test_sax = sax.transform(data_dict["test"].T[:, :nrows])
+
+        data_dict["train_tokens"] = train_sax.T
+        data_dict["test_tokens"] = test_sax.T
+        return data_dict
 
     def discretize(self, data_dict, n_bins=1000):
         if n_bins is None:
