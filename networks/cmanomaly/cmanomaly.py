@@ -95,13 +95,10 @@ class CMAnomaly(TimeSeriesEncoder):
         # return bi_interaction_vector.sum(dim=-1, keepdim=True)
         return bi_interaction_vector
 
-    def forward(self, batch_window):
+    def forward(self, input_dict):
         # batch_window = batch_window.permute(0, 2, 1)  # b x win x ts_dim
-        self.batch_size = batch_window.size(0)
-        x, y = (
-            batch_window[:, 0 : -self.prediction_length, :],
-            batch_window[:, -self.prediction_length :, self.prediction_dims],
-        )
+        x, y = input_dict["x"], input_dict["y"]
+        self.batch_size = x.size(0)
 
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
         interaction, interaction_score = self.afm(x_embed)

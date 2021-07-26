@@ -61,13 +61,11 @@ if __name__ == "__main__":
 
     train_iterator = TokenDataset(
         vocab, window_dict["train_windows"], batch_size=batch_size, shuffle=True
-    ).loader
+    )
     test_iterator = TokenDataset(
         vocab, window_dict["test_windows"], batch_size=4096, shuffle=False
-    ).loader
+    )
 
-    embed()
-    data = next(iter(train_iterator))
     print("Proceeding using {}...".format(device))
 
     encoder = CMAnomaly(
