@@ -59,38 +59,29 @@ class CMAnomaly(TimeSeriesEncoder):
     ):
         super().__init__(architecture="CMAomaly", **kwargs)
 
+        self.in_channels = in_channels
+        self.embedding_dim = embedding_dim
         self.prediction_dims = (
             prediction_dims if prediction_dims else list(range(in_channels))
         )
         self.prediction_length = prediction_length
         self.gamma = gamma
 
-        final_output_dim = prediction_length * len(self.prediction_dims)
-
-        self.embed = nn.Linear(in_channels, embedding_dim)
-        clf_input_dim = embedding_dim + window_size - 1
-        self.time_afm = AFMLayer(embedding_dim, num_fields=window_size - 1)
-        self.feat_afm = AFMLayer(window_size - 1, num_fields=embedding_dim)
-
+        self.embedder = nn.Embedding(vocab_size, embedding_dim)
+        self.afm = AFMLayer(embedding_dim, num_fields=in_channels)
         self.res_w = nn.Linear(
             embedding_dim * (window_size - 1),
             window_size - 1 + embedding_dim,
         )
 
-        self.linear = nn.Sequential(
-            nn.Linear(clf_input_dim, final_output_dim),
-            # nn.ReLU(),
-            # nn.Dropout(dropout),
-            # nn.Linear(128, 64),
-            # nn.ReLU(),
-            # nn.Dropout(dropout),
-            # nn.Linear(64, final_output_dim),
+        self.lstm = nn.LSTM(embedding_dim, 64)
+
+        final_output_dim = prediction_length * len(self.prediction_dims) * 26
+        self.predcitor = nn.Sequential(
+            nn.Linear(64, final_output_dim),
         )
-
-        # self.linear = nn.Sequential(nn.Linear(clf_input_dim, final_output_dim))
-
         self.dropout = nn.Dropout(dropout)
-        self.loss_fn = nn.MSELoss(reduction="none")
+        self.loss_fn = nn.CrossEntropyLoss(reduction="none")
 
         self.compile()
 
@@ -112,17 +103,20 @@ class CMAnomaly(TimeSeriesEncoder):
             batch_window[:, -self.prediction_length :, self.prediction_dims],
         )
 
-        x = self.embed(x)
+        x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
+        interaction, interaction_score = self.afm(x_embed)
+        representation = interaction.view(self.batch_size, -1, self.embedding_dim)
+        lstm_out, _ = self.lstm(representation)
+        lstm_out = self.dropout(lstm_out[:, -1, :])
 
-        time_inter, time_attn_scores = self.time_afm(x)
-        dim_inter, dim_attn_scores = self.feat_afm(x.transpose(2, 1))
-
-        interactions = torch.cat([time_inter, dim_inter], dim=-1)
-        outputs = self.dropout(interactions)
-        recst = self.linear(outputs).view(
+        recst = self.predcitor(lstm_out).view(
             self.batch_size, self.prediction_length, len(self.prediction_dims)
         )
 
+        embed()
+
+        recst = recst.view(self.batch_size, -1)
+        y = y.view(self.batch_size, -1)
         loss = self.loss_fn(recst, y)
         return_dict = {
             "loss": loss.sum(),

@@ -31,10 +31,12 @@ class preprocessor:
         print("Loading preprocessor from {}".format(filepath))
         with open(filepath, "rb") as fw:
             self.__dict__.update(pickle.load(fw))
-    
+
     def symbolize(self, data_dict, n_bins=26, strategy="normal", nrows=None):
         def add_postfix(x):
-            postfix = np.array([["_"+str(i)]*x.shape[0] for i in range(x.shape[1])]).T
+            postfix = np.array(
+                [["_" + str(i)] * x.shape[0] for i in range(x.shape[1])]
+            ).T
             return np.char.add(x, postfix)
 
         print("Discarding constant dimensions.")
@@ -42,7 +44,11 @@ class preprocessor:
         for idx, col in enumerate(data_dict["train"].T):
             if len(set(col)) == 1:
                 constant_cols.append(idx)
-        reserved_cols = [idx for idx in range(data_dict["train"].shape[1]) if idx not in constant_cols]
+        reserved_cols = [
+            idx
+            for idx in range(data_dict["train"].shape[1])
+            if idx not in constant_cols
+        ]
         data_dict["train"] = data_dict["train"][:, reserved_cols]
         data_dict["test"] = data_dict["test"][:, reserved_cols]
 
@@ -53,6 +59,14 @@ class preprocessor:
 
         data_dict["train_tokens"] = add_postfix(train_sax.T)
         data_dict["test_tokens"] = add_postfix(test_sax.T)
+
+        # print(sorted(set(np.unique(data_dict["test_tokens"][:, 12]))))
+        # print()
+        # print(sorted(set(np.unique(data_dict["train_tokens"][:, 12]))))
+        # print(
+        #     set(np.unique(data_dict["test_tokens"]))
+        #     - set(np.unique(data_dict["train_tokens"]))
+        # )
         return data_dict
 
     def discretize(self, data_dict, n_bins=1000):
@@ -99,8 +113,6 @@ class preprocessor:
             if k not in ["train", "test"]:
                 normalized_dict[k] = v
         return normalized_dict
-
-
 
 
 def get_windows(ts, labels=None, window_size=128, stride=1, dim=None):

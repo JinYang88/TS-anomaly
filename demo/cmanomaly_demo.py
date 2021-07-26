@@ -4,10 +4,11 @@ import sys
 sys.path.append("../")
 from common import data_preprocess
 from common.dataloader import load_dataset
-from common.batching import WindowIterator
+from common.batching import TokenDataset
 from common.utils import seed_everything, pprint
 from networks.cmanomaly import CMAnomaly
 from common.evaluation import evaluator
+from common.vocab import Vocab
 from IPython import embed
 
 seed_everything(2020)
@@ -41,7 +42,14 @@ if __name__ == "__main__":
 
     pp = data_preprocess.preprocessor()
     data_dict = pp.normalize(data_dict, method=normalize)
+
+    ### make symbols and convert to numerical features
     data_dict = pp.symbolize(data_dict)
+    vocab = Vocab()
+    vocab.build_vocab(data_dict)
+    data_dict = vocab.transform(data_dict)
+    ### end
+
     os.makedirs(save_path, exist_ok=True)
     pp.save(save_path)
 
@@ -51,30 +59,32 @@ if __name__ == "__main__":
         stride=stride,
     )
 
-    train_iterator = WindowIterator(
-        window_dict["train_windows"], batch_size=batch_size, shuffle=True
-    )
-    test_iterator = WindowIterator(
-        window_dict["test_windows"], batch_size=4096, shuffle=False
-    )
+    train_iterator = TokenDataset(
+        vocab, window_dict["train_windows"], batch_size=batch_size, shuffle=True
+    ).loader
+    test_iterator = TokenDataset(
+        vocab, window_dict["test_windows"], batch_size=4096, shuffle=False
+    ).loader
 
+    embed()
+    data = next(iter(train_iterator))
     print("Proceeding using {}...".format(device))
 
     encoder = CMAnomaly(
-                in_channels=data_dict["dim"],
-                window_size=window_size,
-                embedding_dim=embedding_dim,
-                dropout=dropout,
-                prediction_length=prediction_length,
-                prediction_dims=prediction_dims,
-                patience=patience,
-                save_path=save_path,
-                batch_size=batch_size,
-                nb_epoch=nb_epoch,
-                lr=lr,
-                device=device,
+        in_channels=data_dict["train"].shape[1],
+        window_size=window_size,
+        vocab_size=vocab.vocab_size,
+        embedding_dim=embedding_dim,
+        dropout=dropout,
+        prediction_length=prediction_length,
+        prediction_dims=prediction_dims,
+        patience=patience,
+        save_path=save_path,
+        batch_size=batch_size,
+        nb_epoch=nb_epoch,
+        lr=lr,
+        device=device,
     )
-    
 
     encoder.fit(
         train_iterator,
