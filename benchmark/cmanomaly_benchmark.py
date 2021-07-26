@@ -52,7 +52,7 @@ num_layers = args["num_layers"]
 
 
 normalize = "standard"
-nb_epoch = 1
+nb_epoch = 1000
 patience = 5
 dropout = 0
 batch_size = 128
@@ -60,7 +60,7 @@ prediction_length = 1
 prediction_dims = []
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:1]:
+    for subdataset in subdatasets[dataset]:
         try:
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
 
