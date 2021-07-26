@@ -7,8 +7,9 @@ import hashlib
 import traceback
 from common import data_preprocess
 from common.dataloader import load_dataset
-from common.batching import WindowIterator
-from common.utils import print_to_json, update_from_nni_params, seed_everything, pprint
+from common.batching import TokenDataset
+from common.utils import seed_everything
+from common.vocab import Vocab
 from networks.cmanomaly import CMAnomaly
 
 import argparse
@@ -50,16 +51,16 @@ embedding_dim = args["embedding_dim"]
 num_layers = args["num_layers"]
 
 
-normalize = "minmax"
+normalize = "standard"
 nb_epoch = 1000
 patience = 5
 dropout = 0
-batch_size = 1024
+batch_size = 512
 prediction_length = 1
 prediction_dims = []
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
 
@@ -68,6 +69,14 @@ if __name__ == "__main__":
 
             pp = data_preprocess.preprocessor()
             data_dict = pp.normalize(data_dict, method=normalize)
+
+            ### make symbols and convert to numerical features
+            data_dict = pp.symbolize(data_dict)
+            vocab = Vocab()
+            vocab.build_vocab(data_dict)
+            data_dict = vocab.transform(data_dict)
+            ### end
+
             os.makedirs(save_path, exist_ok=True)
             pp.save(save_path)
 
@@ -77,16 +86,17 @@ if __name__ == "__main__":
                 stride=stride,
             )
 
-            train_iterator = WindowIterator(
-                window_dict["train_windows"], batch_size=batch_size, shuffle=True
+            train_iterator = TokenDataset(
+                vocab, window_dict["train_windows"], batch_size=batch_size, shuffle=True
             )
-            test_iterator = WindowIterator(
-                window_dict["test_windows"], batch_size=4096, shuffle=False
+            test_iterator = TokenDataset(
+                vocab, window_dict["test_windows"], batch_size=512, shuffle=False
             )
 
             encoder = CMAnomaly(
-                in_channels=data_dict["dim"],
+                in_channels=data_dict["train"].shape[1],
                 window_size=window_size,
+                vocab_size=vocab.vocab_size,
                 embedding_dim=embedding_dim,
                 dropout=dropout,
                 prediction_length=prediction_length,
