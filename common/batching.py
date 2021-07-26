@@ -6,11 +6,6 @@ from torch.utils.data import Dataset
 
 from sklearn.preprocessing import MultiLabelBinarizer
 
-test = pd.Series([["a", "b", "e"], ["c", "a"], ["d"], ["d"], ["e"]])
-
-mlb = MultiLabelBinarizer()
-res = pd.DataFrame(mlb.fit_transform(test), columns=mlb.classes_, index=test.index)
-
 
 class WindowIterator:
     def __init__(self, windows, batch_size, shuffle, num_workers=2):
@@ -39,5 +34,5 @@ class TokenDataset(Dataset):
         y[y_indice] = 1
         return {
             "x": self.windows[idx, :-1, :],
-            "y": torch.LongTensor(y),
+            "y": y.float(),
         }

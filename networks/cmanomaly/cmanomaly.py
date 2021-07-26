@@ -76,12 +76,12 @@ class CMAnomaly(TimeSeriesEncoder):
 
         self.lstm = nn.LSTM(embedding_dim, 64)
 
-        final_output_dim =  26
+        final_output_dim = 26
         self.predcitor = nn.Sequential(
             nn.Linear(64, final_output_dim),
         )
         self.dropout = nn.Dropout(dropout)
-        self.loss_fn = nn.CrossEntropyLoss(reduction="none")
+        self.loss_fn = nn.BCEWithLogitsLoss(reduction="none")
 
         self.compile()
 
@@ -106,28 +106,14 @@ class CMAnomaly(TimeSeriesEncoder):
         representation = interaction.view(self.batch_size, -1, self.embedding_dim)
         lstm_out, _ = self.lstm(representation)
         lstm_out = self.dropout(lstm_out[:, -1, :])
+        recst = self.predcitor(lstm_out)
 
-        recst = self.predcitor(lstm_out).view(-1, 26)
-
-        embed()
-
-        recst = recst.view(self.batch_size, -1)
-        y = y.view(self.batch_size, -1)
         loss = self.loss_fn(recst, y)
         return_dict = {
             "loss": loss.sum(),
             "recst": recst,
-            "repr": outputs,
             "score": loss,
             "y": y,
-            "time_attn_scores": time_attn_scores,
-            "dim_attn_scores": dim_attn_scores,
         }
 
         return return_dict
-
-
-if __name__ == "__main__":
-    inp = torch.randn((32, 1, 46))
-    model = MultiLSTM(in_channels=25, num_layers=1, window_size=45)
-    out = model.forward(inp)
