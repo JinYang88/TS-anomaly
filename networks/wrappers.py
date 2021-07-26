@@ -101,7 +101,8 @@ class TimeSeriesEncoder(torch.nn.Module):
             running_loss = 0
             for idx, batch in enumerate(train_iterator.loader):
                 # batch: b x d x dim
-                batch = batch.to(self.device).float()
+                if not isinstance(batch, dict):
+                    batch = batch.to(self.device).float()
                 return_dict = self(batch)
                 self.optimizer.zero_grad()
                 loss = return_dict["loss"]

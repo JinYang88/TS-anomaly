@@ -97,11 +97,13 @@ class CMAnomaly(TimeSeriesEncoder):
 
     def forward(self, input_dict):
         # batch_window = batch_window.permute(0, 2, 1)  # b x win x ts_dim
-        x, y = input_dict["x"], input_dict["y"]
+        x, y = input_dict["x"].to(self.device), input_dict["y"].to(self.device)
         self.batch_size = x.size(0)
 
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
         interaction, interaction_score = self.afm(x_embed)
+
+        embed()
         representation = interaction.view(self.batch_size, -1, self.embedding_dim)
         lstm_out, _ = self.lstm(representation)
         lstm_out = self.dropout(lstm_out[:, -1, :])
