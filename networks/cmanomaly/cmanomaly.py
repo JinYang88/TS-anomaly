@@ -76,7 +76,7 @@ class CMAnomaly(TimeSeriesEncoder):
 
         self.lstm = nn.LSTM(embedding_dim, 64)
 
-        final_output_dim = len(self.prediction_dims) * 26
+        final_output_dim =  26
         self.predcitor = nn.Sequential(
             nn.Linear(64, final_output_dim),
         )
