@@ -63,7 +63,7 @@ if __name__ == "__main__":
         vocab, window_dict["train_windows"], batch_size=batch_size, shuffle=True
     )
     test_iterator = TokenDataset(
-        vocab, window_dict["test_windows"], batch_size=4096, shuffle=False
+        vocab, window_dict["test_windows"], batch_size=512, shuffle=False
     )
 
     print("Proceeding using {}...".format(device))
