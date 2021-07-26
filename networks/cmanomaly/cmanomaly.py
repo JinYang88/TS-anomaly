@@ -76,7 +76,7 @@ class CMAnomaly(TimeSeriesEncoder):
 
         self.lstm = nn.LSTM(embedding_dim, 64)
 
-        final_output_dim = prediction_length * len(self.prediction_dims) * 26
+        final_output_dim = len(self.prediction_dims) * 26
         self.predcitor = nn.Sequential(
             nn.Linear(64, final_output_dim),
         )
@@ -103,14 +103,11 @@ class CMAnomaly(TimeSeriesEncoder):
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
         interaction, interaction_score = self.afm(x_embed)
 
-        embed()
         representation = interaction.view(self.batch_size, -1, self.embedding_dim)
         lstm_out, _ = self.lstm(representation)
         lstm_out = self.dropout(lstm_out[:, -1, :])
 
-        recst = self.predcitor(lstm_out).view(
-            self.batch_size, self.prediction_length, len(self.prediction_dims)
-        )
+        recst = self.predcitor(lstm_out).view(-1, 26)
 
         embed()
 
