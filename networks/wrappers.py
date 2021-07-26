@@ -164,7 +164,8 @@ class TimeSeriesEncoder(torch.nn.Module):
         with torch.no_grad():
             score_list = []
             for batch in iterator:
-                batch = batch.to(self.device).float()
+                if not isinstance(batch, dict):
+                    batch = batch.to(self.device).float()
                 return_dict = self(batch)
                 score = (
                     # average all dimension

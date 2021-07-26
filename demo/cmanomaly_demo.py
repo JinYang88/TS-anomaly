@@ -91,7 +91,7 @@ if __name__ == "__main__":
     )
 
     encoder.load_encoder()
-    records = encoder.predict_prob(test_iterator.loader, window_dict["test_labels"])
+    records = encoder.predict_prob(test_iterator.loader)
 
     anomaly_score = records["score"]
     anomaly_label = records["anomaly_label"]
