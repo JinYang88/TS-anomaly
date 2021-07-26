@@ -55,7 +55,7 @@ normalize = "standard"
 nb_epoch = 1000
 patience = 5
 dropout = 0
-batch_size = 512
+batch_size = 128
 prediction_length = 1
 prediction_dims = []
 
