@@ -21,7 +21,7 @@ batch_size = 64
 device = 0  # -1 for cpu, 0 for cuda:0
 window_size = 32
 stride = 5
-nb_epoch = 10
+nb_epoch = 1
 patience = 5
 
 lr = 0.001
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     records = encoder.predict_prob(test_iterator.loader)
 
     anomaly_score = records["score"]
-    anomaly_label = records["anomaly_label"]
+    anomaly_label = window_dict["test_labels"][:, -1]
 
     print(anomaly_score.shape, anomaly_label.shape)
 

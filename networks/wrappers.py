@@ -170,12 +170,13 @@ class TimeSeriesEncoder(torch.nn.Module):
                 score = (
                     # average all dimension
                     return_dict["score"]
-                    .mean(dim=-1)
+                    .sum(dim=-1)
                     .sigmoid()  # b x prediction_length
                 )
                 # mean all timestamp
-                score_list.append(score.mean(dim=-1))
+                score_list.append(score)
         test_end = time.time()
+
         self.time_tracker["test"] = test_end - test_start
         score_list = torch.cat(score_list, dim=0).cpu().numpy()
 
