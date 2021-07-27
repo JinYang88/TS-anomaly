@@ -152,7 +152,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 gt_list.append(return_dict["y"])
         pred = torch.cat(pred_list)
         gt = torch.cat(gt_list)
-        print("train acc:", accuracy_score(gt[:, 0].numpy(), pred[:, 0].numpy()))
+        print("train acc:", accuracy_score(gt[:, 0].cpu().numpy(), pred[:, 0].cpu().numpy()))
         return False
 
     def encode(self, iterator):
