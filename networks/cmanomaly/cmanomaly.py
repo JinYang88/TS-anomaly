@@ -68,13 +68,13 @@ class CMAnomaly(TimeSeriesEncoder):
         self.gamma = gamma
 
         self.embedder = nn.Embedding(vocab_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, 64, batch_first=True)
+        self.lstm = nn.LSTM(embedding_dim, 256, batch_first=True)
 
         final_output_dim = 26
         self.predcitor = nn.Sequential(
-            nn.Linear(64, 64),
+            nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, in_channels * final_output_dim),
         )
@@ -100,8 +100,8 @@ class CMAnomaly(TimeSeriesEncoder):
 
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
         # interaction, interaction_score = self.afm(x_embed)
-        # interaction = self.CM_interaction(x_embed)
-        interaction = x_embed.mean(dim=1)
+        interaction = self.CM_interaction(x_embed)
+        # interaction = x_embed.mean(dim=1)
 
         representation = interaction.view(self.batch_size, -1, self.embedding_dim)
         # print(x.shape, representation.shape, representation[0])
