@@ -100,15 +100,15 @@ class CMAnomaly(TimeSeriesEncoder):
 
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
         # interaction, interaction_score = self.afm(x_embed)
-        # interaction = self.CM_interaction(x_embed)
+        interaction = self.CM_interaction(x_embed)
         # # interaction = x_embed.mean(dim=1)
 
-        # representation = interaction.view(self.batch_size, -1, self.embedding_dim)
+        representation = interaction.view(self.batch_size, -1, self.embedding_dim)
         # # print(x.shape, representation.shape, representation[0])
-        # lstm_out, _ = self.lstm(representation)
-        # lstm_out = self.dropout(lstm_out[:, -1, :])
+        lstm_out, _ = self.lstm(representation)
+        lstm_out = self.dropout(lstm_out[:, -1, :])
 
-        lstm_out = x_embed.view(self.batch_size, -1)
+        # lstm_out = x_embed.view(self.batch_size, -1)
         recst = self.predcitor(lstm_out).view(-1, 26) # batch*channel x 26
         y = y.view(-1)
         loss = self.loss_fn(recst, y)
