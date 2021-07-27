@@ -30,7 +30,7 @@ num_layers = 1
 dropout = 0
 embedding_dim = 16
 prediction_length = 1
-prediction_dims = [0]
+prediction_dims = []
 iterate_threshold = True
 point_adjustment = True
 
