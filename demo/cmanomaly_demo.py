@@ -30,7 +30,7 @@ num_layers = 1
 dropout = 0
 embedding_dim = 16
 prediction_length = 1
-prediction_dims = []
+prediction_dims = [0]
 iterate_threshold = True
 point_adjustment = True
 
@@ -38,6 +38,7 @@ if __name__ == "__main__":
     data_dict = load_dataset(
         dataset,
         subdataset,
+        0,
     )
 
     pp = data_preprocess.preprocessor()
