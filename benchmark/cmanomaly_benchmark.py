@@ -22,7 +22,7 @@ from common.evaluation import (
 seed_everything(2020)
 
 
-# python cmanomaly_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --embedding_dim 16 --gpu 0
+# python cmanomaly_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --embedding_dim 16 --gpu 0
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -30,7 +30,6 @@ parser.add_argument("--dataset", type=str, help="Dataset used")
 parser.add_argument("--lr", type=float, help="learning rate")
 parser.add_argument("--window_size", type=int, help="window_size")
 parser.add_argument("--stride", type=int, help="stride")
-parser.add_argument("--num_layers", type=int, help="num_layers")
 parser.add_argument("--embedding_dim", type=int, help="embedding_dim")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
 
@@ -48,7 +47,6 @@ window_size = args["window_size"]
 stride = args["stride"]
 lr = args["lr"]
 embedding_dim = args["embedding_dim"]
-num_layers = args["num_layers"]
 
 
 normalize = "standard"
