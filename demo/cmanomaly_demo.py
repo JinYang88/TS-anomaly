@@ -24,7 +24,7 @@ stride = 5
 nb_epoch = 100
 patience = 5
 
-lr = 0.001
+lr = 0.01
 hidden_size = 64
 num_layers = 1
 dropout = 0
@@ -38,7 +38,6 @@ if __name__ == "__main__":
     data_dict = load_dataset(
         dataset,
         subdataset,
-        0,
     )
 
     pp = data_preprocess.preprocessor()
