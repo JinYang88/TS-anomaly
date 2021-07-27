@@ -68,11 +68,12 @@ class CMAnomaly(TimeSeriesEncoder):
         self.gamma = gamma
 
         self.embedder = nn.Embedding(vocab_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, 256, batch_first=True)
+        self.lstm = nn.LSTM(embedding_dim, 128, batch_first=True)
 
         final_output_dim = 26
         self.predcitor = nn.Sequential(
-            nn.Linear(embedding_dim * in_channels * (window_size-1), 128),
+            # nn.Linear(embedding_dim * in_channels * (window_size-1), 128),
+            nn.Linear(128 , 128),
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
@@ -108,7 +109,7 @@ class CMAnomaly(TimeSeriesEncoder):
         lstm_out, _ = self.lstm(representation)
         lstm_out = self.dropout(lstm_out[:, -1, :])
 
-        # lstm_out = x_embed.view(self.batch_size, -1)
+        # lstm_out = x_embed.view(self.batch_size, -1) # only this -> f1 score 0.78!
         recst = self.predcitor(lstm_out).view(-1, 26) # batch*channel x 26
         y = y.view(-1)
         loss = self.loss_fn(recst, y)
