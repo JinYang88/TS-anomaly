@@ -75,8 +75,8 @@ class CMAnomaly(TimeSeriesEncoder):
         final_output_dim = 26
         self.predcitor = nn.Sequential(
             # nn.Linear(embedding_dim * in_channels * (window_size-1), 128),
-            nn.Linear(128 , 128),
-            # nn.Linear(embedding_dim * (window_size-1) , 128),
+            # nn.Linear(128 , 128),
+            nn.Linear(embedding_dim * (window_size-1) , 128),
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
