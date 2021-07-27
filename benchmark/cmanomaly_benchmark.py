@@ -52,7 +52,7 @@ num_layers = args["num_layers"]
 
 
 normalize = "standard"
-nb_epoch = 1
+nb_epoch = 10
 patience = 5
 dropout = 0
 batch_size = 128

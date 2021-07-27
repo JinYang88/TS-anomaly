@@ -49,17 +49,19 @@ class preprocessor:
             for idx in range(data_dict["train"].shape[1])
             if idx not in constant_cols
         ]
-        data_dict["train"] = data_dict["train"][:, reserved_cols]
-        data_dict["test"] = data_dict["test"][:, reserved_cols]
+
+        result_dict = {}
+        result_dict["train"] = data_dict["train"][:, reserved_cols]
+        result_dict["test"] = data_dict["test"][:, reserved_cols]
 
         print("Convert time series to symbolics.")
         sax = SymbolicAggregateApproximation(n_bins=n_bins, strategy=strategy)
-        train_sax = sax.fit_transform(data_dict["train"].T[:, :nrows])
-        test_sax = sax.transform(data_dict["test"].T[:, :nrows])
+        train_sax = sax.fit_transform(result_dict["train"].T[:, :nrows])
+        test_sax = sax.transform(result_dict["test"].T[:, :nrows])
 
-        data_dict["train_tokens"] = add_postfix(train_sax.T)
-        data_dict["test_tokens"] = add_postfix(test_sax.T)
-
+        result_dict["train_tokens"] = add_postfix(train_sax.T)
+        result_dict["test_tokens"] = add_postfix(test_sax.T)
+        result_dict["test_labels"] = data_dict["test_labels"]
         # print(sorted(set(np.unique(data_dict["test_tokens"][:, 12]))))
         # print()
         # print(sorted(set(np.unique(data_dict["train_tokens"][:, 12]))))
@@ -67,7 +69,7 @@ class preprocessor:
         #     set(np.unique(data_dict["test_tokens"]))
         #     - set(np.unique(data_dict["train_tokens"]))
         # )
-        return data_dict
+        return result_dict
 
     def discretize(self, data_dict, n_bins=1000):
         if n_bins is None:

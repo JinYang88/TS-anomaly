@@ -158,7 +158,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         raise NotImplementedError("TBD")
 
     def predict_prob(self, iterator):
-        print("Evaluating")
         self = self.eval()
         test_start = time.time()
         with torch.no_grad():
@@ -170,7 +169,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 score = (
                     # average all dimension
                     return_dict["score"]
-                    .sum(dim=-1)
+                    .mean(dim=-1)
                     .sigmoid()  # b x prediction_length
                 )
                 # mean all timestamp

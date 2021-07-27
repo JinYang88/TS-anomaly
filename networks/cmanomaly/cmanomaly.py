@@ -68,21 +68,15 @@ class CMAnomaly(TimeSeriesEncoder):
         self.gamma = gamma
 
         self.embedder = nn.Embedding(vocab_size, embedding_dim)
-        self.afm = AFMLayer(embedding_dim, num_fields=in_channels)
-        self.res_w = nn.Linear(
-            embedding_dim * (window_size - 1),
-            window_size - 1 + embedding_dim,
-        )
-
         self.lstm = nn.LSTM(embedding_dim, 64, batch_first=True)
 
         final_output_dim = 26
         self.predcitor = nn.Sequential(
-            nn.Linear(64, final_output_dim),
+            nn.Linear(64, in_channels * final_output_dim),
         )
         self.dropout = nn.Dropout(dropout)
-        self.loss_fn = nn.BCEWithLogitsLoss(reduction="none")
-
+        # self.loss_fn = nn.BCEWithLogitsLoss(reduction="none")
+        self.loss_fn = nn.CrossEntropyLoss(reduction="none")
         self.compile()
 
     def CM_interaction(self, x):
@@ -103,17 +97,18 @@ class CMAnomaly(TimeSeriesEncoder):
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
         # interaction, interaction_score = self.afm(x_embed)
         interaction = self.CM_interaction(x_embed)
+        # interaction = x_embed.mean(dim=1)
 
         representation = interaction.view(self.batch_size, -1, self.embedding_dim)
         lstm_out, _ = self.lstm(representation)
         lstm_out = self.dropout(lstm_out[:, -1, :])
-        recst = self.predcitor(lstm_out)
-
+        recst = self.predcitor(lstm_out).view(-1, 26) # batch*channel x 26
+        y = y.view(-1)
         loss = self.loss_fn(recst, y)
         return_dict = {
             "loss": loss.mean(),
             "recst": recst,
-            "score": loss,
+            "score": loss.view(self.batch_size, -1),
             "y": y,
         }
 

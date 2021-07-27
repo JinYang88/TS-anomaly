@@ -11,7 +11,7 @@ class Vocab:
         """
         data_dict["train"]: n_timestamps x n_dims
         """
-        vocabs = np.unique(data_dict["train_tokens"])
+        vocabs = sorted(np.unique(data_dict["train_tokens"]))
         self.vocab_size = len(vocabs) + 1  # +1 means oov
         print("Vocab size: {}".format(self.vocab_size))
 
@@ -32,6 +32,8 @@ class Vocab:
                 tmp_arr.append(list(map(lambda x: self.word2index.get(x, 1), row)))
             return np.array(tmp_arr)
 
-        data_dict["train"] = convert_matrix(data_dict["train_tokens"])
-        data_dict["test"] = convert_matrix(data_dict["test_tokens"])
-        return data_dict
+        result_dict = {}
+        result_dict["train"] = convert_matrix(data_dict["train_tokens"])
+        result_dict["test"] = convert_matrix(data_dict["test_tokens"])
+        result_dict["test_labels"] = data_dict["test_labels"]
+        return result_dict

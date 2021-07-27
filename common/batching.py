@@ -27,12 +27,19 @@ class TokenDataset(Dataset):
         return len(self.windows)
 
     def __getitem__(self, idx):
-        y = torch.zeros(26)
-        y_indice = list(
+        # y = torch.zeros(26)
+        # y_indice = list(
+        #     map(lambda x: self.vocab.label2idx[x], self.windows[idx, -1, :])
+        # )
+        # y[y_indice] = 1
+        # return {
+        #     "x": self.windows[idx, :-1, :],
+        #     "y": y.float(),
+        # }
+        y = torch.LongTensor(list(
             map(lambda x: self.vocab.label2idx[x], self.windows[idx, -1, :])
-        )
-        y[y_indice] = 1
+        ))
         return {
             "x": self.windows[idx, :-1, :],
-            "y": y.float(),
+            "y": y,
         }
