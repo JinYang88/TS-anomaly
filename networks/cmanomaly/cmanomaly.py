@@ -114,7 +114,7 @@ class CMAnomaly(TimeSeriesEncoder):
         loss = self.loss_fn(recst, y)
 
         return_dict = {
-            "loss": loss.sum(),
+            "loss": loss.mean(),
             "recst": recst.argmax(dim=-1).view(self.batch_size, -1),
             "score": loss.view(self.batch_size, -1),
             "y": y.view(self.batch_size, -1),
