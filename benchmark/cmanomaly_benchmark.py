@@ -50,8 +50,8 @@ embedding_dim = args["embedding_dim"]
 
 
 normalize = "standard"
-nb_epoch = 10
-patience = 5
+nb_epoch = 1000
+patience = 3
 dropout = 0
 batch_size = 128
 prediction_length = 1
