@@ -14,12 +14,12 @@ from IPython import embed
 seed_everything(2020)
 
 dataset = "SMD"
-subdataset = "machine-1-1"
+subdataset = "machine-3-5"
 normalize = "minmax"
 save_path = "./savd_dir"
 batch_size = 64
 device = 0  # -1 for cpu, 0 for cuda:0
-window_size = 32
+window_size = 64
 stride = 5
 nb_epoch = 100
 patience = 5
