@@ -4,7 +4,7 @@ import sys
 import copy
 import json
 import glob
-import hashlib
+import pandas as pd
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.cluster import AgglomerativeClustering
@@ -316,23 +316,23 @@ def evaluate_benchmarking_folder(
         "adj_f1",
     ]
     metric_values_dict = defaultdict(list)
-    total_train_time = []
-    total_test_time = []
     folder_count = 0
-    for folder in glob.glob(os.path.join(folder, "*")):
-        folder_name = os.path.basename(folder)
+    foldernames = [] 
+    for subfolder in glob.glob(os.path.join(folder, "*")):
+        folder_name = os.path.basename(subfolder)
+        foldernames.append(folder_name)
         print("Evaluating {}".format(folder_name))
         anomaly_score = np.load(
-            os.path.join(folder, "anomaly_score.npz"), allow_pickle=True
+            os.path.join(subfolder, "anomaly_score.npz"), allow_pickle=True
         )["arr_0"].item()["test"]
         anomaly_score_train = np.load(
-            os.path.join(folder, "anomaly_score.npz"), allow_pickle=True
+            os.path.join(subfolder, "anomaly_score.npz"), allow_pickle=True
         )["arr_0"].item()["train"]
 
-        anomaly_label = np.load(os.path.join(folder, "anomaly_label.npz"))[
+        anomaly_label = np.load(os.path.join(subfolder, "anomaly_label.npz"))[
             "arr_0"
         ].astype(int)
-        with open(os.path.join(folder, "time.json")) as fr:
+        with open(os.path.join(subfolder, "time.json")) as fr:
             time = json.load(fr)
 
         best_f1, best_theta, best_adjust_pred, best_raw_pred = iter_thresholds(
@@ -387,7 +387,7 @@ def evaluate_benchmarking_folder(
         for metric_name in concerned_metrics:
             metric_values_dict[metric_name].append(metric[metric_name])
 
-        json_pretty_dump(metric, os.path.join(folder, "metrics.json"))
+        json_pretty_dump(metric, os.path.join(subfolder, "metrics.json"))
         folder_count += 1
 
     current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -398,8 +398,6 @@ def evaluate_benchmarking_folder(
         info = f"{current_time}\t{hash_id}\tcount:{folder_count}\t{params}\t"
         metric_str = []
 
-        # from IPython import embed
-        # embed()
         for metric_name in concerned_metrics:
             values = np.array(metric_values_dict[metric_name], dtype=float)
             mean, std = values.mean(), values.std()
@@ -407,6 +405,9 @@ def evaluate_benchmarking_folder(
         metric_str = "\t".join(metric_str)
         info += metric_str + "\n"
         fw.write(info)
+    
+    metrics_per_datasets = pd.DataFrame(metric_values_dict, index=foldernames)
+    metrics_per_datasets.to_csv(os.path.join(folder, "..", "metrics_per_datasets.csv"))
     print(info)
 
 

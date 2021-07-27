@@ -14,7 +14,7 @@ from IPython import embed
 seed_everything(2020)
 
 dataset = "SMD"
-subdataset = "machine-1-1"
+subdataset = "machine-1-2"
 normalize = "minmax"
 save_path = "./savd_dir"
 batch_size = 64
