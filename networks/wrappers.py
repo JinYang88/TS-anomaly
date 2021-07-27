@@ -34,8 +34,7 @@ import torch
 from common.evaluation import iter_thresholds
 from common.utils import set_device
 from IPython import embed
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
-
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score, accuracy_score
 import networks
 
 
@@ -111,7 +110,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 running_loss += loss.item()
             avg_loss = running_loss / num_batches
             print("Epoch: {}, loss: {:.5f}".format(epoch, avg_loss))
-            stop_training = self.__on_epoch_end(avg_loss, patience=patience)
+            stop_training = self.__on_epoch_end(avg_loss, patience=patience, loader=train_iterator.loader)
             if stop_training:
                 print("Early stop at epoch {}.".format(epoch))
                 break
@@ -120,7 +119,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         self.time_tracker["train"] = train_end - train_start
         return self
 
-    def __on_epoch_end(self, monitor_value, patience):
+    def __on_epoch_end(self, monitor_value, patience, loader=None):
         if monitor_value < self.best_metric:
             self.best_metric = monitor_value
             print("Saving model for performance: {:.3f}".format(monitor_value))
@@ -130,6 +129,30 @@ class TimeSeriesEncoder(torch.nn.Module):
             self.worse_count += 1
         if self.worse_count >= patience:
             return True
+
+        self.eval()
+        with torch.no_grad():
+            score_list = []
+            pred_list = []
+            gt_list = []
+            for batch in loader:
+                if not isinstance(batch, dict):
+                    batch = batch.to(self.device).float()
+                return_dict = self(batch)
+                score = (
+                    # average all dimension
+                    return_dict["score"]
+                    .mean(dim=-1)
+                    .sigmoid()  # b x prediction_length
+                )
+                pred = return_dict["recst"]
+                # mean all timestamp
+                score_list.append(score)
+                pred_list.append(pred)
+                gt_list.append(return_dict["y"])
+        pred = torch.cat(pred_list)
+        gt = torch.cat(gt_list)
+        print("train acc:", accuracy_score(gt[:, 0].numpy(), pred[:, 0].numpy()))
         return False
 
     def encode(self, iterator):

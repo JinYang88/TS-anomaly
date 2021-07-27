@@ -72,6 +72,10 @@ class CMAnomaly(TimeSeriesEncoder):
 
         final_output_dim = 26
         self.predcitor = nn.Sequential(
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Linear(64, 64),
+            nn.ReLU(),
             nn.Linear(64, in_channels * final_output_dim),
         )
         self.dropout = nn.Dropout(dropout)
@@ -96,20 +100,22 @@ class CMAnomaly(TimeSeriesEncoder):
 
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
         # interaction, interaction_score = self.afm(x_embed)
-        interaction = self.CM_interaction(x_embed)
-        # interaction = x_embed.mean(dim=1)
+        # interaction = self.CM_interaction(x_embed)
+        interaction = x_embed.mean(dim=1)
 
         representation = interaction.view(self.batch_size, -1, self.embedding_dim)
+        # print(x.shape, representation.shape, representation[0])
         lstm_out, _ = self.lstm(representation)
         lstm_out = self.dropout(lstm_out[:, -1, :])
         recst = self.predcitor(lstm_out).view(-1, 26) # batch*channel x 26
         y = y.view(-1)
         loss = self.loss_fn(recst, y)
+
         return_dict = {
-            "loss": loss.mean(),
-            "recst": recst,
+            "loss": loss.sum(),
+            "recst": recst.argmax(dim=-1).view(self.batch_size, -1),
             "score": loss.view(self.batch_size, -1),
-            "y": y,
+            "y": y.view(self.batch_size, -1),
         }
 
         return return_dict
