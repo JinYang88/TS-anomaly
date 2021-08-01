@@ -65,7 +65,7 @@ if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
         try:
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
-            if subdataset != "machine-1-5": continue
+            #if subdataset != "machine-1-5": continue
             print(f"Running on {subdataset} of {dataset}")
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
