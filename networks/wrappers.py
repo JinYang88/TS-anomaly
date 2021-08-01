@@ -129,31 +129,32 @@ class TimeSeriesEncoder(torch.nn.Module):
             self.worse_count += 1
         if self.worse_count >= patience:
             return True
-
-        self.eval()
-        with torch.no_grad():
-            score_list = []
-            pred_list = []
-            gt_list = []
-            for batch in loader:
-                if not isinstance(batch, dict):
-                    batch = batch.to(self.device).float()
-                return_dict = self(batch)
-                score = (
-                    # average all dimension
-                    return_dict["score"]
-                    .mean(dim=-1)
-                    .sigmoid()  # b x prediction_length
-                )
-                pred = return_dict["recst"]
-                # mean all timestamp
-                score_list.append(score)
-                pred_list.append(pred)
-                gt_list.append(return_dict["y"])
-        pred = torch.cat(pred_list)
-        gt = torch.cat(gt_list)
-        self.train()
-        print("train acc:", accuracy_score(gt.cpu().numpy().reshape(-1), pred.cpu().numpy().reshape(-1)))
+        
+        if self.architecture == "CMAomaly":
+            self.eval()
+            with torch.no_grad():
+                score_list = []
+                pred_list = []
+                gt_list = []
+                for batch in loader:
+                    if not isinstance(batch, dict):
+                        batch = batch.to(self.device).float()
+                    return_dict = self(batch)
+                    score = (
+                        # average all dimension
+                        return_dict["score"]
+                        .mean(dim=-1)
+                        .sigmoid()  # b x prediction_length
+                    )
+                    pred = return_dict["recst"]
+                    # mean all timestamp
+                    score_list.append(score)
+                    pred_list.append(pred)
+                    gt_list.append(return_dict["y"])
+            pred = torch.cat(pred_list)
+            gt = torch.cat(gt_list)
+            self.train()
+            print("train acc:", accuracy_score(gt.cpu().numpy().reshape(-1), pred.cpu().numpy().reshape(-1)))
         return False
 
     def encode(self, iterator):

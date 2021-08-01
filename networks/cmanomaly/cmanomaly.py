@@ -125,6 +125,7 @@ class CMAnomaly(TimeSeriesEncoder):
             "recst": recst.argmax(dim=-1).view(self.batch_size, -1),
             "score": loss.view(self.batch_size, -1),
             "y": y.view(self.batch_size, -1),
+            "x": x
         }
 
         return return_dict
