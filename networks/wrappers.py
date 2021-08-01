@@ -131,7 +131,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         if self.worse_count >= patience:
             return True
         
-        if self.architecture == "CMAomaly":
+        if self.architecture == "CMAomaly1":
             self.eval()
             with torch.no_grad():
                 score_list = []
