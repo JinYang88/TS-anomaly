@@ -50,6 +50,7 @@ class TimeSeriesEncoder(torch.nn.Module):
         **kwargs,
     ):
         super().__init__()
+        self.architecture = architecture
         self.device = set_device(device)
         self.batch_size = batch_size
         self.nb_epoch = nb_epoch
