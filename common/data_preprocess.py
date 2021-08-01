@@ -32,7 +32,7 @@ class preprocessor:
         with open(filepath, "rb") as fw:
             self.__dict__.update(pickle.load(fw))
 
-    def symbolize(self, data_dict, n_bins=26, strategy="normal", nrows=None):
+    def symbolize(self, data_dict, n_bins=10, strategy="normal", nrows=None):
         def add_postfix(x):
             postfix = np.array(
                 [["_" + str(i)] * x.shape[0] for i in range(x.shape[1])]
@@ -55,20 +55,18 @@ class preprocessor:
         result_dict["test"] = data_dict["test"][:, reserved_cols]
 
         print("Convert time series to symbolics.")
-        sax = SymbolicAggregateApproximation(n_bins=n_bins, strategy=strategy)
-        train_sax = sax.fit_transform(result_dict["train"].T[:, :nrows])
-        test_sax = sax.transform(result_dict["test"].T[:, :nrows])
+        # est = SymbolicAggregateApproximation(n_bins=n_bins, strategy=strategy)
+        # train_tokens = est.fit_transform(result_dict["train"].T[:, :nrows])
+        # test_tokens = est.transform(result_dict["test"].T[:, :nrows])
 
-        result_dict["train_tokens"] = add_postfix(train_sax.T)
-        result_dict["test_tokens"] = add_postfix(test_sax.T)
+        est = KBinsDiscretizer(
+                    n_bins=n_bins, encode="ordinal", strategy=strategy
+                )
+        train_tokens = est.fit_transform(result_dict["train"][:, :nrows])
+        test_tokens = est.transform(result_dict["test"][:, :nrows])
+        result_dict["train_tokens"] = add_postfix(train_tokens.astype(str))
+        result_dict["test_tokens"] = add_postfix(test_tokens.astype(str))
         result_dict["test_labels"] = data_dict["test_labels"]
-        # print(sorted(set(np.unique(data_dict["test_tokens"][:, 12]))))
-        # print()
-        # print(sorted(set(np.unique(data_dict["train_tokens"][:, 12]))))
-        # print(
-        #     set(np.unique(data_dict["test_tokens"]))
-        #     - set(np.unique(data_dict["train_tokens"]))
-        # )
         return result_dict
 
     def discretize(self, data_dict, n_bins=1000):

@@ -18,7 +18,10 @@ class Vocab:
         self.word2index = {word: idx for idx, word in enumerate(vocabs, 1)}
 
         self.label2idx = {}
-        char2idx = {ch: idx for idx, ch in enumerate(string.ascii_letters)}
+
+        all_char_used = set(map(lambda x: x.split("_")[0], self.word2index.keys()))
+
+        char2idx = {ch: idx for idx, ch in enumerate(all_char_used)}
         for k, v in self.word2index.items():
             self.label2idx[v] = char2idx[k.split("_")[0]]
         return self.vocab_size

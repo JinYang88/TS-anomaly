@@ -31,6 +31,7 @@ parser.add_argument("--lr", type=float, help="learning rate")
 parser.add_argument("--window_size", type=int, help="window_size")
 parser.add_argument("--stride", type=int, help="stride")
 parser.add_argument("--embedding_dim", type=int, help="embedding_dim")
+parser.add_argument("--nbins", type=int, help="nbins")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
 
 args = vars(parser.parse_args())
@@ -45,6 +46,7 @@ dataset = args["dataset"]
 device = args["gpu"]
 window_size = args["window_size"]
 stride = args["stride"]
+nbins = args["nbins"]
 lr = args["lr"]
 embedding_dim = args["embedding_dim"]
 
@@ -69,7 +71,8 @@ if __name__ == "__main__":
             data_dict = pp.normalize(data_dict, method=normalize)
 
             ### make symbols and convert to numerical features
-            data_dict = pp.symbolize(data_dict)
+            # data_dict = pp.symbolize(data_dict)
+            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy="kmeans")
             vocab = Vocab()
             vocab.build_vocab(data_dict)
             data_dict = vocab.transform(data_dict)
