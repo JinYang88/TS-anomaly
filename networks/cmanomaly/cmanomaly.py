@@ -98,7 +98,7 @@ class CMAnomaly(TimeSeriesEncoder):
         return bi_interaction_vector
 
     def forward(self, input_dict):
-        # batch_window = batch_window.permute(0, 2, 1)  # b x win x ts_dim
+        # x: b x window_size x in_channels x embedding_dim
         x, y = input_dict["x"].to(self.device), input_dict["y"].to(self.device)
         self.batch_size = x.size(0)
 
