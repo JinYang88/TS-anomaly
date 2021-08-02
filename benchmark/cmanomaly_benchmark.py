@@ -68,7 +68,7 @@ if __name__ == "__main__":
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             pp = data_preprocess.preprocessor()
-            data_dict = pp.normalize(data_dict, method=normalize)
+            # data_dict = pp.normalize(data_dict, method=normalize)
 
             ### make symbols and convert to numerical features
             # data_dict = pp.symbolize(data_dict)
