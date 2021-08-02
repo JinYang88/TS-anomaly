@@ -72,7 +72,8 @@ if __name__ == "__main__":
 
             ### make symbols and convert to numerical features
             # data_dict = pp.symbolize(data_dict)
-            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy="kmeans")
+            # uniform, quantile
+            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy="uniform")
             vocab = Vocab()
             vocab.build_vocab(data_dict)
             data_dict = vocab.transform(data_dict)
