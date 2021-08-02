@@ -48,6 +48,7 @@ class CMAnomaly(TimeSeriesEncoder):
     def __init__(
         self,
         in_channels,
+        nbins,
         window_size,
         vocab_size=None,
         embedding_dim=None,
@@ -66,13 +67,12 @@ class CMAnomaly(TimeSeriesEncoder):
         )
         self.prediction_length = prediction_length
         self.gamma = gamma
+        self.nbins = nbins
 
         self.embedder = nn.Embedding(vocab_size, embedding_dim)
         self.lstm = nn.LSTM(embedding_dim, 128, batch_first=True)
-
         self.afm = AFMLayer(embedding_dim, num_fields=in_channels)
 
-        final_output_dim = 26
         self.predcitor = nn.Sequential(
             # nn.Linear(embedding_dim * in_channels * (window_size-1), 128),
             # nn.Linear(128 , 128),
@@ -80,7 +80,7 @@ class CMAnomaly(TimeSeriesEncoder):
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, in_channels * final_output_dim),
+            nn.Linear(64, in_channels * nbins),
         )
         self.dropout = nn.Dropout(dropout)
         # self.loss_fn = nn.BCEWithLogitsLoss(reduction="none")
@@ -116,7 +116,7 @@ class CMAnomaly(TimeSeriesEncoder):
         # lstm_out = x_embed.view(self.batch_size, -1) # only this -> f1 score 0.78!
 
         lstm_out = representation.view(self.batch_size, -1)
-        recst = self.predcitor(lstm_out).view(-1, 26) # batch*channel x 26
+        recst = self.predcitor(lstm_out).view(-1, self.nbins) # batch*channel x 26
         y = y.view(-1)
         loss = self.loss_fn(recst, y)
 

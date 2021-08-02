@@ -96,6 +96,7 @@ if __name__ == "__main__":
 
             encoder = CMAnomaly(
                 in_channels=data_dict["train"].shape[1],
+                nbins=nbins,
                 window_size=window_size,
                 vocab_size=vocab.vocab_size,
                 embedding_dim=embedding_dim,
