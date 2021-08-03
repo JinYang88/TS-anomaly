@@ -77,7 +77,7 @@ class CMAnomaly(TimeSeriesEncoder):
         self.predcitor = nn.Sequential(
             # nn.Linear(embedding_dim * in_channels * (window_size-1), 128),
             # nn.Linear(128 , 128),
-            nn.Linear(embedding_dim * (window_size - 1), 128),
+            nn.Linear(2 * embedding_dim * (window_size - 1), 128),
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
@@ -109,16 +109,11 @@ class CMAnomaly(TimeSeriesEncoder):
         interaction = self.CM_interaction(x_embed)
         # # interaction = x_embed.mean(dim=1)
 
-        repre_self = x_embed.mean(dim=1)
+        repre_self = x_embed.mean(dim=1).view(self.batch_size, -1, self.embedding_dim)
         repre_inter = interaction.view(
             self.batch_size, -1, self.embedding_dim
         )  # b x window x embedding
-
-        print(repre_inter.shape, repre_self.shape)
-
         representation = torch.cat([repre_self, repre_inter], dim=-1)
-
-        print(representation.shape)
 
         # # print(x.shape, representation.shape, representation[0])
         # lstm_out, _ = self.lstm(representation)
@@ -126,6 +121,7 @@ class CMAnomaly(TimeSeriesEncoder):
         # lstm_out = x_embed.view(self.batch_size, -1) # only this -> f1 score 0.78!
 
         lstm_out = representation.view(self.batch_size, -1)
+
         recst = self.predcitor(lstm_out).view(-1, self.nb_classes)  # batch*channel x 26
         y = y.view(-1)
         loss = self.loss_fn(recst, y)
