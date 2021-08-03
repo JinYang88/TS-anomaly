@@ -22,8 +22,12 @@ class Vocab:
         all_char_used = set(map(lambda x: x.split("_")[0], self.word2index.keys()))
 
         char2idx = {ch: idx for idx, ch in enumerate(all_char_used)}
-        for k, v in self.word2index.items():
-            self.label2idx[v] = char2idx[k.split("_")[0]]
+        for idx, (k, v) in enumerate(self.word2index.items()):
+#            self.label2idx[v] = char2idx[k.split("_")[0]]
+            self.label2idx[v] = idx
+        
+        # print(self.word2index)
+        # print(self.label2idx)
         return self.vocab_size
 
     def transform(self, data_dict):
