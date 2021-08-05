@@ -83,7 +83,6 @@ if __name__ == "__main__":
             data_dict = vocab.transform(data_dict)
             ### end
 
-            print(data_dict.keys())
             os.makedirs(save_path, exist_ok=True)
             pp.save(save_path)
 

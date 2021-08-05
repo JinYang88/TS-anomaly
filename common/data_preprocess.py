@@ -41,9 +41,9 @@ class preprocessor:
 
         print("Discarding constant dimensions.")
         constant_cols = []
-        for idx, col in enumerate(data_dict["train"].T):
-            if len(set(col)) == 1:
-                constant_cols.append(idx)
+        # for idx, col in enumerate(data_dict["train"].T):
+        #     if len(set(col)) == 1:
+        #         constant_cols.append(idx)
         reserved_cols = [
             idx
             for idx in range(data_dict["train"].shape[1])
