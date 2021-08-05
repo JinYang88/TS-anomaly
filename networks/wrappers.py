@@ -195,7 +195,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 score = (
                     # average all dimension
                     return_dict["score"]
-                    .sum(dim=-1)  # b x prediction_length
+                    .mean(dim=-1)  # b x prediction_length
                 )
                 # mean all timestamp
                 score_list.append(score)

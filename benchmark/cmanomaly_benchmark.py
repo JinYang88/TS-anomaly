@@ -122,7 +122,6 @@ if __name__ == "__main__":
 
             encoder.load_encoder()
             records = encoder.predict_prob(test_iterator.loader)
-
             records_train = encoder.predict_prob(train_iterator.loader)
 
             train_anomaly_score = records_train["score"]
