@@ -132,7 +132,7 @@ def iter_thresholds(
     if threshold is not None:
         search_range = [0]
     else:
-        search_range = np.linspace(0, 1, 100)
+        search_range = np.linspace(1e-3, 1, 500)
 
     best_set = []
     for trial in ["higher", "less"]:
@@ -145,9 +145,9 @@ def iter_thresholds(
             else:
                 theta = threshold
             if trial == "higher":
-                pred = (score >= theta).astype(int)
+                pred = (score > theta).astype(int)
             elif trial == "less":
-                pred = (score <= theta).astype(int)
+                pred = (score < theta).astype(int)
 
             if adjustment:
                 pred, adjusted_pred = point_adjustment(pred, label)
@@ -170,27 +170,46 @@ def point_adjustment(pred, label):
     """
     Borrow from https://github.com/NetManAIOps/OmniAnomaly/blob/master/omni_anomaly/eval_methods.py
     """
-    adjusted_pred = copy.deepcopy(pred)
+    raw_pred = copy.deepcopy(pred)
 
+    actual = label == 1
     anomaly_state = False
     anomaly_count = 0
-    latency = 0
-    for i in range(len(adjusted_pred)):
-        if label[i] and adjusted_pred[i] and not anomaly_state:
+    for i in range(len(pred)):
+        if actual[i] and pred[i] and not anomaly_state:
             anomaly_state = True
             anomaly_count += 1
             for j in range(i, 0, -1):
-                if not label[j]:
+                if not actual[j]:
                     break
                 else:
-                    if not adjusted_pred[j]:
-                        adjusted_pred[j] = True
-                        latency += 1
-        elif not label[i]:
+                    if not pred[j]:
+                        pred[j] = True
+        elif not actual[i]:
             anomaly_state = False
         if anomaly_state:
-            adjusted_pred[i] = True
-    return pred, adjusted_pred
+            pred[i] = True
+    return raw_pred, pred
+
+    # anomaly_state = False
+    # anomaly_count = 0
+    # latency = 0
+    # for i in range(len(adjusted_pred)):
+    #     if label[i] and adjusted_pred[i] and not anomaly_state:
+    #         anomaly_state = True
+    #         anomaly_count += 1
+    #         for j in range(i, 0, -1):
+    #             if not label[j]:
+    #                 break
+    #             else:
+    #                 if not adjusted_pred[j]:
+    #                     adjusted_pred[j] = True
+    #                     latency += 1
+    #     elif not label[i]:
+    #         anomaly_state = False
+    #     if anomaly_state:
+    #         adjusted_pred[i] = True
+    # return pred, adjusted_pred
 
 
 def compute_support(score, label, dtype="normal"):

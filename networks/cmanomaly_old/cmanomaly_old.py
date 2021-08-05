@@ -20,14 +20,10 @@ class CMAnomaly_old(TimeSeriesEncoder):
     def __init__(
         self,
         in_channels,
-        hidden_size=64,
-        num_layers=1,
-        vocab_size=None,
-        embedding_dim=None,
         dropout=0,
         prediction_length=1,
         prediction_dims=[],
-        inter="FM",
+        inter="TIME",
         gamma=0.01,
         **kwargs,
     ):
@@ -40,12 +36,6 @@ class CMAnomaly_old(TimeSeriesEncoder):
         self.inter = inter
         self.gamma = gamma
 
-        if vocab_size is not None and embedding_dim is not None:
-            self.embedder = nn.Embedding(vocab_size, embedding_dim)
-            lstm_input_dim = embedding_dim
-        else:
-            self.embedder = None
-            lstm_input_dim = in_channels
 
         final_output_dim = prediction_length * len(self.prediction_dims)
 

@@ -24,18 +24,15 @@ seed_everything(2020)
 # python cmanomaly_old_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --embedding_dim 16 --nbins 10 --gpu 0
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="Dataset used")
-
-parser.add_argument("--lr", type=float, help="learning rate")
-parser.add_argument("--window_size", type=int, help="window_size")
-parser.add_argument("--stride", type=int, help="stride")
-parser.add_argument("--embedding_dim", type=int, help="embedding_dim")
-parser.add_argument("--nbins", type=int, help="nbins")
+parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
+parser.add_argument("--lr", type=float, default=0.01, help="learning rate")
+parser.add_argument("--window_size", type=int, default=32, help="window_size")
+parser.add_argument("--stride", type=int, default=5, help="stride")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
 
 args = vars(parser.parse_args())
 
-model_name = "CMAnomaly"  # change this name for different models
+model_name = "CMAnomaly_old"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -45,10 +42,7 @@ dataset = args["dataset"]
 device = args["gpu"]
 window_size = args["window_size"]
 stride = args["stride"]
-nbins = args["nbins"]
 lr = args["lr"]
-embedding_dim = args["embedding_dim"]
-
 
 normalize = "minmax"
 nb_epoch = 1000
@@ -60,6 +54,7 @@ prediction_dims = []
 
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
+        if subdataset != "machine-1-5": continue
         try:
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
 
@@ -85,12 +80,10 @@ if __name__ == "__main__":
                 window_dict["test_windows"], batch_size=4096, shuffle=False
             )
 
+
             encoder = CMAnomaly_old(
                 in_channels=data_dict["train"].shape[1],
-                hidden_size=64,
-                num_layers=1,
-                window_size=window_size,
-                embedding_dim=embedding_dim,
+                window_size = window_size,
                 dropout=dropout,
                 prediction_length=prediction_length,
                 prediction_dims=prediction_dims,

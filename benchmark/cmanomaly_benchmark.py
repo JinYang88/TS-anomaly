@@ -25,13 +25,13 @@ seed_everything(2020)
 # python cmanomaly_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --embedding_dim 16 --nbins 10 --gpu 0
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="Dataset used")
+parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
 
-parser.add_argument("--lr", type=float, help="learning rate")
-parser.add_argument("--window_size", type=int, help="window_size")
-parser.add_argument("--stride", type=int, help="stride")
-parser.add_argument("--embedding_dim", type=int, help="embedding_dim")
-parser.add_argument("--nbins", type=int, help="nbins")
+parser.add_argument("--lr", type=float, default=0.01, help="learning rate")
+parser.add_argument("--window_size", type=int, default=64, help="window_size")
+parser.add_argument("--stride", type=int, default=5, help="stride")
+parser.add_argument("--embedding_dim", type=int, default=16, help="embedding_dim")
+parser.add_argument("--nbins", type=int, default=10, help="nbins")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
 
 args = vars(parser.parse_args())
@@ -52,7 +52,7 @@ embedding_dim = args["embedding_dim"]
 
 
 normalize = "standard"
-nb_epoch = 1000
+nb_epoch = 20
 patience = 3
 dropout = 0
 batch_size = 128
@@ -62,6 +62,8 @@ prediction_dims = []
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
         try:
+            if subdataset != "machine-1-5":
+                continue
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
 
             print(f"Running on {subdataset} of {dataset}")
