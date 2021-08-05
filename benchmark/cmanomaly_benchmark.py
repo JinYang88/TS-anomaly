@@ -54,7 +54,7 @@ embedding_dim = args["embedding_dim"]
 
 
 normalize = "minmax"
-nb_epoch = 20
+nb_epoch = 100
 patience = 3
 dropout = 0
 batch_size = 128
