@@ -1,5 +1,7 @@
 import sys
 
+from IPython.terminal.embed import embed
+
 sys.path.append("../")
 
 import os
@@ -51,7 +53,7 @@ lr = args["lr"]
 embedding_dim = args["embedding_dim"]
 
 
-normalize = "standard"
+normalize = "minmax"
 nb_epoch = 20
 patience = 3
 dropout = 0
@@ -64,23 +66,24 @@ if __name__ == "__main__":
         try:
             if subdataset != "machine-1-5":
                 continue
-            save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
+            save_path = os.path.join("./savd_dir_cmanomaly", hash_id, subdataset)
 
             print(f"Running on {subdataset} of {dataset}")
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             pp = data_preprocess.preprocessor()
-            # data_dict = pp.normalize(data_dict, method=normalize)
+            data_dict = pp.normalize(data_dict, method=normalize)
 
             ### make symbols and convert to numerical features
             # data_dict = pp.symbolize(data_dict)
             # uniform, quantile
-            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy="quantile")
+            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy="uniform")
             vocab = Vocab()
             vocab.build_vocab(data_dict)
             data_dict = vocab.transform(data_dict)
             ### end
 
+            print(data_dict.keys())
             os.makedirs(save_path, exist_ok=True)
             pp.save(save_path)
 
@@ -90,11 +93,18 @@ if __name__ == "__main__":
                 stride=stride,
             )
 
+            window_dict_tokens = data_preprocess.generate_windows(
+                data_dict,
+                use_token=True,
+                window_size=window_size,
+                stride=stride,
+            )
+
             train_iterator = TokenDataset(
-                vocab, window_dict["train_windows"], batch_size=batch_size, shuffle=True
+                vocab, windows_tokens=window_dict_tokens["train_windows"], windows=window_dict["train_windows"], batch_size=batch_size, shuffle=True
             )
             test_iterator = TokenDataset(
-                vocab, window_dict["test_windows"], batch_size=512, shuffle=False
+                vocab, windows_tokens=window_dict_tokens["test_windows"], windows=window_dict["test_windows"], batch_size=512, shuffle=False
             )
 
             encoder = CMAnomaly(

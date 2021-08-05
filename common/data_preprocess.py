@@ -206,6 +206,7 @@ def generate_windows_with_index(
 
 def generate_windows(
     data_dict,
+    use_token=False,
     data_hdf5_path=None,
     window_size=100,
     nrows=None,
@@ -229,11 +230,18 @@ def generate_windows(
     print("Generating sliding windows (size {}).".format(window_size))
 
     if "train" in data_dict:
-        train = data_dict["train"][0:nrows]
+        if use_token:
+            train = data_dict["train_tokens"][0:nrows]
+        else:
+            train = data_dict["train"][0:nrows]
+            
         train_windows, _ = get_windows(train, window_size=window_size, stride=stride)
 
     if "test" in data_dict:
-        test = data_dict["test"][0:nrows]
+        if use_token:
+            test = data_dict["test_tokens"][0:nrows]
+        else:
+            test = data_dict["test"][0:nrows]
         test_label = (
             None
             if "test_labels" not in data_dict

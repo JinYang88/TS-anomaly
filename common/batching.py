@@ -16,9 +16,10 @@ class WindowIterator:
 
 
 class TokenDataset(Dataset):
-    def __init__(self, vocab, windows, batch_size, shuffle, num_workers=2):
+    def __init__(self, vocab, windows_tokens, windows, batch_size, shuffle, num_workers=2):
         self.vocab = vocab
         self.windows = windows
+        self.windows_tokens = windows_tokens
         self.loader = DataLoader(
             self, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
         )
@@ -36,10 +37,11 @@ class TokenDataset(Dataset):
         #     "x": self.windows[idx, :-1, :],
         #     "y": y.float(),
         # }
-        y = torch.LongTensor(list(
-            map(lambda x: self.vocab.label2idx[x], self.windows[idx, -1, :])
-        ))
+        # y = torch.LongTensor(list(
+        #     map(lambda x: self.vocab.label2idx[x], self.windows[idx, -1, :])
+        # ))
+        y = torch.Tensor(self.windows[idx, -1, :])
         return {
-            "x": self.windows[idx, :-1, :],
+            "x": self.windows_tokens[idx, :-1, :],
             "y": y,
         }

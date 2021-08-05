@@ -39,8 +39,9 @@ class Vocab:
                 tmp_arr.append(list(map(lambda x: self.word2index.get(x, 1), row)))
             return np.array(tmp_arr)
 
-        result_dict = {}
-        result_dict["train"] = convert_matrix(data_dict["train_tokens"])
-        result_dict["test"] = convert_matrix(data_dict["test_tokens"])
-        result_dict["test_labels"] = data_dict["test_labels"]
+        result_dict = {"train_tokens": convert_matrix(data_dict["train_tokens"]),
+                        "test_tokens": convert_matrix(data_dict["test_tokens"]),
+                        "train": data_dict["train"],
+                        "test": data_dict["test"], 
+                        "test_labels": data_dict["test_labels"]}
         return result_dict

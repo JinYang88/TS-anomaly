@@ -81,11 +81,12 @@ class CMAnomaly(TimeSeriesEncoder):
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, in_channels * nb_classes),
+            nn.Linear(64, in_channels),
         )
         self.dropout = nn.Dropout(dropout)
         # self.loss_fn = nn.BCEWithLogitsLoss(reduction="none")
-        self.loss_fn = nn.CrossEntropyLoss(reduction="none")
+        # self.loss_fn = nn.CrossEntropyLoss(reduction="none")
+        self.loss_fn = nn.MSELoss(reduction="none")
         self.compile()
 
     def CM_interaction(self, x):
@@ -121,16 +122,16 @@ class CMAnomaly(TimeSeriesEncoder):
         # lstm_out = x_embed.view(self.batch_size, -1) # only this -> f1 score 0.78!
 
         lstm_out = representation.view(self.batch_size, -1)
-
-        recst = self.predcitor(lstm_out).view(-1, self.nb_classes)  # batch*channel x 26
-        y = y.view(-1)
+        recst = self.predcitor(lstm_out).view(self.batch_size, self.in_channels)  # batch*channel x 26
+        # y = y.view(-1)
         loss = self.loss_fn(recst, y)
 
         return_dict = {
-            "loss": loss.mean(),
-            "recst": recst.argmax(dim=-1).view(self.batch_size, -1),
-            "score": loss.view(self.batch_size, -1),
-            "y": y.view(self.batch_size, -1),
+            "loss": loss.sum(),
+            "recst": recst,
+            # "recst": recst.argmax(dim=-1).view(self.batch_size, -1),
+            "score": loss,
+            "y": y,
             "x": x,
         }
 
