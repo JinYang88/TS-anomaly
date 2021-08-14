@@ -23,7 +23,7 @@ class CMAnomaly_old(TimeSeriesEncoder):
         dropout=0,
         prediction_length=1,
         prediction_dims=[],
-        inter="TIME",
+        inter="CONCAT",
         gamma=0.01,
         **kwargs,
     ):
@@ -93,7 +93,6 @@ class CMAnomaly_old(TimeSeriesEncoder):
         if self.inter == "FM":
             time_inter = self.FM_interaction(x)
             dim_inter = self.FM_interaction(x.transpose(2, 1))
-            # print(dim_inter.shape)
             raw = self.res_w(x.reshape(self.batch_size, -1))
             inter = self.gamma * torch.cat([time_inter, dim_inter], dim=-1)
             outputs = torch.cat([raw + inter, x.mean(dim=-1)], dim=-1)
@@ -122,9 +121,3 @@ class CMAnomaly_old(TimeSeriesEncoder):
         }
 
         return return_dict
-
-
-if __name__ == "__main__":
-    inp = torch.randn((32, 1, 46))
-    model = MultiLSTMEncoder(in_channels=25, num_layers=1, window_size=45)
-    out = model.forward(inp)

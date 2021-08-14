@@ -36,9 +36,10 @@ parser.add_argument("--embedding_dim", type=int, default=16, help="embedding_dim
 parser.add_argument("--nbins", type=int, default=10, help="nbins")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
 
+
 args = vars(parser.parse_args())
 
-model_name = "CMAnomaly"  # change this name for different models
+model_name = "CMAnomaly-token"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -57,7 +58,7 @@ normalize = "minmax"
 nb_epoch = 100
 patience = 3
 dropout = 0
-batch_size = 128
+batch_size = 1024
 prediction_length = 1
 prediction_dims = []
 
@@ -83,6 +84,9 @@ if __name__ == "__main__":
             data_dict = vocab.transform(data_dict)
             ### end
 
+            nb_classes = len(vocab.label2idx)
+            # nb_classes = nbins
+
             os.makedirs(save_path, exist_ok=True)
             pp.save(save_path)
 
@@ -100,15 +104,25 @@ if __name__ == "__main__":
             )
 
             train_iterator = TokenDataset(
-                vocab, windows_tokens=window_dict_tokens["train_windows"], windows=window_dict["train_windows"], batch_size=batch_size, shuffle=True
+                vocab,
+                windows_tokens=window_dict_tokens["train_windows"],
+                windows=window_dict["train_windows"],
+                nb_classes=nb_classes,
+                batch_size=batch_size,
+                shuffle=True,
             )
             test_iterator = TokenDataset(
-                vocab, windows_tokens=window_dict_tokens["test_windows"], windows=window_dict["test_windows"], batch_size=512, shuffle=False
+                vocab,
+                windows_tokens=window_dict_tokens["test_windows"],
+                windows=window_dict["test_windows"],
+                nb_classes=nb_classes,
+                batch_size=512,
+                shuffle=False,
             )
 
             encoder = CMAnomaly(
                 in_channels=data_dict["train"].shape[1],
-                nb_classes=len(vocab.label2idx),
+                nb_classes=nb_classes,
                 window_size=window_size,
                 vocab_size=vocab.vocab_size,
                 embedding_dim=embedding_dim,

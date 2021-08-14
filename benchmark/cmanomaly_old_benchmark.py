@@ -29,6 +29,7 @@ parser.add_argument("--lr", type=float, default=0.01, help="learning rate")
 parser.add_argument("--window_size", type=int, default=32, help="window_size")
 parser.add_argument("--stride", type=int, default=5, help="stride")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
+parser.add_argument("--normalize", type=str, default="minmax", help="choice: [minmax],[standard],[robust]")
 
 args = vars(parser.parse_args())
 
@@ -43,18 +44,18 @@ device = args["gpu"]
 window_size = args["window_size"]
 stride = args["stride"]
 lr = args["lr"]
+normalize = args["normalize"]
 
-normalize = "minmax"
 nb_epoch = 1000
 patience = 3
 dropout = 0
-batch_size = 128
+batch_size = 1024
 prediction_length = 1
 prediction_dims = []
 
 if __name__ == "__main__":
     for subdataset in subdatasets[dataset]:
-        if subdataset != "machine-1-5": continue
+        # if subdataset != "machine-1-4": continue
         try:
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
 
