@@ -77,11 +77,11 @@ class CMAnomaly(TimeSeriesEncoder):
         self.predcitor = nn.Sequential(
             # nn.Linear(embedding_dim * in_channels * (window_size-1), 128),
             # nn.Linear(128 , 128),
-            nn.Linear(2 * embedding_dim * (window_size - 1), 128),
+            nn.Linear(embedding_dim * (window_size - 1), 256),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(64, nb_classes),
+            nn.Linear(128, nb_classes),
         )
         self.dropout = nn.Dropout(dropout)
         self.loss_fn = nn.BCEWithLogitsLoss(reduction="none")
@@ -103,33 +103,24 @@ class CMAnomaly(TimeSeriesEncoder):
         # x: b x window_size x in_channels x embedding_dim
         x, y = input_dict["x"].to(self.device), input_dict["y"].to(self.device)
         self.batch_size = x.size(0)
-        
 
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
-        # interaction, interaction_score = self.afm(x_embed)
         # embed()
         interaction = self.CM_interaction(x_embed)
-        # # interaction = x_embed.mean(dim=1)
 
         repre_self = x_embed.mean(dim=1).view(self.batch_size, -1, self.embedding_dim)
-        repre_inter = interaction.view(
-            self.batch_size, -1, self.embedding_dim
-        )  # b x window x embedding
-        representation = torch.cat([repre_self, repre_inter], dim=-1)
+        # repre_inter = interaction.view(
+        #     self.batch_size, -1, self.embedding_dim
+        # )  # b x window x embedding
+        # representation = torch.cat([repre_self, repre_inter], dim=-1)
 
-        lstm_out = representation.view(self.batch_size, -1)
+        lstm_out = repre_self.view(self.batch_size, -1)
         recst = self.predcitor(lstm_out)  # batch*channel x 26
 
-        # embed()
-
         loss = self.loss_fn(recst, y)
-
-        loss = self.loss_fn(recst.view(-1), y.view(-1))
-
         return_dict = {
-            "loss": loss.sum(),
+            "loss": loss.mean(),
             "recst": recst,
-            # "recst": recst.argmax(dim=-1).view(self.batch_size, -1),
             "score": loss,
             "y": y,
             "x": x,

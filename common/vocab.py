@@ -21,8 +21,8 @@ class Vocab:
         all_char_used = set(map(lambda x: x.split("_")[0], self.word2index.keys()))
         char2idx = {ch: idx for idx, ch in enumerate(all_char_used)}
         for idx, (k, v) in enumerate(self.word2index.items()):
-           self.label2idx[v] = char2idx[k.split("_")[0]]
-            # self.label2idx[v] = idx
+            #    self.label2idx[v] = char2idx[k.split("_")[0]]
+            self.label2idx[v] = idx
         # print(self.word2index)
         # print(self.label2idx)
         return self.vocab_size
@@ -36,9 +36,11 @@ class Vocab:
                 tmp_arr.append(list(map(lambda x: self.word2index.get(x, 1), row)))
             return np.array(tmp_arr)
 
-        result_dict = {"train_tokens": convert_matrix(data_dict["train_tokens"]),
-                        "test_tokens": convert_matrix(data_dict["test_tokens"]),
-                        "train": data_dict["train"],
-                        "test": data_dict["test"], 
-                        "test_labels": data_dict["test_labels"]}
+        result_dict = {
+            "train_tokens": convert_matrix(data_dict["train_tokens"]),
+            "test_tokens": convert_matrix(data_dict["test_tokens"]),
+            "train": data_dict["train"],
+            "test": data_dict["test"],
+            "test_labels": data_dict["test_labels"],
+        }
         return result_dict
