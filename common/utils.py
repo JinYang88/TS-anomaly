@@ -9,7 +9,6 @@ from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_sco
 
 def set_device(gpu=-1):
     import torch
-
     if gpu != -1 and torch.cuda.is_available():
         device = torch.device("cuda:" + str(gpu))
     else:

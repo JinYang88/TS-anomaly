@@ -100,15 +100,15 @@ if __name__ == "__main__":
             )
 
             train_iterator = TokenDataset(
-                vocab, windows_tokens=window_dict_tokens["train_windows"], windows=window_dict["train_windows"], batch_size=batch_size, shuffle=True
+                vocab, windows_tokens=window_dict_tokens["train_windows"], windows=window_dict["train_windows"], nb_classes=nbins, batch_size=batch_size, shuffle=True
             )
             test_iterator = TokenDataset(
-                vocab, windows_tokens=window_dict_tokens["test_windows"], windows=window_dict["test_windows"], batch_size=512, shuffle=False
+                vocab, windows_tokens=window_dict_tokens["test_windows"], windows=window_dict["test_windows"], nb_classes=nbins, batch_size=512, shuffle=False
             )
 
             encoder = CMAnomaly(
                 in_channels=data_dict["train"].shape[1],
-                nb_classes=len(vocab.label2idx),
+                nb_classes=nbins,
                 window_size=window_size,
                 vocab_size=vocab.vocab_size,
                 embedding_dim=embedding_dim,
