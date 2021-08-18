@@ -104,7 +104,7 @@ settings = {
 }
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:1]:
+    for subdataset in subdatasets[dataset]:
         try:
             data_dict = load_dataset(dataset, subdataset, "all")
 

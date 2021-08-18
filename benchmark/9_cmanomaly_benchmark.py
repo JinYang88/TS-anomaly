@@ -72,7 +72,7 @@ prediction_dims = []
 
 if __name__ == "__main__":
     eval_folder = os.path.join(benchmarking_dir, model_name, hash_id, dataset)
-    for subdataset in subdatasets[dataset][0:1]:
+    for subdataset in subdatasets[dataset]:
         # for subdataset in []:
         try:
             save_path = os.path.join("./savd_dir_cmanomaly", hash_id, subdataset)

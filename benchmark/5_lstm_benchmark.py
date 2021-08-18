@@ -62,7 +62,7 @@ prediction_length = 1
 prediction_dims = []
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:1]:
+    for subdataset in subdatasets[dataset]:
         try:
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
             #if subdataset != "machine-1-5": continue

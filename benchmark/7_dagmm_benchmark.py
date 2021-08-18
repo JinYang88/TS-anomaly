@@ -52,7 +52,7 @@ minibatch = 1024
 normalize = True
 random_seed = 123
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset][0:1]:
+    for subdataset in subdatasets[dataset]:
         try:
             print(f"Running on {subdataset} of {dataset}")
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
