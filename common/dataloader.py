@@ -9,7 +9,7 @@ import pandas as pd
 from IPython import embed
 
 data_path_dict = {
-    "SMD": "./datasets/anomaly/SMD/processed",
+    "SMD": "./datasets/anomaly/SMD_20/processed",
     "SMAP": "./datasets/anomaly/SMAP-MSL/processed_SMAP",
     "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
     "WADI": "./datasets/anomaly/WADI/processed",
@@ -39,7 +39,7 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
     use_dim: dimension used in multivariate timeseries
     """
     print("Loading {} of {} dataset".format(subdataset, dataset))
-    x_dim = get_data_dim(dataset)
+    # x_dim = get_data_dim(dataset)
     path = data_path_dict[dataset]
     prefix = subdataset
     train_files = glob(os.path.join(root_dir, path, prefix + "_train.pkl"))
@@ -50,13 +50,13 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
     logging.info("{} files found.".format(len(train_files)))
 
     data_dict = defaultdict(dict)
-    data_dict["dim"] = x_dim if use_dim == "all" else 1
+    # data_dict["dim"] = x_dim if use_dim == "all" else 1
 
     train_data_list = []
     for idx, f_name in enumerate(train_files):
         machine_name = os.path.basename(f_name).split("_")[0]
         f = open(f_name, "rb")
-        train_data = pickle.load(f).reshape((-1, x_dim))
+        train_data = pickle.load(f)
         f.close()
         if use_dim != "all":
             train_data = train_data[:, use_dim].reshape(-1, 1)
@@ -68,7 +68,7 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
     for idx, f_name in enumerate(test_files):
         machine_name = os.path.basename(f_name).split("_")[0]
         f = open(f_name, "rb")
-        test_data = pickle.load(f).reshape((-1, x_dim))
+        test_data = pickle.load(f)
         f.close()
         if use_dim != "all":
             test_data = test_data[:, use_dim].reshape(-1, 1)

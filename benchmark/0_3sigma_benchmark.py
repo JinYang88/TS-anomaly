@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("../")
 
 from networks.threesigma import ThreeSigma
@@ -14,7 +15,7 @@ from common.evaluation import (
 )
 
 # write example command here
-# python 0_3sigma_benchmark.py --dataset SMD 
+# python 0_3sigma_benchmark.py --dataset SMD
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
@@ -42,7 +43,7 @@ if __name__ == "__main__":
 
             # data preprocessing for MSCRED
             od = ThreeSigma()
-            
+
             train_start = time.time()
             od.fit(x_train)
             train_end = time.time()
