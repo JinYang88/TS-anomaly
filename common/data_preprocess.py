@@ -32,7 +32,7 @@ class preprocessor:
         with open(filepath, "rb") as fw:
             self.__dict__.update(pickle.load(fw))
 
-    def symbolize(self, data_dict, n_bins=10, strategy="normal", nrows=None):
+    def symbolize(self, data_dict, n_bins=10, strategy="uniform", nrows=None):
         def add_postfix(x):
             postfix = np.array(
                 [["_" + str(i)] * x.shape[0] for i in range(x.shape[1])]
@@ -41,9 +41,9 @@ class preprocessor:
 
         print("Discarding constant dimensions.")
         constant_cols = []
-        # for idx, col in enumerate(data_dict["train"].T):
-        #     if len(set(col)) == 1:
-        #         constant_cols.append(idx)
+        for idx, col in enumerate(data_dict["train"].T):
+            if len(set(col)) == 1:
+                constant_cols.append(idx)
         reserved_cols = [
             idx
             for idx in range(data_dict["train"].shape[1])
@@ -59,11 +59,10 @@ class preprocessor:
         # train_tokens = est.fit_transform(result_dict["train"].T[:, :nrows])
         # test_tokens = est.transform(result_dict["test"].T[:, :nrows])
 
-        est = KBinsDiscretizer(
-                    n_bins=n_bins, encode="ordinal", strategy=strategy
-                )
+        est = KBinsDiscretizer(n_bins=n_bins, encode="ordinal", strategy=strategy)
         train_tokens = est.fit_transform(result_dict["train"][:, :nrows])
         test_tokens = est.transform(result_dict["test"][:, :nrows])
+
         result_dict["train_tokens"] = add_postfix(train_tokens.astype(str))
         result_dict["test_tokens"] = add_postfix(test_tokens.astype(str))
         result_dict["test_labels"] = data_dict["test_labels"]
@@ -234,7 +233,7 @@ def generate_windows(
             train = data_dict["train_tokens"][0:nrows]
         else:
             train = data_dict["train"][0:nrows]
-            
+
         train_windows, _ = get_windows(train, window_size=window_size, stride=stride)
 
     if "test" in data_dict:

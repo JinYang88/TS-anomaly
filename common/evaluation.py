@@ -4,6 +4,7 @@ import sys
 import copy
 import json
 import glob
+from IPython.terminal.embed import embed
 import pandas as pd
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
@@ -132,7 +133,7 @@ def iter_thresholds(
     if threshold is not None:
         search_range = [0]
     else:
-        search_range = np.linspace(1e-3, 1, 500)
+        search_range = np.linspace(1e-3, 1, 100)
 
     best_set = []
     for trial in ["higher", "less"]:
@@ -171,7 +172,6 @@ def point_adjustment(pred, label):
     Borrow from https://github.com/NetManAIOps/OmniAnomaly/blob/master/omni_anomaly/eval_methods.py
     """
     raw_pred = copy.deepcopy(pred)
-
     actual = label == 1
     anomaly_state = False
     anomaly_count = 0
@@ -327,16 +327,14 @@ def evaluate_benchmarking_folder(
     concerned_metrics = [
         "train_time",
         "test_time",
-        "adj_precision",
-        "adj_recall",
-        "pot-precision",
-        "pot-recall",
-        "pot-f1",
-        "adj_f1",
+        "adj_PC",
+        "adj_RC",
+        "adj_F1",
     ]
-    metric_values_dict = defaultdict(list)
     folder_count = 0
-    foldernames = [] 
+    foldernames = []
+    metric_values_dict = defaultdict(list)
+    pred_results_all = defaultdict(list)
     for subfolder in glob.glob(os.path.join(folder, "*")):
         folder_name = os.path.basename(subfolder)
         foldernames.append(folder_name)
@@ -347,12 +345,15 @@ def evaluate_benchmarking_folder(
         anomaly_score_train = np.load(
             os.path.join(subfolder, "anomaly_score.npz"), allow_pickle=True
         )["arr_0"].item()["train"]
-
         anomaly_label = np.load(os.path.join(subfolder, "anomaly_label.npz"))[
             "arr_0"
         ].astype(int)
         with open(os.path.join(subfolder, "time.json")) as fr:
             time = json.load(fr)
+
+        pred_results_all["anomaly_score"].append(anomaly_score)
+        pred_results_all["anomaly_label"].append(anomaly_label)
+        pred_results_all["anomaly_score_train"].append(anomaly_score_train)
 
         best_f1, best_theta, best_adjust_pred, best_raw_pred = iter_thresholds(
             anomaly_score, anomaly_label, metric="f1", adjustment=True
@@ -367,47 +368,38 @@ def evaluate_benchmarking_folder(
         adj_f1 = f1_score(anomaly_label, best_adjust_pred)
         adj_precision = precision_score(anomaly_label, best_adjust_pred)
         adj_recall = recall_score(anomaly_label, best_adjust_pred)
-
         raw_f1 = f1_score(anomaly_label, best_raw_pred)
         raw_precision = precision_score(anomaly_label, best_raw_pred)
         raw_recall = recall_score(anomaly_label, best_raw_pred)
-
         total_delay = compute_delay(anomaly_label, best_raw_pred)
-
-        # bf_search_min, bf_search_max = 0, 1
-        # bf_search_step_size = 0.01
-        # t, th = bf_search(
-        #     anomaly_score,
-        #     anomaly_label,
-        #     start=bf_search_min,
-        #     end=bf_search_max,
-        #     step_num=int(abs(bf_search_max - bf_search_min) / bf_search_step_size),
-        #     display_freq=50,
-        # )
-        # get pot results
-        pot_result = pot_eval(
-            anomaly_score_train, anomaly_score, anomaly_label, level=0.0001
-        )
 
         metric = {
             "auc": auc,
-            "raw_f1": raw_f1,
-            "raw_precision": raw_precision,
-            "raw_recall": raw_recall,
-            "adj_f1": adj_f1,
-            "adj_precision": adj_precision,
-            "adj_recall": adj_recall,
+            "raw_F1": raw_f1,
+            "raw_PC": raw_precision,
+            "raw_RC": raw_recall,
+            "adj_F1": adj_f1,
+            "adj_PC": adj_precision,
+            "adj_RC": adj_recall,
             "delay": total_delay,
             "train_time": time["train"],
             "test_time": time["test"],
         }
-        metric.update(pot_result)
-
         for metric_name in concerned_metrics:
             metric_values_dict[metric_name].append(metric[metric_name])
-
         json_pretty_dump(metric, os.path.join(subfolder, "metrics.json"))
         folder_count += 1
+
+    concated_test_score = np.concatenate(pred_results_all["anomaly_score"])
+    concated_test_label = np.concatenate(pred_results_all["anomaly_label"])
+    _, _, concated_adjusted_pred, concated_raw_pred = iter_thresholds(
+        concated_test_score, concated_test_label, metric="f1", adjustment=True
+    )
+    concacted_adj_f1 = f1_score(concated_test_label, concated_adjusted_pred)
+    concacted_adj_precision = precision_score(
+        concated_test_label, concated_adjusted_pred
+    )
+    concacted_adj_recall = recall_score(concated_test_label, concated_adjusted_pred)
 
     current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
     with open(
@@ -421,10 +413,15 @@ def evaluate_benchmarking_folder(
             values = np.array(metric_values_dict[metric_name], dtype=float)
             mean, std = values.mean(), values.std()
             metric_str.append("{}: {:.3f} ({:.3f})".format(metric_name, mean, std))
+
+        metric_str.append("con_PC: {:.3f}".format(concacted_adj_precision))
+        metric_str.append("con_RC: {:.3f}".format(concacted_adj_recall))
+        metric_str.append("con_F1: {:.3f}".format(concacted_adj_f1))
+
         metric_str = "\t".join(metric_str)
         info += metric_str + "\n"
         fw.write(info)
-    
+
     metrics_per_datasets = pd.DataFrame(metric_values_dict, index=foldernames)
     metrics_per_datasets.to_csv(os.path.join(folder, "..", "metrics_per_datasets.csv"))
     print(info)

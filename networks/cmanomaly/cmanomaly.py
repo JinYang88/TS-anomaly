@@ -71,13 +71,10 @@ class CMAnomaly(TimeSeriesEncoder):
         self.nb_classes = nb_classes
 
         self.embedder = nn.Embedding(vocab_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, 128, batch_first=True)
-        self.afm = AFMLayer(embedding_dim, num_fields=in_channels)
-
         self.predcitor = nn.Sequential(
             # nn.Linear(embedding_dim * in_channels * (window_size-1), 128),
             # nn.Linear(128 , 128),
-            nn.Linear(embedding_dim * (window_size - 1), 256),
+            nn.Linear(2 * embedding_dim * (window_size - 1), 256),
             nn.ReLU(),
             nn.Linear(256, 128),
             nn.ReLU(),
@@ -105,16 +102,14 @@ class CMAnomaly(TimeSeriesEncoder):
         self.batch_size = x.size(0)
 
         x_embed = self.embedder(x.long()).view(-1, self.in_channels, self.embedding_dim)
-        # embed()
         interaction = self.CM_interaction(x_embed)
-
         repre_self = x_embed.mean(dim=1).view(self.batch_size, -1, self.embedding_dim)
-        # repre_inter = interaction.view(
-        #     self.batch_size, -1, self.embedding_dim
-        # )  # b x window x embedding
-        # representation = torch.cat([repre_self, repre_inter], dim=-1)
+        repre_inter = interaction.view(
+            self.batch_size, -1, self.embedding_dim
+        )  # b x window x embedding
+        representation = torch.cat([repre_self, repre_inter], dim=-1)
 
-        lstm_out = repre_self.view(self.batch_size, -1)
+        lstm_out = representation.view(self.batch_size, -1)
         recst = self.predcitor(lstm_out)  # batch*channel x 26
 
         loss = self.loss_fn(recst, y)

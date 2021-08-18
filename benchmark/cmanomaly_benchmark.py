@@ -34,7 +34,14 @@ parser.add_argument("--window_size", type=int, default=64, help="window_size")
 parser.add_argument("--stride", type=int, default=5, help="stride")
 parser.add_argument("--embedding_dim", type=int, default=16, help="embedding_dim")
 parser.add_argument("--nbins", type=int, default=10, help="nbins")
+parser.add_argument(
+    "--strategy",
+    type=str,
+    default="kmeans",
+    help="sybolization strategy [uniform， quantile]",
+)
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
+parser.add_argument("--info", type=str, default="", help="Comment")
 
 
 args = vars(parser.parse_args())
@@ -52,10 +59,11 @@ stride = args["stride"]
 nbins = args["nbins"]
 lr = args["lr"]
 embedding_dim = args["embedding_dim"]
+strategy = args["strategy"]
 
 
 normalize = "minmax"
-nb_epoch = 100
+nb_epoch = 200
 patience = 3
 dropout = 0
 batch_size = 1024
@@ -63,10 +71,10 @@ prediction_length = 1
 prediction_dims = []
 
 if __name__ == "__main__":
+    eval_folder = os.path.join(benchmarking_dir, model_name, hash_id, dataset)
     for subdataset in subdatasets[dataset]:
+        # for subdataset in []:
         try:
-            # if subdataset != "machine-1-5":
-            #     continue
             save_path = os.path.join("./savd_dir_cmanomaly", hash_id, subdataset)
 
             print(f"Running on {subdataset} of {dataset}")
@@ -75,10 +83,8 @@ if __name__ == "__main__":
             pp = data_preprocess.preprocessor()
             data_dict = pp.normalize(data_dict, method=normalize)
 
-            ### make symbols and convert to numerical features
-            # data_dict = pp.symbolize(data_dict)
             # uniform, quantile
-            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy="uniform")
+            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy=strategy)
             vocab = Vocab()
             vocab.build_vocab(data_dict)
             data_dict = vocab.transform(data_dict)
@@ -116,7 +122,7 @@ if __name__ == "__main__":
                 windows_tokens=window_dict_tokens["test_windows"],
                 windows=window_dict["test_windows"],
                 nb_classes=nb_classes,
-                batch_size=512,
+                batch_size=2048,
                 shuffle=False,
             )
 
@@ -151,7 +157,7 @@ if __name__ == "__main__":
             anomaly_score = records["score"]
             anomaly_label = window_dict["test_labels"][:, -1]
 
-            eval_folder = store_benchmarking_results(
+            store_benchmarking_results(
                 hash_id,
                 benchmarking_dir,
                 dataset,
