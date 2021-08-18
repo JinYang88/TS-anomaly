@@ -175,7 +175,6 @@ class TimeSeriesEncoder(torch.nn.Module):
         # Check if the given time series have unequal lengths
         save_dict = defaultdict(list)
         self = self.eval()
-
         used_keys = ["recst", "y", "diff"]
         with torch.no_grad():
             for batch in iterator:
@@ -205,11 +204,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 if not isinstance(batch, dict):
                     batch = batch.to(self.device).float()
                 return_dict = self(batch)
-                score = (
-                    # average all dimension
-                    return_dict["score"].sum(dim=-1)  # b x prediction_length
-                )
-                # mean all timestamp
+                score = return_dict["score"].mean(dim=-1)  # b x n_channels
                 score_list.append(score)
         test_end = time.time()
 
