@@ -55,7 +55,7 @@ class preprocessor:
         result_dict["test"] = data_dict["test"][:, reserved_cols]
 
         print("Convert time series to symbolics.")
-        est = SymbolicAggregateApproximation(n_bins=n_bins, strategy=strategy)
+        # est = SymbolicAggregateApproximation(n_bins=n_bins, strategy=strategy)
         # train_tokens = est.fit_transform(result_dict["train"].T[:, :nrows])
         # test_tokens = est.transform(result_dict["test"].T[:, :nrows])
 

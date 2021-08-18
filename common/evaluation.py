@@ -138,17 +138,20 @@ def iter_thresholds(
     best_set = []
     for trial in ["higher", "less"]:
         for anomaly_ratio in search_range:
-            if threshold is None:
-                if not normalized:
-                    theta = np.percentile(score, 100 * (1 - anomaly_ratio))
-                else:
-                    theta = anomaly_ratio
-            else:
-                theta = threshold
+
             
             if sum(np.unique(score)) == 1 or sum(np.unique(score)) == 0:
                 pred = score
+                theta = None
             else:
+                if threshold is None:
+                    if not normalized:
+                        theta = np.percentile(score, 100 * (1 - anomaly_ratio))
+                    else:
+                        theta = anomaly_ratio
+                else:
+                    theta = threshold
+
                 if trial == "higher":
                     pred = (score > theta).astype(int)
                 elif trial == "less":
@@ -326,7 +329,7 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
 
 
 def evaluate_benchmarking_folder(
-    folder, benchmarking_dir, hash_id, dataset, model_name, adjustment=True,
+    folder, benchmarking_dir, hash_id, dataset, model_name, adjustment=False,
 ):
     concerned_metrics = [
         "train_time",
@@ -404,6 +407,13 @@ def evaluate_benchmarking_folder(
     _, _, concated_adjusted_pred, concated_raw_pred = iter_thresholds(
         concated_test_score, concated_test_label, metric="f1", adjustment=adjustment
     )
+
+    concacted_raw_f1 = f1_score(concated_test_label, concated_raw_pred)
+    concacted_raw_precision = precision_score(
+        concated_test_label, concated_raw_pred
+    )
+    concacted_raw_recall = recall_score(concated_test_label, concated_raw_pred)
+
     concacted_adj_f1 = f1_score(concated_test_label, concated_adjusted_pred)
     concacted_adj_precision = precision_score(
         concated_test_label, concated_adjusted_pred
@@ -422,6 +432,10 @@ def evaluate_benchmarking_folder(
             values = np.array(metric_values_dict[metric_name], dtype=float)
             mean, std = values.mean(), values.std()
             metric_str.append("{}: {:.3f} ({:.3f})".format(metric_name, mean, std))
+
+        metric_str.append("con_adj_PC: {:.3f}".format(concacted_raw_precision))
+        metric_str.append("con_adj_RC: {:.3f}".format(concacted_raw_recall))
+        metric_str.append("con_adj_F1: {:.3f}".format(concacted_raw_f1))
 
         metric_str.append("con_PC: {:.3f}".format(concacted_adj_precision))
         metric_str.append("con_RC: {:.3f}".format(concacted_adj_recall))

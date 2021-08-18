@@ -38,10 +38,9 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
     """
     use_dim: dimension used in multivariate timeseries
     """
-    logging.info("Loading {} of {} dataset".format(subdataset, dataset))
+    print("Loading {} of {} dataset".format(subdataset, dataset))
     x_dim = get_data_dim(dataset)
     path = data_path_dict[dataset]
-
     prefix = subdataset
     train_files = glob(os.path.join(root_dir, path, prefix + "_train.pkl"))
     test_files = glob(os.path.join(root_dir, path, prefix + "_test.pkl"))
