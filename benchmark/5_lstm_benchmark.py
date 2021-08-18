@@ -1,7 +1,5 @@
 import sys
 
-from IPython.terminal.embed import embed
-
 sys.path.append("../")
 
 import os
@@ -9,10 +7,9 @@ import hashlib
 import traceback
 from common import data_preprocess
 from common.dataloader import load_dataset
-from common.batching import TokenDataset
-from common.utils import seed_everything
-from common.vocab import Vocab
-from networks.cmanomaly import CMAnomaly
+from common.batching import WindowIterator
+from common.utils import print_to_json, update_from_nni_params, seed_everything, pprint
+from networks.lstm import LSTM
 
 import argparse
 from common.config import subdatasets
@@ -24,29 +21,24 @@ from common.evaluation import (
 seed_everything(2020)
 
 
-# python cmanomaly_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --embedding_dim 16 --nbins 10 --gpu 0
-
+# python 5_lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 128 --gpu 0
+# python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 128 --gpu 0
+# python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu 0
+# python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1
+# python lstm_benchmark.py --dataset WADI --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
+parser.add_argument("--dataset", type=str, help="Dataset used")
 
-parser.add_argument("--lr", type=float, default=0.01, help="learning rate")
-parser.add_argument("--window_size", type=int, default=64, help="window_size")
-parser.add_argument("--stride", type=int, default=5, help="stride")
-parser.add_argument("--embedding_dim", type=int, default=16, help="embedding_dim")
-parser.add_argument("--nbins", type=int, default=10, help="nbins")
-parser.add_argument(
-    "--strategy",
-    type=str,
-    default="kmeans",
-    help="sybolization strategy [uniform， quantile]",
-)
+parser.add_argument("--lr", type=float, help="learning rate")
+parser.add_argument("--window_size", type=int, help="window_size")
+parser.add_argument("--stride", type=int, help="stride")
+parser.add_argument("--num_layers", type=int, help="num_layers")
+parser.add_argument("--hidden_size", type=int, help="hidden_size")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
-parser.add_argument("--info", type=str, default="", help="Comment")
-
 
 args = vars(parser.parse_args())
 
-model_name = "CMAnomaly-token"  # change this name for different models
+model_name = "lstm"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -56,43 +48,29 @@ dataset = args["dataset"]
 device = args["gpu"]
 window_size = args["window_size"]
 stride = args["stride"]
-nbins = args["nbins"]
 lr = args["lr"]
-embedding_dim = args["embedding_dim"]
-strategy = args["strategy"]
+hidden_size = args["hidden_size"]
+num_layers = args["num_layers"]
 
 
 normalize = "minmax"
-nb_epoch = 200
-patience = 3
+nb_epoch = 20
+patience = 5
 dropout = 0
 batch_size = 1024
 prediction_length = 1
 prediction_dims = []
 
 if __name__ == "__main__":
-    eval_folder = os.path.join(benchmarking_dir, model_name, hash_id, dataset)
-    for subdataset in subdatasets[dataset]:
-        # for subdataset in []:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
-            save_path = os.path.join("./savd_dir_cmanomaly", hash_id, subdataset)
-
+            save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
+            #if subdataset != "machine-1-5": continue
             print(f"Running on {subdataset} of {dataset}")
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             pp = data_preprocess.preprocessor()
             data_dict = pp.normalize(data_dict, method=normalize)
-
-            # uniform, quantile
-            data_dict = pp.symbolize(data_dict, n_bins=nbins, strategy=strategy)
-            vocab = Vocab()
-            vocab.build_vocab(data_dict)
-            data_dict = vocab.transform(data_dict)
-            ### end
-
-            nb_classes = len(vocab.label2idx)
-            # nb_classes = nbins
-
             os.makedirs(save_path, exist_ok=True)
             pp.save(save_path)
 
@@ -102,37 +80,19 @@ if __name__ == "__main__":
                 stride=stride,
             )
 
-            window_dict_tokens = data_preprocess.generate_windows(
-                data_dict,
-                use_token=True,
-                window_size=window_size,
-                stride=stride,
+            train_iterator = WindowIterator(
+                window_dict["train_windows"], batch_size=batch_size, shuffle=True
+            )
+            test_iterator = WindowIterator(
+                window_dict["test_windows"], batch_size=4096, shuffle=False
             )
 
-            train_iterator = TokenDataset(
-                vocab,
-                windows_tokens=window_dict_tokens["train_windows"],
-                windows=window_dict["train_windows"],
-                nb_classes=nb_classes,
-                batch_size=batch_size,
-                shuffle=True,
-            )
-            test_iterator = TokenDataset(
-                vocab,
-                windows_tokens=window_dict_tokens["test_windows"],
-                windows=window_dict["test_windows"],
-                nb_classes=nb_classes,
-                batch_size=2048,
-                shuffle=False,
-            )
-
-            encoder = CMAnomaly(
-                in_channels=data_dict["train"].shape[1],
-                nb_classes=nb_classes,
-                window_size=window_size,
-                vocab_size=vocab.vocab_size,
-                embedding_dim=embedding_dim,
+            encoder = LSTM(
+                in_channels=data_dict["dim"],
+                hidden_size=hidden_size,
+                num_layers=num_layers,
                 dropout=dropout,
+                window_size=window_size,
                 prediction_length=prediction_length,
                 prediction_dims=prediction_dims,
                 patience=patience,
@@ -151,13 +111,14 @@ if __name__ == "__main__":
 
             encoder.load_encoder()
             records = encoder.predict_prob(test_iterator.loader)
+
             records_train = encoder.predict_prob(train_iterator.loader)
 
             train_anomaly_score = records_train["score"]
             anomaly_score = records["score"]
             anomaly_label = window_dict["test_labels"][:, -1]
 
-            store_benchmarking_results(
+            eval_folder = store_benchmarking_results(
                 hash_id,
                 benchmarking_dir,
                 dataset,

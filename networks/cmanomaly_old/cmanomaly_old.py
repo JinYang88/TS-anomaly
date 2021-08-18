@@ -113,7 +113,7 @@ class CMAnomaly_old(TimeSeriesEncoder):
         )
         loss = self.loss_fn(recst, y)
         return_dict = {
-            "loss": loss.sum(),
+            "loss": loss.mean(),
             "recst": recst,
             "repr": outputs,
             "score": loss,

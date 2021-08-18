@@ -18,14 +18,14 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-# python dagmm_benchmark.py --dataset SMD --lr 0.0001 --dropout 0.25 --num_epochs 100 -ch 32 16 2 -eh 80 40
+# python 7_dagmm_benchmark.py -ch 32 16 2 -eh 80 40
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="Dataset used")
+parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
 
-parser.add_argument("--lr", type=float, help="learning rate")
-parser.add_argument("--dropout", type=float, help="dropout")
-parser.add_argument("--num_epochs", type=int, help="num_epochs")
+parser.add_argument("--lr", type=float, default="0.001", help="learning rate")
+parser.add_argument("--dropout", type=float, default=0.25, help="dropout")
+parser.add_argument("--num_epochs", type=int, default=100, help="num_epochs")
 parser.add_argument(
     "-ch", "--compression_hiddens", nargs="+", help="compression_hiddens", required=True
 )  # 32 16 2
@@ -51,12 +51,11 @@ estimation_hiddens = args["estimation_hiddens"]
 minibatch = 1024
 normalize = True
 random_seed = 123
-# python dagmm_benchmark.py --dataset SMD --lr 0.003 --dropout 0.25 --num_epochs 100 -ch 32 16 2 -eh 80 40
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
             # preprocessing
             pp = preprocessor()
             data_dict = pp.normalize(data_dict)

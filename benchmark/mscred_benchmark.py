@@ -49,7 +49,7 @@ gap_time = 10
 thred_b = 0.005
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             save_path = os.path.join("./mscred_data/", hash_id, subdataset)
 

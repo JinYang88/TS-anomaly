@@ -17,8 +17,9 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
+# 
 
-#  python lstm_vae_benchmark.py --dataset SMAP --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 10
+#  python 6_lstm_vae_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --intermediate_dim 64 --window_size 32 --stride 5 --hidden_size 128 --num_epochs 10
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -49,10 +50,10 @@ stateful = False
 batch_size = 1024
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             # preprocessing
             pp = preprocessor()

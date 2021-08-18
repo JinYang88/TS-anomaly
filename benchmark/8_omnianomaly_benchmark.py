@@ -30,7 +30,7 @@ from common.evaluation import (
     evaluate_benchmarking_folder,
 )
 
-#  python omnianomaly_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --rnn_num_hidden 500 --window_size 32 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 1
+#  python 8_omnianomaly_benchmark.py --dataset SMD --lr 0.001 --z_dim 3 --rnn_num_hidden 500 --window_size 32 --stride 5 --dense_dim 128 --nf_layers 2 --max_epoch 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, help="Dataset used")
@@ -113,7 +113,7 @@ class ExpConfig(Config):
 
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             print(f"Running on {subdataset} of {dataset}")
             config = ExpConfig()
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             results.save_config(config)  # save experiment settings for review
             results.make_dirs(config.save_dir, exist_ok=True)
 
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             # preprocessing
             pp = preprocessor()

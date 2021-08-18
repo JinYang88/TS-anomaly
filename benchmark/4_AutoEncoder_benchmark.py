@@ -1,9 +1,11 @@
+import os
 import sys
-import logging
-from pyod.models.pca import PCA
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 sys.path.append("../")
+import logging
 
+from pyod.models.auto_encoder import AutoEncoder
 from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint
@@ -20,38 +22,48 @@ from common.evaluation import (
 )
 
 # write example command here
-# python PCA_benchmark.py --dataset SMD --n_components 10
+# python 4_AutoEncoder_benchmark.py --dataset SMD --hidden_neurons 64 32 32 64 --batch_size 32 --epochs 100 --l2_regularizer 0.1
+# input neuron layer size like: 64 32 32 64
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="dataset")
-parser.add_argument("--n_components", type=int, help="n_components")
+parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
+parser.add_argument("--hidden_neurons", nargs="+", type=int, help="hidden_neurons")
+parser.add_argument("--batch_size", type=int, help="batch_size")
+parser.add_argument("--epochs", type=int, help="epochs")
+parser.add_argument("--l2_regularizer", type=float, help="l2_regularizer")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
-n_components = args["n_components"]
+hidden_neurons = args["hidden_neurons"]
+batch_size = args["batch_size"]
+epochs = args["epochs"]
+l2_regularizer = args["l2_regularizer"]
 
-model_name = "PCA"  # change this name for different models
+model_name = "AutoEncoder"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
 ).hexdigest()[0:8]
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]
             x_test_labels = data_dict["test_labels"]
 
-            print(x_test_labels.sum()/len(x_test_labels))
-            sys.exit()
-
-            od = PCA(args["n_components"], standardization=False)
+            od = AutoEncoder(
+                hidden_neurons=hidden_neurons,
+                batch_size=batch_size,
+                epochs=epochs,
+                l2_regularizer=l2_regularizer,
+                verbose=0,
+            )
 
             train_start = time.time()
             od.fit(x_train)
@@ -80,7 +92,6 @@ if __name__ == "__main__":
                 anomaly_label,
                 time_tracker,
             )
-
         except Exception as e:
             print(f"Running on {subdataset} failed.")
             print(traceback.format_exc())

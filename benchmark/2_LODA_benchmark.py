@@ -23,8 +23,8 @@ from common.evaluation import (
 # python LODA_benchmark.py --dataset SMD --n_bins 10
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="dataset")
-parser.add_argument("--n_bins", type=int, help="n_bins")
+parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
+parser.add_argument("--n_bins", type=int,  default=10, help="n_bins")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
@@ -38,11 +38,11 @@ hash_id = hashlib.md5(
 ).hexdigest()[0:8]
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]

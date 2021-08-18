@@ -8,8 +8,8 @@ import traceback
 from common import data_preprocess
 from common.dataloader import load_dataset
 from common.batching import WindowIterator
-from common.utils import print_to_json, update_from_nni_params, seed_everything, pprint
-from networks.lstm import LSTM
+from common.utils import seed_everything
+from networks.cmanomaly_old import CMAnomaly_old
 
 import argparse
 from common.config import subdatasets
@@ -21,24 +21,19 @@ from common.evaluation import (
 seed_everything(2020)
 
 
-# python lstm_benchmark.py --dataset MSL --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 128 --gpu 0
-# python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 128 --gpu 0
-# python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu 0
-# python lstm_benchmark.py --dataset SMD --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1
-# python lstm_benchmark.py --dataset WADI --lr 0.001 --window_size 32 --stride 5 --num_layers 2 --hidden_size 64 --gpu -1
-parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="Dataset used")
+# python cmanomaly_old_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --embedding_dim 16 --nbins 10 --gpu 0
 
-parser.add_argument("--lr", type=float, help="learning rate")
-parser.add_argument("--window_size", type=int, help="window_size")
-parser.add_argument("--stride", type=int, help="stride")
-parser.add_argument("--num_layers", type=int, help="num_layers")
-parser.add_argument("--hidden_size", type=int, help="hidden_size")
+parser = argparse.ArgumentParser()
+parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
+parser.add_argument("--lr", type=float, default=0.01, help="learning rate")
+parser.add_argument("--window_size", type=int, default=32, help="window_size")
+parser.add_argument("--stride", type=int, default=5, help="stride")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
+parser.add_argument("--normalize", type=str, default="minmax", help="choice: [minmax],[standard],[robust]")
 
 args = vars(parser.parse_args())
 
-model_name = "lstm"  # change this name for different models
+model_name = "CMAnomaly_old"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -49,28 +44,27 @@ device = args["gpu"]
 window_size = args["window_size"]
 stride = args["stride"]
 lr = args["lr"]
-hidden_size = args["hidden_size"]
-num_layers = args["num_layers"]
+normalize = args["normalize"]
 
-
-normalize = "minmax"
 nb_epoch = 1000
-patience = 5
+patience = 3
 dropout = 0
 batch_size = 1024
 prediction_length = 1
 prediction_dims = []
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
+        # if subdataset != "machine-1-4": continue
         try:
             save_path = os.path.join("./savd_dir_lstm", hash_id, subdataset)
-            #if subdataset != "machine-1-5": continue
+
             print(f"Running on {subdataset} of {dataset}")
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             pp = data_preprocess.preprocessor()
             data_dict = pp.normalize(data_dict, method=normalize)
+
             os.makedirs(save_path, exist_ok=True)
             pp.save(save_path)
 
@@ -87,12 +81,11 @@ if __name__ == "__main__":
                 window_dict["test_windows"], batch_size=4096, shuffle=False
             )
 
-            encoder = LSTM(
-                in_channels=data_dict["dim"],
-                hidden_size=hidden_size,
-                num_layers=num_layers,
+
+            encoder = CMAnomaly_old(
+                in_channels=data_dict["train"].shape[1],
+                window_size = window_size,
                 dropout=dropout,
-                window_size=window_size,
                 prediction_length=prediction_length,
                 prediction_dims=prediction_dims,
                 patience=patience,

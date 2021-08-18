@@ -1,6 +1,7 @@
 import sys
 import logging
-from alibi_detect.od import IForest
+# from alibi_detect.od import IForest
+from pyod.models.iforest import IForest
 
 sys.path.append("../")
 
@@ -24,8 +25,8 @@ from common.evaluation import (
 # python iforest_benchmark.py --dataset SMD --n_estimators 100
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="dataset")
-parser.add_argument("--n_estimators", type=int, help="n_estimators")
+parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
+parser.add_argument("--n_estimators", type=int, default=100, help="n_estimators")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
@@ -39,11 +40,11 @@ hash_id = hashlib.md5(
 ).hexdigest()[0:8]
 
 if __name__ == "__main__":
-    for subdataset in subdatasets[dataset]:
+    for subdataset in subdatasets[dataset][0:1]:
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]
@@ -56,10 +57,10 @@ if __name__ == "__main__":
             train_end = time.time()
 
             test_start = time.time()
-            anomaly_score = od.score(x_test)
+            anomaly_score = od.decision_function(x_test)
             test_end = time.time()
 
-            anomaly_score_train = od.score(x_train)
+            anomaly_score_train = od.decision_function(x_train)
 
             time_tracker = {
                 "train": train_end - train_start,

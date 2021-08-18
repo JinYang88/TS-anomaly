@@ -1,6 +1,6 @@
 import sys
 import logging
-from pyod.models.knn import KNN
+from pyod.models.pca import PCA
 
 sys.path.append("../")
 
@@ -20,19 +20,18 @@ from common.evaluation import (
 )
 
 # write example command here
-# python KNN_benchmark.py --dataset SMD --n_neighbors 5
-# python KNN_benchmark.py --dataset WADI_SPLIT --n_neighbors 5
+# python PCA_benchmark.py --dataset SMD --n_components 10
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="dataset")
-parser.add_argument("--n_neighbors", type=int, help="n_neighbors")
+parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
+parser.add_argument("--n_components", type=int, default=10, help="n_components")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
-n_neighbors = args["n_neighbors"]
+n_components = args["n_components"]
 
-model_name = "KNN"  # change this name for different models
+model_name = "PCA"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -43,13 +42,13 @@ if __name__ == "__main__":
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]
             x_test_labels = data_dict["test_labels"]
 
-            od = KNN(n_neighbors=n_neighbors)
+            od = PCA(args["n_components"], standardization=False)
 
             train_start = time.time()
             od.fit(x_train)
