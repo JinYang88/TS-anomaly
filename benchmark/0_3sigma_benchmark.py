@@ -1,14 +1,8 @@
 import sys
-import logging
-from pyod.models.loda import LODA
-
 sys.path.append("../")
 
+from networks.threesigma import ThreeSigma
 from common.dataloader import load_dataset
-from common.evaluation import evaluator
-from common.utils import pprint
-
-## import the following for benchmarking
 import time
 import hashlib
 import traceback
@@ -20,18 +14,16 @@ from common.evaluation import (
 )
 
 # write example command here
-# python LODA_benchmark.py --dataset SMD --n_bins 10
+# python 0_3sigma_benchmark.py --dataset SMD 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, help="dataset")
-parser.add_argument("--n_bins", type=int, help="n_bins")
+parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
-n_bins = args["n_bins"]
 
-model_name = "LODA"  # change this name for different models
+model_name = "3sigma"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -42,23 +34,25 @@ if __name__ == "__main__":
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset)
+            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]
             x_test_labels = data_dict["test_labels"]
 
-            od = LODA(n_bins=n_bins)
-
+            # data preprocessing for MSCRED
+            od = ThreeSigma()
+            
             train_start = time.time()
             od.fit(x_train)
             train_end = time.time()
 
             test_start = time.time()
-            anomaly_score = od.decision_function(x_test)
+            anomaly_score = od.predict(x_test)
             test_end = time.time()
 
-            anomaly_score_train = od.decision_function(x_train)
+            anomaly_score_train = od.predict(x_train)
+
             time_tracker = {
                 "train": train_end - train_start,
                 "test": test_end - test_start,
@@ -73,7 +67,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                {"train": anomaly_score_train, "test": anomaly_score},
+                {"test": anomaly_score, "train": anomaly_score_train},
                 anomaly_label,
                 time_tracker,
             )

@@ -27,7 +27,7 @@ class CMAnomaly_old(TimeSeriesEncoder):
         gamma=0.01,
         **kwargs,
     ):
-        super().__init__(architecture="MultiLSTM", **kwargs)
+        super().__init__(architecture="CMAnomaly_old", **kwargs)
 
         self.prediction_dims = (
             prediction_dims if prediction_dims else list(range(in_channels))
@@ -113,7 +113,7 @@ class CMAnomaly_old(TimeSeriesEncoder):
         )
         loss = self.loss_fn(recst, y)
         return_dict = {
-            "loss": loss.sum(),
+            "loss": loss.mean(),
             "recst": recst,
             "repr": outputs,
             "score": loss,

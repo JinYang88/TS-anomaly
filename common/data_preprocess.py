@@ -11,7 +11,7 @@ from sklearn.preprocessing import (
     RobustScaler,
     StandardScaler,
 )
-from pyts.approximation import SymbolicAggregateApproximation
+# from pyts.approximation import SymbolicAggregateApproximation
 from common.utils import load_hdf5, save_hdf5
 
 

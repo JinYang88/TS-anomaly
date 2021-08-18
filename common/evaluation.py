@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.cluster import AgglomerativeClustering
-from common.thresholding import bf_search, pot_eval
 from datetime import datetime
 
 metric_func = {
@@ -138,17 +137,23 @@ def iter_thresholds(
     best_set = []
     for trial in ["higher", "less"]:
         for anomaly_ratio in search_range:
-            if threshold is None:
-                if not normalized:
-                    theta = np.percentile(score, 100 * (1 - anomaly_ratio))
-                else:
-                    theta = anomaly_ratio
+
+            if sum(np.unique(score)) == 1 or sum(np.unique(score)) == 0:
+                pred = score
+                theta = None
             else:
-                theta = threshold
-            if trial == "higher":
-                pred = (score > theta).astype(int)
-            elif trial == "less":
-                pred = (score < theta).astype(int)
+                if threshold is None:
+                    if not normalized:
+                        theta = np.percentile(score, 100 * (1 - anomaly_ratio))
+                    else:
+                        theta = anomaly_ratio
+                else:
+                    theta = threshold
+
+                if trial == "higher":
+                    pred = (score > theta).astype(int)
+                elif trial == "less":
+                    pred = (score < theta).astype(int)
 
             if adjustment:
                 pred, adjusted_pred = point_adjustment(pred, label)
@@ -322,11 +327,19 @@ def compute_salience(score, label, plot=False, ax=None, fig_saving_path=""):
 
 
 def evaluate_benchmarking_folder(
-    folder, benchmarking_dir, hash_id, dataset, model_name
+    folder,
+    benchmarking_dir,
+    hash_id,
+    dataset,
+    model_name,
+    adjustment=False,
 ):
     concerned_metrics = [
         "train_time",
         "test_time",
+        "raw_PC",
+        "raw_RC",
+        "raw_F1",
         "adj_PC",
         "adj_RC",
         "adj_F1",
@@ -356,7 +369,7 @@ def evaluate_benchmarking_folder(
         pred_results_all["anomaly_score_train"].append(anomaly_score_train)
 
         best_f1, best_theta, best_adjust_pred, best_raw_pred = iter_thresholds(
-            anomaly_score, anomaly_label, metric="f1", adjustment=True
+            anomaly_score, anomaly_label, metric="f1", adjustment=adjustment
         )
 
         try:
@@ -368,6 +381,8 @@ def evaluate_benchmarking_folder(
         adj_f1 = f1_score(anomaly_label, best_adjust_pred)
         adj_precision = precision_score(anomaly_label, best_adjust_pred)
         adj_recall = recall_score(anomaly_label, best_adjust_pred)
+
+        print(anomaly_score.sum(), best_raw_pred.sum())
         raw_f1 = f1_score(anomaly_label, best_raw_pred)
         raw_precision = precision_score(anomaly_label, best_raw_pred)
         raw_recall = recall_score(anomaly_label, best_raw_pred)
@@ -393,8 +408,13 @@ def evaluate_benchmarking_folder(
     concated_test_score = np.concatenate(pred_results_all["anomaly_score"])
     concated_test_label = np.concatenate(pred_results_all["anomaly_label"])
     _, _, concated_adjusted_pred, concated_raw_pred = iter_thresholds(
-        concated_test_score, concated_test_label, metric="f1", adjustment=True
+        concated_test_score, concated_test_label, metric="f1", adjustment=adjustment
     )
+
+    concacted_raw_f1 = f1_score(concated_test_label, concated_raw_pred)
+    concacted_raw_precision = precision_score(concated_test_label, concated_raw_pred)
+    concacted_raw_recall = recall_score(concated_test_label, concated_raw_pred)
+
     concacted_adj_f1 = f1_score(concated_test_label, concated_adjusted_pred)
     concacted_adj_precision = precision_score(
         concated_test_label, concated_adjusted_pred
@@ -413,6 +433,10 @@ def evaluate_benchmarking_folder(
             values = np.array(metric_values_dict[metric_name], dtype=float)
             mean, std = values.mean(), values.std()
             metric_str.append("{}: {:.3f} ({:.3f})".format(metric_name, mean, std))
+
+        metric_str.append("con_adj_PC: {:.3f}".format(concacted_raw_precision))
+        metric_str.append("con_adj_RC: {:.3f}".format(concacted_raw_recall))
+        metric_str.append("con_adj_F1: {:.3f}".format(concacted_raw_f1))
 
         metric_str.append("con_PC: {:.3f}".format(concacted_adj_precision))
         metric_str.append("con_RC: {:.3f}".format(concacted_adj_recall))

@@ -109,7 +109,7 @@ class CMAnomaly(TimeSeriesEncoder):
         )  # b x window x embedding
         representation = torch.cat([repre_self, repre_inter], dim=-1)
 
-        lstm_out = representation.view(self.batch_size, -1)
+        lstm_out = representation.flatten(start_dim=1)
         recst = self.predcitor(lstm_out)  # batch*channel x 26
 
         loss = self.loss_fn(recst, y)
