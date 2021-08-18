@@ -88,7 +88,7 @@ if __name__ == "__main__":
             )
 
             encoder = LSTM(
-                in_channels=data_dict["dim"],
+                in_channels=data_dict["train"].shape[1],
                 hidden_size=hidden_size,
                 num_layers=num_layers,
                 dropout=dropout,

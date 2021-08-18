@@ -123,9 +123,9 @@ if __name__ == "__main__":
             config.result_dir = os.path.join(save_path, "result")
             config.save_dir = os.path.join(save_path, "model")
 
-            results = MLResults(config.result_dir)
-            results.save_config(config)  # save experiment settings for review
-            results.make_dirs(config.save_dir, exist_ok=True)
+            # results = MLResults(config.result_dir)
+            # results.save_config(config)  # save experiment settings for review
+            # results.make_dirs(config.save_dir, exist_ok=True)
 
             data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
 
