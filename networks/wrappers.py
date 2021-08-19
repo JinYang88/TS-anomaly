@@ -204,7 +204,7 @@ class TimeSeriesEncoder(torch.nn.Module):
                 if not isinstance(batch, dict):
                     batch = batch.to(self.device).float()
                 return_dict = self(batch)
-                score = return_dict["score"].mean(dim=-1)  # b x n_channels
+                score = return_dict["score"].sigmoid().mean(dim=-1)  # b x n_channels
                 score_list.append(score)
         test_end = time.time()
 
