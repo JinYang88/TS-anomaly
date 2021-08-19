@@ -11,6 +11,7 @@ from sklearn.preprocessing import (
     RobustScaler,
     StandardScaler,
 )
+
 # from pyts.approximation import SymbolicAggregateApproximation
 from common.utils import load_hdf5, save_hdf5
 
@@ -211,6 +212,7 @@ def generate_windows(
     nrows=None,
     clear=False,
     stride=1,
+    test_stride=1,
     **kwargs
 ):
     results = {}
@@ -226,7 +228,7 @@ def generate_windows(
         if not clear and os.path.isfile(cache_file):
             return load_hdf5(cache_file)
 
-    print("Generating sliding windows (size {}).".format(window_size))
+    print("Generating sliding windows (size {}, stride {}, test stride {}).".format(window_size, stride, test_stride))
 
     if "train" in data_dict:
         if use_token:
@@ -247,7 +249,7 @@ def generate_windows(
             else data_dict["test_labels"][0:nrows]
         )
         test_windows, test_labels = get_windows(
-            test, test_label, window_size=window_size, stride=1
+            test, test_label, window_size=window_size, stride=test_stride
         )
 
     if len(train_windows) > 0:
