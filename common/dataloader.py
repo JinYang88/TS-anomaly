@@ -9,7 +9,9 @@ import pandas as pd
 from IPython import embed
 
 data_path_dict = {
-    "SMD": "./datasets/anomaly/SMD_20/processed",
+    "SMD": "./datasets/anomaly/SMD/processed",
+    "SMD12": "./datasets/anomaly/SMD12",
+    "OMI": "./datasets/anomaly/OMI",
     "SMAP": "./datasets/anomaly/SMAP-MSL/processed_SMAP",
     "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
     "WADI": "./datasets/anomaly/WADI/processed",
