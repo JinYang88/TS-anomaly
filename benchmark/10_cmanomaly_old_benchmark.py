@@ -21,7 +21,9 @@ from common.evaluation import (
 seed_everything(2020)
 
 
-# python cmanomaly_old_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --embedding_dim 16 --nbins 10 --gpu 0
+# python 10_cmanomaly_old_benchmark.py --dataset SMD --lr 0.005 --window_size 64 --stride 5 --gpu 0 B
+# python 10_cmanomaly_old_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --gpu 0 B
+# python 10_cmanomaly_old_benchmark.py --dataset SMD --lr 0.01 --window_size 64 --stride 5 --gpu 0 B
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
