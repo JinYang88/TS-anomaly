@@ -9,7 +9,9 @@ import pandas as pd
 from IPython import embed
 
 data_path_dict = {
-    "SMD": "./datasets/anomaly/SMD_20/processed",
+    "SMD": "./datasets/anomaly/SMD/processed",
+    "SMD12": "./datasets/anomaly/SMD12",
+    "OMI": "./datasets/anomaly/OMI",
     "SMAP": "./datasets/anomaly/SMAP-MSL/processed_SMAP",
     "MSL": "./datasets/anomaly/SMAP-MSL/processed_MSL",
     "WADI": "./datasets/anomaly/WADI/processed",
@@ -39,7 +41,6 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
     use_dim: dimension used in multivariate timeseries
     """
     print("Loading {} of {} dataset".format(subdataset, dataset))
-    # x_dim = get_data_dim(dataset)
     path = data_path_dict[dataset]
     prefix = subdataset
     train_files = glob(os.path.join(root_dir, path, prefix + "_train.pkl"))
@@ -50,7 +51,6 @@ def load_dataset(dataset, subdataset, use_dim="all", root_dir="../", nrows=None)
     logging.info("{} files found.".format(len(train_files)))
 
     data_dict = defaultdict(dict)
-    # data_dict["dim"] = x_dim if use_dim == "all" else 1
 
     train_data_list = []
     for idx, f_name in enumerate(train_files):

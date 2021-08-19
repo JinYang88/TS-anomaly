@@ -27,7 +27,7 @@ seed_everything(2020)
 # python cmanomaly_benchmark.py --dataset SMD --lr 0.001 --window_size 64 --stride 5 --embedding_dim 16 --nbins 10 --gpu 0
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
+parser.add_argument("--dataset", type=str, default="SMD12", help="Dataset used")
 
 parser.add_argument("--lr", type=float, default=0.001, help="learning rate")
 parser.add_argument("--window_size", type=int, default=64, help="window_size")
@@ -91,7 +91,6 @@ if __name__ == "__main__":
             ### end
 
             nb_classes = len(vocab.label2idx)
-            # nb_classes = nbins
 
             os.makedirs(save_path, exist_ok=True)
             pp.save(save_path)
