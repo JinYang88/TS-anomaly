@@ -99,7 +99,8 @@ subdatasets = {
     "SWAT": ["swat"],
     "WADI_SPLIT": ["wadi-1", "wadi-2", "wadi-3"],
     "SMD12": sorted(['machine-3-4', 'machine-2-7', 'machine-3-6', 'machine-2-8', 'machine-3-3', 'machine-2-1', 'machine-1-1', 'machine-3-8', 'machine-1-7', 'machine-2-2', 'machine-3-11', 'machine-1-6']),
-    "OMI": sorted(['omi-7', 'omi-1', 'omi-11', 'omi-5', 'omi-8', 'omi-4', 'omi-9', 'omi-10', 'omi-2', 'omi-12', 'omi-6', 'omi5', 'omi-3'])
+    "OMI": sorted(['omi-7', 'omi-1', 'omi-11', 'omi-5', 'omi-8', 'omi-4', 'omi-9', 'omi-10', 'omi-2', 'omi-12', 'omi-6', 'omi5', 'omi-3']),
+    "HUAWEI": ["aa", "bb", "cc"]
 }
 
 

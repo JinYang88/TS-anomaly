@@ -18,10 +18,11 @@ data_path_dict = {
     "SWAT": "./datasets/anomaly/SWAT/processed",
     "WADI_SPLIT": "./datasets/anomaly/WADI_SPLIT/processed",
     "SWAT_SPLIT": "./datasets/anomaly/SWAT_SPLIT/processed",
+    "HUAWEI": "./datasets/anomaly/HW"
 }
 
 
-def get_data_dim(dataset):
+def get_data_dim(dataset, subdataset=""):
     if "SMAP" in dataset:
         return 25
     elif "MSL" in dataset:
@@ -32,6 +33,12 @@ def get_data_dim(dataset):
         return 93
     elif "SWAT" in dataset:
         return 40
+    elif "HUAWEI" in dataset:
+        return {
+            "aa":30, # change to hashid
+            "bb":30,
+            "cc":30,
+        }[subdataset]
     else:
         raise ValueError("unknown dataset " + str(dataset))
 
