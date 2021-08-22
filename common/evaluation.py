@@ -434,13 +434,13 @@ def evaluate_benchmarking_folder(
             mean, std = values.mean(), values.std()
             metric_str.append("{}: {:.3f} ({:.3f})".format(metric_name, mean, std))
 
-        metric_str.append("con_adj_PC: {:.3f}".format(concacted_raw_precision))
-        metric_str.append("con_adj_RC: {:.3f}".format(concacted_raw_recall))
-        metric_str.append("con_adj_F1: {:.3f}".format(concacted_raw_f1))
+        metric_str.append("con_adj_PC: {:.3f}".format(concacted_adj_precision))
+        metric_str.append("con_adj_RC: {:.3f}".format(concacted_adj_recall))
+        metric_str.append("con_adj_F1: {:.3f}".format(concacted_adj_f1))
 
-        metric_str.append("con_PC: {:.3f}".format(concacted_adj_precision))
-        metric_str.append("con_RC: {:.3f}".format(concacted_adj_recall))
-        metric_str.append("con_F1: {:.3f}".format(concacted_adj_f1))
+        metric_str.append("con_PC: {:.3f}".format(concacted_raw_precision))
+        metric_str.append("con_RC: {:.3f}".format(concacted_raw_recall))
+        metric_str.append("con_F1: {:.3f}".format(concacted_raw_f1))
 
         metric_str = "\t".join(metric_str)
         info += metric_str + "\n"
