@@ -36,7 +36,6 @@ class CMAnomaly_old(TimeSeriesEncoder):
         self.inter = inter
         self.gamma = gamma
 
-
         final_output_dim = prediction_length * len(self.prediction_dims)
 
         if self.inter == "TIME" or self.inter == "MEAN":
