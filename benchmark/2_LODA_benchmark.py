@@ -50,8 +50,21 @@ if __name__ == "__main__":
 
             od = LODA(n_bins=n_bins)
 
+            # input: 10000 x 38
+            # current: 1 x 38 * 1 fit
+            # expected: [1 x 1] * 38 fit  -> 38 anomaly prediction  
+            # output: 10000 x 38
+            # fit_transform
+            # fit
+            # for col in x_train:
+            #     fit col
+
             train_start = time.time()
             od.fit(x_train)
+
+
+
+
             train_end = time.time()
 
             test_start = time.time()
