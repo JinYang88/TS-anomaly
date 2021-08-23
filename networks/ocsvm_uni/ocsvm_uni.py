@@ -1,24 +1,24 @@
 import numpy as np
-from pyod.models.loda import LODA
+from pyod.models.ocsvm import OCSVM
 from IPython import embed
 
 
-class LODAUni:
-    def __init__(self, anomaly_ts_num: float = 0.5, anomaly_threshold=0.2):
+class OCSVMUni:
+    def __init__(self, anomaly_ts_num: float = 0.5, anomaly_threshold: float = 5):
         self.anomaly_ts_num = anomaly_ts_num
         self.anomaly_threshold = anomaly_threshold
-        self.LODAModels = []
+        self.OCSVMModels = []
 
-    def fit(self, train_data, n_bins=10):
+    def fit(self, train_data):
         """
         train_data: type is np.ndarray
         """
         for i in range(train_data.shape[1]):
-            print(f"fit dim {i}")
+            print(f"fitting dim {i}")
             ts = train_data[:, i].copy()
-            od = LODA(n_bins=n_bins)
+            od = OCSVM()
             od.fit(ts.reshape(-1, 1))
-            self.LODAModels.append(od)
+            self.OCSVMModels.append(od)
 
     def predict(self, test_data):
         """
@@ -26,9 +26,9 @@ class LODAUni:
         """
         anomaly_indice = np.zeros(test_data.shape[0])
         for dim in range(test_data.shape[1]):
-            print(f"predict dim {dim}")
+            print(f"predicting dim {dim}")
             ts = test_data[:, dim].copy()
-            anomaly_score = self.LODAModels[dim].decision_function(
+            anomaly_score = self.OCSVMModels[dim].decision_function(
                 ts.reshape(-1, 1))
             anomaly_dim_indice = (
                 anomaly_score > self.anomaly_threshold).astype(int)
