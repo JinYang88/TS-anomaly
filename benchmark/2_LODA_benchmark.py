@@ -8,7 +8,7 @@ from common.dataloader import load_dataset
 from common.evaluation import evaluator
 from common.utils import pprint
 
-## import the following for benchmarking
+# import the following for benchmarking
 import time
 import hashlib
 import traceback
@@ -24,7 +24,7 @@ from common.evaluation import (
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
-parser.add_argument("--n_bins", type=int,  default=10, help="n_bins")
+parser.add_argument("--n_bins", type=int, default=10, help="n_bins")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
@@ -42,7 +42,8 @@ if __name__ == "__main__":
         try:
             time_tracker = {}
             print(f"Running on {subdataset} of {dataset}")
-            data_dict = load_dataset(dataset, subdataset, "all", root_dir="../")
+            data_dict = load_dataset(
+                dataset, subdataset, "all", root_dir="../")
 
             x_train = data_dict["train"]
             x_test = data_dict["test"]
@@ -50,20 +51,8 @@ if __name__ == "__main__":
 
             od = LODA(n_bins=n_bins)
 
-            # input: 10000 x 38
-            # current: 1 x 38 * 1 fit
-            # expected: [1 x 1] * 38 fit  -> 38 anomaly prediction  
-            # output: 10000 x 38
-            # fit_transform
-            # fit
-            # for col in x_train:
-            #     fit col
-
             train_start = time.time()
             od.fit(x_train)
-
-
-
 
             train_end = time.time()
 
