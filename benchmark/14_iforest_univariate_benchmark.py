@@ -1,36 +1,45 @@
 import sys
+import logging
+
 sys.path.append("../")
 
+from networks.iforest_uni import IForestUni
+
+from common.dataloader import load_dataset
+from common.evaluation import evaluator
+
+
+# import the following for benchmarking
+import time
+import hashlib
+import traceback
+import argparse
+from common.config import subdatasets
 from common.evaluation import (
     store_benchmarking_results,
     evaluate_benchmarking_folder,
 )
-from common.config import subdatasets
-import argparse
-import traceback
-import hashlib
-import time
-from common.dataloader import load_dataset
-from networks.arima import ARIMAModel
 
 # write example command here
-# python 13_ARIMA_benchmark.py --dataset SMD --arima_p 1
+# python 14_iforest_univariate_benchmark.py --dataset SMD --n_estimators 10 --anomaly_threshold 0.2 --anomaly_ts_num 0.5
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
+parser.add_argument("--n_estimators", type=int,
+                    default=100, help="n_estimators")
+parser.add_argument("--anomaly_threshold", type=float,
+                    default=0.2, help="anomaly_threshold")
 parser.add_argument("--anomaly_ts_num", type=float,
-                    default=0.5, help="number of KPIs")
-parser.add_argument("--arima_p", type=int,
-                    default=1, help="ARIMA p")
-
+                    default=0.5, help="anomaly_ts_num")
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
+n_estimators = args["n_estimators"]
+anomaly_threshold = args["anomaly_threshold"]
 anomaly_ts_num = args["anomaly_ts_num"]
-arima_p = args["arima_p"]
 
-model_name = "arima_model"  # change this name for different models
+model_name = "iforest_univariate"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -49,7 +58,8 @@ if __name__ == "__main__":
             x_test_labels = data_dict["test_labels"]
 
             # data preprocessing for MSCRED
-            od = ARIMAModel(anomaly_ts_num=anomaly_ts_num, w=arima_p)
+            od = IForestUni(anomaly_ts_num=anomaly_ts_num,
+                            anomaly_threshold=anomaly_threshold)
 
             train_start = time.time()
             od.fit(x_train)

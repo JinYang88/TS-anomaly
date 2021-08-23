@@ -1,3 +1,4 @@
+pyod
 pyts
 matplotlib
 numpy
