@@ -14,7 +14,7 @@ from common.dataloader import load_dataset
 from networks.moving_average import MovingAverage
 
 # write example command here
-# python 11_movingavg_benchmark.py --dataset SMD
+# python 11_MA_benchmark.py --dataset SMD
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
