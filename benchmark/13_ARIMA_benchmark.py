@@ -11,23 +11,26 @@ import traceback
 import hashlib
 import time
 from common.dataloader import load_dataset
-from networks.auto_regression import AutoRegression
+from networks.arima import ARIMAModel
 
 # write example command here
-# python 12_AR_benchmark.py --dataset SMD
+# python 13_ARIMA_benchmark.py --dataset SMD --arima_window 100
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
 parser.add_argument("--anomaly_ts_num", type=float,
                     default=0.5, help="number of KPIs")
+parser.add_argument("--arima_window", type=int,
+                    default=10, help="ARIMA window size")
 
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
 anomaly_ts_num = args["anomaly_ts_num"]
+arima_window = args["arima_window"]
 
-model_name = "auto_regression"  # change this name for different models
+model_name = "arima_model"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -46,7 +49,7 @@ if __name__ == "__main__":
             x_test_labels = data_dict["test_labels"]
 
             # data preprocessing for MSCRED
-            od = AutoRegression(anomaly_ts_num=anomaly_ts_num)
+            od = ARIMAModel(anomaly_ts_num=anomaly_ts_num, w=arima_window)
 
             train_start = time.time()
             od.fit(x_train)
