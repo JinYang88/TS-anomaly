@@ -23,7 +23,7 @@ class CMAnomaly_old(TimeSeriesEncoder):
         dropout=0,
         prediction_length=1,
         prediction_dims=[],
-        inter="CONCAT",
+        inter="FM",
         gamma=0.01,
         **kwargs,
     ):
@@ -44,8 +44,10 @@ class CMAnomaly_old(TimeSeriesEncoder):
             clf_input_dim = kwargs["window_size"] - 1
         elif self.inter == "CONCAT":
             clf_input_dim = in_channels * (kwargs["window_size"] - 1)
-        elif self.inter == "FM":
+        elif self.inter == "FM_com":
             clf_input_dim = 2 * (kwargs["window_size"] - 1) + in_channels
+        elif self.inter == "FM":
+            clf_input_dim = kwargs["window_size"] - 1 + in_channels
         else:
             clf_input_dim = kwargs["window_size"] - 1 + in_channels
 
@@ -89,12 +91,16 @@ class CMAnomaly_old(TimeSeriesEncoder):
             batch_window[:, -self.prediction_length :, self.prediction_dims],
         )
 
-        if self.inter == "FM":
+        if self.inter == "FM_com":
             time_inter = self.FM_interaction(x)
             dim_inter = self.FM_interaction(x.transpose(2, 1))
             raw = self.res_w(x.reshape(self.batch_size, -1))
             inter = self.gamma * torch.cat([time_inter, dim_inter], dim=-1)
             outputs = torch.cat([raw + inter, x.mean(dim=-1)], dim=-1)
+        elif self.inter == "FM":
+            time_inter = self.FM_interaction(x)
+            dim_inter = self.FM_interaction(x.transpose(2, 1))
+            outputs = torch.cat([time_inter, dim_inter], dim=-1)
         elif self.inter == "MEAN":
             outputs = x.mean(dim=1)
         elif self.inter == "TIME":

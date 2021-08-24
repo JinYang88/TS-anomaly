@@ -364,13 +364,15 @@ def evaluate_benchmarking_folder(
         with open(os.path.join(subfolder, "time.json")) as fr:
             time = json.load(fr)
 
-        pred_results_all["anomaly_score"].append(anomaly_score)
-        pred_results_all["anomaly_label"].append(anomaly_label)
-        pred_results_all["anomaly_score_train"].append(anomaly_score_train)
-
         best_f1, best_theta, best_adjust_pred, best_raw_pred = iter_thresholds(
             anomaly_score, anomaly_label, metric="f1", adjustment=adjustment
         )
+
+        pred_results_all["anomaly_adjust_pred"].append(best_adjust_pred)
+        pred_results_all["anomaly_raw_pred"].append(best_raw_pred)
+        pred_results_all["anomaly_score"].append(anomaly_score)
+        pred_results_all["anomaly_label"].append(anomaly_label)
+        pred_results_all["anomaly_score_train"].append(anomaly_score_train)
 
         try:
             auc = roc_auc_score(anomaly_label, anomaly_score)
@@ -382,7 +384,6 @@ def evaluate_benchmarking_folder(
         adj_precision = precision_score(anomaly_label, best_adjust_pred)
         adj_recall = recall_score(anomaly_label, best_adjust_pred)
 
-        print(anomaly_score.sum(), best_raw_pred.sum())
         raw_f1 = f1_score(anomaly_label, best_raw_pred)
         raw_precision = precision_score(anomaly_label, best_raw_pred)
         raw_recall = recall_score(anomaly_label, best_raw_pred)
@@ -405,11 +406,11 @@ def evaluate_benchmarking_folder(
         json_pretty_dump(metric, os.path.join(subfolder, "metrics.json"))
         folder_count += 1
 
-    concated_test_score = np.concatenate(pred_results_all["anomaly_score"])
+    # concated_test_score = np.concatenate(pred_results_all["anomaly_score"])
+    
+    concated_raw_pred = np.concatenate(pred_results_all["anomaly_raw_pred"])
+    concated_adjusted_pred = np.concatenate(pred_results_all["anomaly_adjust_pred"])
     concated_test_label = np.concatenate(pred_results_all["anomaly_label"])
-    _, _, concated_adjusted_pred, concated_raw_pred = iter_thresholds(
-        concated_test_score, concated_test_label, metric="f1", adjustment=adjustment
-    )
 
     concacted_raw_f1 = f1_score(concated_test_label, concated_raw_pred)
     concacted_raw_precision = precision_score(concated_test_label, concated_raw_pred)
