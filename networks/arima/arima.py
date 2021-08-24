@@ -4,15 +4,14 @@ from statsmodels.tsa.arima.model import ARIMA
 
 
 class ARIMAModel:
-    def __init__(self, anomaly_ts_num: float = 0.5, w=10):
+    def __init__(self, anomaly_ts_num: float = 0.5):
         self.anomaly_ts_num = anomaly_ts_num
-        self.w = w
         self.diff_upper_threshold_list = []
 
     def _arima_model(self, ts):
         assert len(ts.shape) == 1, 'Only support 1-d time series currently'
         ar_result = np.zeros(ts.shape)
-        model = ARIMA(ts, order=(self.w, 0, 0))
+        model = ARIMA(ts, order=(1, 0, 0))
         model_fit = model.fit()
         fittedLen = model_fit.fittedvalues.shape[0]
         ar_result[ts.shape[0] - fittedLen:] = model_fit.fittedvalues
@@ -24,6 +23,7 @@ class ARIMAModel:
         train_data: type is np.ndarray
         """
         for i in range(train_data.shape[1]):
+            print(f"fitting dim {i}")
             ar_result = self._arima_model(train_data[:, i])
             ar_diff = np.abs(ar_result - train_data[:, i])
             mean = np.mean(ar_diff)
@@ -36,6 +36,7 @@ class ARIMAModel:
         """
         anomaly_indice = np.zeros(test_data.shape[0])
         for dim in range(test_data.shape[1]):
+            print(f"predicting dim {dim}")
             ts = test_data[:, dim]
             ar_result = self._arima_model(ts)
             ar_diff = np.abs(ar_result - ts)

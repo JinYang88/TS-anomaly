@@ -20,15 +20,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
 parser.add_argument("--anomaly_ts_num", type=float,
                     default=0.5, help="number of KPIs")
-parser.add_argument("--arima_p", type=int,
-                    default=1, help="ARIMA p")
+# parser.add_argument("--arima_p", type=int,
+#                     default=1, help="ARIMA p")
 
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
 anomaly_ts_num = args["anomaly_ts_num"]
-arima_p = args["arima_p"]
+# arima_p = args["arima_p"]
 
 model_name = "arima_model"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             x_test_labels = data_dict["test_labels"]
 
             # data preprocessing for MSCRED
-            od = ARIMAModel(anomaly_ts_num=anomaly_ts_num, w=arima_p)
+            od = ARIMAModel(anomaly_ts_num=anomaly_ts_num)
 
             train_start = time.time()
             od.fit(x_train)

@@ -21,12 +21,12 @@ from common.evaluation import (
 )
 
 # write example command here
-# python 15_LODA_uni_benchmark.py --dataset SMD --n_bins 10 --anomaly_threshold 0.2 --anomaly_ts_num 0.5
+# python 15_LODA_uni_benchmark.py --dataset SMD --n_bins 2 --anomaly_threshold 0.2 --anomaly_ts_num 0.5
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
 parser.add_argument("--n_bins", type=int,
-                    default=10, help="n_bins")
+                    default=2, help="n_bins")
 parser.add_argument("--anomaly_threshold", type=float,
                     default=0.2, help="anomaly_threshold")
 parser.add_argument("--anomaly_ts_num", type=float,
