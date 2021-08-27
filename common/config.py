@@ -98,9 +98,63 @@ subdatasets = {
     "WADI": ["wadi"],
     "SWAT": ["swat"],
     "WADI_SPLIT": ["wadi-1", "wadi-2", "wadi-3"],
-    "SMD12": sorted(['machine-3-4', 'machine-2-7', 'machine-3-6', 'machine-2-8', 'machine-3-3', 'machine-2-1', 'machine-1-1', 'machine-3-8', 'machine-1-7', 'machine-2-2', 'machine-3-11', 'machine-1-6']),
-    "OMI": sorted(['omi-7', 'omi-1', 'omi-11', 'omi-5', 'omi-8', 'omi-4', 'omi-9', 'omi-10', 'omi-2', 'omi-12', 'omi-6', 'omi5', 'omi-3']),
-    "HUAWEI": ["aa", "bb", "cc"]
+    "SMD12": sorted(
+        [
+            "machine-3-4",
+            "machine-2-7",
+            "machine-3-6",
+            "machine-2-8",
+            "machine-3-3",
+            "machine-2-1",
+            "machine-1-1",
+            "machine-3-8",
+            "machine-1-7",
+            "machine-2-2",
+            "machine-3-11",
+            "machine-1-6",
+        ]
+    ),
+    "OMI": sorted(
+        [
+            "omi-7",
+            "omi-1",
+            "omi-11",
+            "omi-5",
+            "omi-8",
+            "omi-4",
+            "omi-9",
+            "omi-10",
+            "omi-2",
+            "omi-12",
+            "omi-6",
+            "omi5",
+            "omi-3",
+        ]
+    ),
+    "HUAWEI_FILTERED": [
+        "0a82a873",
+        "2fe95315",
+        "5dafb960",
+        "aeb5a1de",
+        "af732cc4",
+        "b2a04b7f",
+        "c23b2b2d",
+        "c2970798",
+        "c91f4a07",
+        "ca2ae31d",
+        "e29ca1cd",
+        "f7958fb7",
+    ],
+    "HUAWEI_GROUP_A": [
+        "e29ca1cd",
+        "c23b2b2d",
+        "aeb5a1de",
+        "2fe95315",
+        "0a82a873",
+        "af732cc4",
+    ],
+    "HUAWEI_GROUP_B": ["b2a04b7f", "c2970798", "5dafb960"],
+    "HUAWEI_GROUP_C": ["c91f4a07", "ca2ae31d", "f7958fb7"],
 }
 
 

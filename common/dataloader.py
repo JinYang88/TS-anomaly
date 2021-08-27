@@ -18,7 +18,10 @@ data_path_dict = {
     "SWAT": "./datasets/anomaly/SWAT/processed",
     "WADI_SPLIT": "./datasets/anomaly/WADI_SPLIT/processed",
     "SWAT_SPLIT": "./datasets/anomaly/SWAT_SPLIT/processed",
-    "HUAWEI": "./datasets/anomaly/HW"
+    "HUAWEI_FILTERED": "./datasets/anomaly/HUAWEI_FILTERED",
+    "HUAWEI_GROUP_A": "./datasets/anomaly/HUAWEI_GROUP_A",
+    "HUAWEI_GROUP_B": "./datasets/anomaly/HUAWEI_GROUP_B",
+    "HUAWEI_GROUP_C": "./datasets/anomaly/HUAWEI_GROUP_C",
 }
 
 
@@ -35,9 +38,18 @@ def get_data_dim(dataset, subdataset=""):
         return 40
     elif "HUAWEI" in dataset:
         return {
-            "aa":30, # change to hashid
-            "bb":30,
-            "cc":30,
+            "e29ca1cd": 3,
+            "c23b2b2d": 4,
+            "aeb5a1de": 6,
+            "2fe95315": 5,
+            "0a82a873": 7,
+            "af732cc4": 7,
+            "b2a04b7f": 20,
+            "c2970798": 13,
+            "5dafb960": 12,
+            "c91f4a07": 24,
+            "ca2ae31d": 43,
+            "f7958fb7": 37,
         }[subdataset]
     else:
         raise ValueError("unknown dataset " + str(dataset))
