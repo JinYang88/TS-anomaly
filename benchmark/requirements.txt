@@ -1,0 +1,11 @@
+pyod
+pyts
+matplotlib
+numpy
+pandas
+scipy
+scikit_learn
+statsmodels
+tqdm
+pyyaml
+IPython

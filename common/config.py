@@ -6,9 +6,10 @@ import glob
 import yaml
 
 subdatasets = {
-    "SMD": ["machine-1-{}".format(i) for i in range(1, 9)]
-    + ["machine-2-{}".format(i) for i in range(1, 10)]
-    + ["machine-3-{}".format(i) for i in range(1, 12)],
+    "SMD": ["machine-1-1"],
+    # "SMD": ["machine-1-{}".format(i) for i in range(1, 9)]
+    # + ["machine-2-{}".format(i) for i in range(1, 10)]
+    # + ["machine-3-{}".format(i) for i in range(1, 12)],
     "SMAP": [
         "P-1",
         "S-1",

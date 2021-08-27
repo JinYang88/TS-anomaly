@@ -1,37 +1,36 @@
 import sys
-import logging
-from pyod.models.loda import LODA
-
 sys.path.append("../")
 
-from common.dataloader import load_dataset
-from common.evaluation import evaluator
-from common.utils import pprint
-
-# import the following for benchmarking
-import time
-import hashlib
-import traceback
-import argparse
-from common.config import subdatasets
 from common.evaluation import (
     store_benchmarking_results,
     evaluate_benchmarking_folder,
 )
+from common.config import subdatasets
+import argparse
+import traceback
+import hashlib
+import time
+from common.dataloader import load_dataset
+from networks.arima import ARIMAModel
 
 # write example command here
-# python LODA_benchmark.py --dataset SMD --n_bins 10
+# python 13_ARIMA_benchmark.py --dataset SMD --arima_p 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="dataset")
-parser.add_argument("--n_bins", type=int, default=10, help="n_bins")
+parser.add_argument("--anomaly_ts_num", type=float,
+                    default=0.5, help="number of KPIs")
+# parser.add_argument("--arima_p", type=int,
+#                     default=1, help="ARIMA p")
+
 args = vars(parser.parse_args())
 
 # parameters are got from the args
 dataset = args["dataset"]
-n_bins = args["n_bins"]
+anomaly_ts_num = args["anomaly_ts_num"]
+# arima_p = args["arima_p"]
 
-model_name = "LODA"  # change this name for different models
+model_name = "arima_model"  # change this name for different models
 benchmarking_dir = "./benchmarking_results"
 hash_id = hashlib.md5(
     str(sorted([(k, v) for k, v in args.items()])).encode("utf-8")
@@ -49,18 +48,19 @@ if __name__ == "__main__":
             x_test = data_dict["test"]
             x_test_labels = data_dict["test_labels"]
 
-            od = LODA(n_bins=n_bins)
+            # data preprocessing for MSCRED
+            od = ARIMAModel(anomaly_ts_num=anomaly_ts_num)
 
             train_start = time.time()
             od.fit(x_train)
-
             train_end = time.time()
 
             test_start = time.time()
-            anomaly_score = od.decision_function(x_test)
+            anomaly_score = od.predict(x_test)
             test_end = time.time()
 
-            anomaly_score_train = od.decision_function(x_train)
+            anomaly_score_train = od.predict(x_train)
+
             time_tracker = {
                 "train": train_end - train_start,
                 "test": test_end - test_start,
@@ -75,7 +75,7 @@ if __name__ == "__main__":
                 subdataset,
                 args,
                 model_name,
-                {"train": anomaly_score_train, "test": anomaly_score},
+                {"test": anomaly_score, "train": anomaly_score_train},
                 anomaly_label,
                 time_tracker,
             )
