@@ -45,7 +45,8 @@ class CMAnomaly_old(TimeSeriesEncoder):
         elif self.inter == "CONCAT":
             clf_input_dim = in_channels * (kwargs["window_size"] - 1)
         elif self.inter == "FM_com":
-            clf_input_dim = 2 * (kwargs["window_size"] - 1) + in_channels
+            # clf_input_dim = 2 * (kwargs["window_size"] - 1) + in_channels
+            clf_input_dim = kwargs["window_size"] - 1
         elif self.inter == "FM":
             clf_input_dim = kwargs["window_size"] - 1 + in_channels
         else:
