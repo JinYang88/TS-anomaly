@@ -423,7 +423,9 @@ def evaluate_benchmarking_folder(
     concacted_adj_recall = recall_score(concated_test_label, concated_adjusted_pred)
 
     current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-    with open(os.path.join(benchmarking_dir, f"{dataset}_ALL.txt"), "a+") as fw:
+    with open(
+        os.path.join(benchmarking_dir, f"{dataset}_{model_name}.txt"), "a+"
+    ) as fw:
         params = " ".join(sys.argv)
         info = f"{current_time}\t{hash_id}\tcount:{folder_count}\t{params}\t"
         metric_str = []

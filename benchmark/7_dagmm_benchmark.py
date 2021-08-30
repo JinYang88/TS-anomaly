@@ -26,6 +26,7 @@ parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
 parser.add_argument("--lr", type=float, default="0.001", help="learning rate")
 parser.add_argument("--dropout", type=float, default=0.25, help="dropout")
 parser.add_argument("--num_epochs", type=int, default=100, help="num_epochs")
+parser.add_argument("--batch_size", type=int, default=64, help="batch_size")
 parser.add_argument(
     "-ch", "--compression_hiddens", nargs="+", help="compression_hiddens", required=True
 )  # 32 16 2
@@ -41,6 +42,7 @@ hash_id = hashlib.md5(
 ).hexdigest()[0:8]
 
 
+minibatch = args["batch_size"]
 dataset = args["dataset"]
 estimation_dropout_ratio = args["dropout"]
 epoch = args["num_epochs"]  # 100
@@ -48,7 +50,6 @@ lr = args["lr"]
 compression_hiddens = args["compression_hiddens"]
 estimation_hiddens = args["estimation_hiddens"]
 
-minibatch = 1024
 normalize = True
 random_seed = 123
 if __name__ == "__main__":

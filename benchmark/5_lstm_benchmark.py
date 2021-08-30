@@ -34,6 +34,7 @@ parser.add_argument("--window_size", type=int, help="window_size")
 parser.add_argument("--stride", type=int, help="stride")
 parser.add_argument("--num_layers", type=int, help="num_layers")
 parser.add_argument("--hidden_size", type=int, help="hidden_size")
+parser.add_argument("--nb_epoch", type=int, help="nb_epoch")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
 
 args = vars(parser.parse_args())
@@ -51,10 +52,10 @@ stride = args["stride"]
 lr = args["lr"]
 hidden_size = args["hidden_size"]
 num_layers = args["num_layers"]
+nb_epoch = args["nb_epoch"]
 
 
 normalize = "minmax"
-nb_epoch = 20
 patience = 5
 dropout = 0
 batch_size = 1024

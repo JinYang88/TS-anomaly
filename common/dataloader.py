@@ -19,9 +19,9 @@ data_path_dict = {
     "WADI_SPLIT": "./datasets/anomaly/WADI_SPLIT/processed",
     "SWAT_SPLIT": "./datasets/anomaly/SWAT_SPLIT/processed",
     "HUAWEI_FILTERED": "./datasets/anomaly/HUAWEI_FILTERED",
-    "HUAWEI_GROUP_A": "./datasets/anomaly/HUAWEI_GROUP_A",
-    "HUAWEI_GROUP_B": "./datasets/anomaly/HUAWEI_GROUP_B",
-    "HUAWEI_GROUP_C": "./datasets/anomaly/HUAWEI_GROUP_C",
+    "HUAWEI_GROUP_A": "./datasets/anomaly/HUAWEI_GROUP_A1",
+    "HUAWEI_GROUP_B": "./datasets/anomaly/HUAWEI_GROUP_B1",
+    "HUAWEI_GROUP_C": "./datasets/anomaly/HUAWEI_GROUP_C1",
 }
 
 

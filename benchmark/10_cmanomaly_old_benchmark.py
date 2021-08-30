@@ -28,10 +28,13 @@ seed_everything(2020)
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type=str, default="SMD", help="Dataset used")
 parser.add_argument("--lr", type=float, default=0.01, help="learning rate")
+parser.add_argument("--gamma", type=float, default=1, help="gamma")
 parser.add_argument("--window_size", type=int, default=32, help="window_size")
 parser.add_argument("--stride", type=int, default=5, help="stride")
+parser.add_argument("--nb_epoch", type=int, default=100, help="nb_epoch")
 parser.add_argument("--inter", type=str, default="FM", help="stride")
 parser.add_argument("--gpu", type=int, default=0, help="The gpu index, -1 for cpu")
+
 parser.add_argument(
     "--normalize",
     type=str,
@@ -53,8 +56,10 @@ window_size = args["window_size"]
 stride = args["stride"]
 lr = args["lr"]
 normalize = args["normalize"]
+gamma = args["gamma"]
+nb_epoch = args["nb_epoch"]
 
-nb_epoch = 1000
+
 patience = 3
 dropout = 0
 batch_size = 1024
@@ -91,6 +96,7 @@ if __name__ == "__main__":
 
             encoder = CMAnomaly_old(
                 in_channels=data_dict["train"].shape[1],
+                gamma=gamma,
                 inter=args["inter"],
                 window_size=window_size,
                 dropout=dropout,
